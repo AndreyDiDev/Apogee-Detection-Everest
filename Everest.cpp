@@ -45,7 +45,6 @@ void Everest::IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
     // Wait for both IMUs to update
 
     // Calculate average of IMU parameters
-    // #define Q ahrs->quaternion.element
     #define averageIMU state.avgIMU
 
     averageIMU.gyroX = (internalIMU_1.gyroX + internalIMU_2.gyroX) / 2.0;
@@ -59,8 +58,8 @@ void Everest::IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
     #undef averageIMU
 
     // feed to Madgwick
-    MadgwickAHRSupdateIMU(ahrs, averageIMU.gyroX, averageIMU.gyroY, 
-    averageIMU.gyroZ, averageIMU.accelX, averageIMU.accelY, averageIMU.accelZ);
+    // MadgwickAHRSupdateIMU(ahrs, averageIMU.gyroX, averageIMU.gyroY, 
+    // averageIMU.gyroZ, averageIMU.accelX, averageIMU.accelY, averageIMU.accelZ);
     
 
 }
@@ -70,16 +69,5 @@ void Everest::IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
 */
 int main()
 {
-    // Initially we trust systems equally
-    state.confidence_IMU = 1/3.0;
-    state.confidence_Baros = 1/3.0;
-    state.confidence_Real_Baro = 1/3.0;
-
-    // Initially no apogee detected
-    state.apogeeDetected_IMU = false;
-    state.apogeeDetected_Baros = false;
-    state.apogeeDetected_Real_Baro = false;
-    state.finalApogeeDetected = false;
-
     return 0;
 }

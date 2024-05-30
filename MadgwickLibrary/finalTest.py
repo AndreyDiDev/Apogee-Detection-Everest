@@ -14,7 +14,7 @@ import numpy
 print("running this 2")
 
 # Import sensor data
-data = numpy.genfromtxt("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/infusion.txt", delimiter=",", skip_header=1)
+data = numpy.genfromtxt("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.txt", delimiter=",", skip_header=1)
 
 # with open('C:/Users/Andrey/Documents/AHRSRepo/MadgwickAHRS/newSimsTxt.txt') as fin, open('newfile.txt', 'w') as fout:
 #     for line in fin:

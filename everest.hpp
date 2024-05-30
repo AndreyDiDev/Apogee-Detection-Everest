@@ -53,8 +53,30 @@ class Everest{
         BarosData baro1, baro2, baro3, realBaro;
 
         // Initialize system state
-        systemState state; 
+        systemState state;
+
+        // Initialize Madgwick Library
+        Infusion madgwick = Infusion();
+        
+        void initialize(systemState& state);
 };
+
+void initialize(systemState& state){
+    // Initially we trust systems equally
+    state.confidence_IMU = 1/3.0;
+    state.confidence_Baros = 1/3.0;
+    state.confidence_Real_Baro = 1/3.0;
+
+    // Initially no apogee detected
+    state.apogeeDetected_IMU = false;
+    state.apogeeDetected_Baros = false;
+    state.apogeeDetected_Real_Baro = false;
+    state.finalApogeeDetected = false;
+}
+
+Infusion getMadgwick(){
+    return madgwick;
+}
 
 
 

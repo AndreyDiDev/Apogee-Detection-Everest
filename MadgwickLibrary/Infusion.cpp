@@ -843,7 +843,7 @@ void testNoMag(){
 
     madAhrsSetSettings(&ahrs, &settings);
 
-    FILE *fileIn = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/sensor_data.csv", "r");
+    FILE *fileIn = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
 
     // if (!fileIn) {
     //     perror("Error opening file");
@@ -958,7 +958,7 @@ int main() {
     };
     madAhrsSetSettings(&ahrs, &settings);
 
-    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/sensor_data.csv", "r");
+    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
     if (!file1) {
         perror("Error opening file");
         return 1;
