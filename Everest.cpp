@@ -1,5 +1,20 @@
 // Asynchornous complementary filter 
 #include "everest.hpp"
+#include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
+
+// Initialize structs 
+IMUData internalIMU_1, internalIMU_2;
+
+// Initialize system state
+systemState state;
+
+// Initialize baros
+BarosData baro1, baro2, baro3, realBaro;
+
+// Initialize Madgwick filter
+
+
+
 
 // 2 IMUs report on same refresh rate
 // dont know if they are in sync
@@ -9,28 +24,28 @@ void IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
     if(whichOne == 1)
     {
         // Update IMU1
-        internalIMU1.time = imu1.time;
-        internalIMU1.gyroX = imu.gyroX;
-        internalIMU1.gyroY = imu.gyroY;
-        internalIMU1.gyroZ = imu.gyroZ;
+        internalIMU_1.time = imu1.time;
+        internalIMU_1.gyroX = imu1.gyroX;
+        internalIMU_1.gyroY = imu1.gyroY;
+        internalIMU_1.gyroZ = imu1.gyroZ;
 
-        internalIMU1.accelX = imu.accelX;
-        internalIMU1.accelY = imu.accelY;
-        internalIMU1.accelZ = imu.accelZ;  
+        internalIMU_1.accelX = imu1.accelX;
+        internalIMU_1.accelY = imu1.accelY;
+        internalIMU_1.accelZ = imu1.accelZ;  
 
     }
     else
     {
         // Update IMU2
-        internalIMU2.time = imu2.time;
+        internalIMU_2.time = imu2.time;
 
-        internalIMU2.gyroX = imu2.gyroX;
-        internalIMU2.gyroY = imu2.gyroY;
-        internalIMU2.gyroZ = imu2.gyroZ;
+        internalIMU_2.gyroX = imu2.gyroX;
+        internalIMU_2.gyroY = imu2.gyroY;
+        internalIMU_2.gyroZ = imu2.gyroZ;
 
-        internalIMU2.accelX = imu2.accelX;
-        internalIMU2.accelY = imu2.accelY;
-        internalIMU2.accelZ = imu2.accelZ;
+        internalIMU_2.accelX = imu2.accelX;
+        internalIMU_2.accelY = imu2.accelY;
+        internalIMU_2.accelZ = imu2.accelZ;
 
     }
 
@@ -42,21 +57,19 @@ void IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
     // #define Q ahrs->quaternion.element
     #define averageIMU state.avgIMU
 
-    averageIMU.gyroX = (internalIMU1.gyroX + internalIMU2.gyroX) / 2.0;
-    averageIMU.gyroY = (internalIMU1.gyroY + internalIMU2.gyroY) / 2.0;
-    averageIMU.gyroZ = (internalIMU1.gyroZ + internalIMU2.gyroZ) / 2.0;
+    averageIMU.gyroX = (internalIMU_1.gyroX + internalIMU_2.gyroX) / 2.0;
+    averageIMU.gyroY = (internalIMU_1.gyroY + internalIMU_2.gyroY) / 2.0;
+    averageIMU.gyroZ = (internalIMU_1.gyroZ + internalIMU_2.gyroZ) / 2.0;
 
-    averageIMU.accelX = (internalIMU1.accelX + internalIMU2.accelX) / 2.0;
-    averageIMU.accelY = (internalIMU1.accelY + internalIMU2.accelY) / 2.0;
-    averageIMU.accelZ = (internalIMU1.accelZ + internalIMU2.accelZ) / 2.0;
+    averageIMU.accelX = (internalIMU_1.accelX + internalIMU_2.accelX) / 2.0;
+    averageIMU.accelY = (internalIMU_1.accelY + internalIMU_2.accelY) / 2.0;
+    averageIMU.accelZ = (internalIMU_1.accelZ + internalIMU_2.accelZ) / 2.0;
 
-
-    // Calculate confidence values
-
-
+    #undef averageIMU
 
     // feed to Madgwick
-
+    MadgwickAHRSupdateIMU(ahrs, averageIMU.gyroX, averageIMU.gyroY, 
+    averageIMU.gyroZ, averageIMU.accelX, averageIMU.accelY, averageIMU.accelZ);
     
 
 }
@@ -66,15 +79,6 @@ void IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
 */
 int main()
 {
-    // Initialize structs 
-    IMUData internalIMU_1, internalIMU_2;
-
-    // Initialize system state
-    systemState state;
-
-    // Initialize baros
-    BarosData baro1, baro2, baro3, realBaro;
-
     // Initially we trust systems equally
     state.confidence_IMU = 1/3.0;
     state.confidence_Baros = 1/3.0;
