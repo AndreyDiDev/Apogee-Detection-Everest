@@ -789,9 +789,13 @@ void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate)
 
 madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
 
-madAhrs getMadAhrs(Infusion infusion) {return infusion.madAHRS;};
+madAhrs* getMadAhrs(const Infusion *const infusion) {return &infusion.madAHRS;};
 
-madOffset getOffset(Infusion infusion) {return infusion.offset;};
+madOffset* getOffset(const Infusion *const infusion) {return &infusion.offset;};
+
+madQuaternion* getQuaternion(const Infusion *const infusion) {return &infusion.quaternion;};
+
+madEuler getEuler(const Infusion *const infusion) {return madQuaternionToEuler((getQuaternion(infusion));};
 
 // The End
 // Class
@@ -811,9 +815,12 @@ class Infusion {
         void setHeading(float heading);
         madAhrs madAHRS;
         madOffset offset;
+        madQuaternion quaternion;
 
         madAhrs getMadAhrs(Infusion infusion);
         madOffset getOffset(Infusion infusion);
+        madQuaternion getQuaternion(Infusion infusion);
+        madEuler getEuler(Infusion infusion);
 
     private:
         madAhrsSettings settings;

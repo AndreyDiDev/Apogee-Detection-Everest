@@ -26,19 +26,33 @@ void MadgwickSetup(Everest everest)
 
     madOffsetInitialise(&offset, SAMPLE_RATE);
     madAhrsInitialise(&ahrs);
+
+        // Set AHRS algorithm settings
+    const madAhrsSettings settings = {
+            .convention = EarthConventionNed,
+            .gain = 0.5f,
+            .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
+            .accelerationRejection = 10.0f,
+            .magneticRejection = 10.0f,
+            .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
+    };
+
+    madAhrsSetSettings(&ahrs, &settings);
 }
 
 void MadgwickWrapper(SensorDataNoMag data, Infusion infusion){
-#define ahrs infusion->getMadAhrs(infusion)
+// #define ahrs infusion->getMadAhrs(infusion)
 
+    madAhrs *ahrs = infusion.getMadAhrs(infusion);
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
+    madEuler euler = infusion.getEuler(infusion);
     madVector earth = madAhrsGetEarthAcceleration(ahrs);
 
     // Update gyroscope offset correction algorithm
+    madOffset offset = infusion.getOffset(infusion);
     gyroscope = madOffsetUpdate(&offset, gyroscope);
 
     // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
@@ -56,7 +70,10 @@ void MadgwickWrapper(SensorDataNoMag data, Infusion infusion){
     // Update gyroscope AHRS algorithm
     madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
 
-#undef ahrs
+// #undef ahrs
+
+    // return accelerationZ
+    // or run numerical integration on accelerationZ
 }
 
 // 2 IMUs report on same refresh rate
@@ -128,6 +145,8 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
     this->realBaro.time = realBaro.time;
     this->realBaro.pressure = realBaro.pressure;
 
+    // Double Derivation of Baros for velocity?
+
 }
 
 /**
@@ -138,6 +157,10 @@ int main()
     // Instantiate Everest
     Everest everest = getEverest();
 
+    // Setup Madgwick
+    // Attach Madgwick to Everest
+    MadgwickSetup(everest);
+
     // test purposes
     SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -145,9 +168,5 @@ int main()
     everest.IMU_Update(imu1, imu2, 1);
     everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
 
-    // Attach Madgwick to Everest
-    MadgwickSetup(everest);
-
-    // printf()
     return 0;
 }
