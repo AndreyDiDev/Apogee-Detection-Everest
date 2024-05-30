@@ -21,11 +21,11 @@ void MadgwickSetup(Everest everest)
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
     // Initialise algorithms
-    madOffset offset = infusion.getOffset(infusion);
-    madAhrs ahrs = infusion.getMadAhrs(infusion);
+    madOffset offset = infusion.getOffset();
+    madAhrs *ahrs = infusion.getMadAhrs();
 
     madOffsetInitialise(&offset, SAMPLE_RATE);
-    madAhrsInitialise(&ahrs);
+    madAhrsInitialise(ahrs);
 
         // Set AHRS algorithm settings
     const madAhrsSettings settings = {
@@ -37,10 +37,10 @@ void MadgwickSetup(Everest everest)
             .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
     };
 
-    madAhrsSetSettings(&ahrs, &settings);
+    madAhrsSetSettings(ahrs, &settings);
 }
 
-void MadgwickWrapper(SensorDataNoMag data, Infusion infusion){
+void MadgwickWrapper(SensorDataNoMag data, Infusion *infusion){
 // #define ahrs infusion->getMadAhrs(infusion)
 
     madAhrs *ahrs = infusion.getMadAhrs(infusion);
@@ -48,11 +48,11 @@ void MadgwickWrapper(SensorDataNoMag data, Infusion infusion){
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    madEuler euler = infusion.getEuler(infusion);
+    madEuler euler = getEuler(ahrs);
     madVector earth = madAhrsGetEarthAcceleration(ahrs);
 
     // Update gyroscope offset correction algorithm
-    madOffset offset = infusion.getOffset(infusion);
+    madOffset offset = getOffset(infusion);
     gyroscope = madOffsetUpdate(&offset, gyroscope);
 
     // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
@@ -127,7 +127,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     #undef averageIMU
 
     // fed to Madgwick
-    MadgwickWrapper(state.avgIMU, madgwick);
+    MadgwickWrapper(state.avgIMU, ahrs);
 }
 
 void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro)

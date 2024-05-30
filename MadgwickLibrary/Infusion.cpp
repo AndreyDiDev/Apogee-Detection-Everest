@@ -744,7 +744,7 @@ void testNoMagInternal(madOffset offset,
         const double timestamp = data.time;
         madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
         madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
-        madVector magnetometer = {data.magX, data.magY, data.magZ}; // replace this with actual magnetometer data in arbitrary units
+        // madVector magnetometer = {data.magX, data.magY, data.magZ}; // replace this with actual magnetometer data in arbitrary units
 
         madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
         madVector earth = madAhrsGetEarthAcceleration(ahrs);

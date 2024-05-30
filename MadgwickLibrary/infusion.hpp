@@ -789,13 +789,11 @@ void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate)
 
 madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
 
-madAhrs* getMadAhrs(const Infusion *const infusion) {return &infusion.madAHRS;};
+// madAhrs* getMadAhrs(const Infusion *const infusion) {return this->madAHRS;};
 
-madOffset* getOffset(const Infusion *const infusion) {return &infusion.offset;};
+// madOffset* getOffset(const Infusion *const infusion) {return &infusion.offset;};
 
-madQuaternion* getQuaternion(const Infusion *const infusion) {return &infusion.quaternion;};
-
-madEuler getEuler(const Infusion *const infusion) {return madQuaternionToEuler((getQuaternion(infusion));};
+// madQuaternion* getQuaternion(const Infusion *const infusion) {return &infusion.quaternion;};
 
 // The End
 // Class
@@ -817,10 +815,18 @@ class Infusion {
         madOffset offset;
         madQuaternion quaternion;
 
-        madAhrs getMadAhrs(Infusion infusion);
-        madOffset getOffset(Infusion infusion);
-        madQuaternion getQuaternion(Infusion infusion);
-        madEuler getEuler(Infusion infusion);
+        madAhrs* getMadAhrs() {return &madAHRS;};
+
+        madOffset getOffset() {return offset;};
+
+        // madQuaternion getQuaternion(Infusion infusion);
+        madQuaternion madAhrsGetQuaternion(const madAhrs *const ahrs);
+
+        madEuler getEuler(const madAhrs *const ahrs);
+
+        madVector madAhrsGetEarthAcceleration(const madAhrs *const ahrs);
+
+        madQuaternion madAhrsGetQuaternion(const madAhrs *const ahrs);
 
     private:
         madAhrsSettings settings;
@@ -852,3 +858,5 @@ class Infusion {
 
 //     return Infusion();
 // }
+
+madEuler getEuler(const madAhrs *const ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
