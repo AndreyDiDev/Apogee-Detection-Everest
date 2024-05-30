@@ -22,17 +22,17 @@ typedef union {
 
     bool finalApogeeDetected;
 
-    IMUData avgIMU;
+    SensorDataNoMag avgIMU;
 } systemState;
 
 /**
  * @brief Keeps the data from the IMU sensor #1
 */
-typedef struct{
-    float time;
-    float gyroX, gyroY, gyroZ;
-    float accelX, accelY, accelZ;
-} IMUData;
+// typedef struct{
+//     float time;
+//     float gyroX, gyroY, gyroZ;
+//     float accelX, accelY, accelZ;
+// } IMUData;
 
 typedef struct{
     float time;
@@ -44,11 +44,11 @@ class Everest{
         Everest();
         ~Everest();
 
-        void IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne);
+        void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, int whichOne);
 
     private:
-        IMUData internalIMU_1;
-        IMUData internalIMU_2;
+        SensorDataNoMag internalIMU_1;
+        SensorDataNoMag internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
 
@@ -74,9 +74,15 @@ void initialize(systemState& state){
     state.finalApogeeDetected = false;
 }
 
-Infusion getMadgwick(){
+Infusion Everest::Everest(){
+    initialize(state);
+    Infusion madgwick = Infusion();
     return madgwick;
 }
+
+// Infusion getMadgwick(){
+//     return madgwick;
+// }
 
 
 

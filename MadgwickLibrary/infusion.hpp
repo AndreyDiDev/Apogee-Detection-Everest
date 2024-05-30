@@ -829,3 +829,8 @@ private:
     madVector feedback(const madVector& sensor, const madVector& reference) const;
     int clamp(int value, int min, int max) const;
 };
+
+Infusion::Infusion() {
+    initialise();
+    return this;
+}
