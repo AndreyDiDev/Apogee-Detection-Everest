@@ -3,8 +3,7 @@
  * @file everest.hpp
  * @brief 
 */
-
-
+#include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
 
 /**
@@ -46,6 +45,12 @@ class Everest{
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, int whichOne);
 
+        Infusion Initialize();
+
+        Everest getEverest();
+
+        void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
+
     private:
         SensorDataNoMag internalIMU_1;
         SensorDataNoMag internalIMU_2;
@@ -74,10 +79,17 @@ void initialize(systemState& state){
     state.finalApogeeDetected = false;
 }
 
-Infusion Everest::Everest(){
+Infusion Everest::Initialize(){
+
     initialize(state);
     Infusion madgwick = Infusion();
+
     return madgwick;
+}
+
+Everest getEverest(){
+    Everest everest = Everest();
+    return everest;
 }
 
 // Infusion getMadgwick(){

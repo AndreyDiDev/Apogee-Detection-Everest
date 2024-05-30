@@ -1,11 +1,12 @@
 // Asynchornous complementary filter 
 #include "everest.hpp"
-#include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
 
-void MadgwickSetup()
+void MadgwickSetup(Everest everest)
 {
+    // Attaches Madgwick to Everest
+    Infusion infusion = everest.Initialize();
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     const madVector gyroscopeSensitivity = {1.0f, 1.0f, 1.0f};
@@ -15,25 +16,47 @@ void MadgwickSetup()
     const madVector accelerometerOffset = {0.0f, 0.0f, 0.0f};
     const madMatrix softIronMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-    madAhrsInternalStates internal;
-    madAhrsFlags flags;
+    madAhrsInternalStates internal = infusion.getInternalStates();
+    madAhrsFlags flags = infusion.getFlags();
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
     // Initialise algorithms
-    madOffset offset;
-    madAhrs ahrs;
+    madOffset offset = infusion.getOffset(infusion);
+    madAhrs ahrs = infusion.getMadAhrs(infusion);
 
     madOffsetInitialise(&offset, SAMPLE_RATE);
     madAhrsInitialise(&ahrs);
 }
 
-void MadgwickWrapper(SensorDataNoMag data, madAhrs ahrs){
+void MadgwickWrapper(SensorDataNoMag data, Infusion infusion){
+#define ahrs infusion->getMadAhrs(infusion)
+
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
     madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
     madVector earth = madAhrsGetEarthAcceleration(ahrs);
+
+    // Update gyroscope offset correction algorithm
+    gyroscope = madOffsetUpdate(&offset, gyroscope);
+
+    // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
+    //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
+
+    // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
+    //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
+    //        earth.axis.x, earth.axis.y, earth.axis.z);
+
+    // Calculate delta time (in seconds) to account for gyroscope sample clock error
+    static float previousTimestamp;
+    float deltaTime = (float) (timestamp - previousTimestamp);
+    previousTimestamp = timestamp;
+
+    // Update gyroscope AHRS algorithm
+    madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+
+#undef ahrs
 }
 
 // 2 IMUs report on same refresh rate
@@ -44,28 +67,28 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     if(whichOne == 1)
     {
         // Update IMU1
-        internalIMU_1.time = imu1.time;
-        internalIMU_1.gyroX = imu1.gyroX;
-        internalIMU_1.gyroY = imu1.gyroY;
-        internalIMU_1.gyroZ = imu1.gyroZ;
+        this->internalIMU_1.time = imu1.time;
+        this->internalIMU_1.gyroX = imu1.gyroX;
+        this->internalIMU_1.gyroZ = imu1.gyroZ;
+        this->internalIMU_1.gyroY = imu1.gyroY;
 
-        internalIMU_1.accelX = imu1.accelX;
-        internalIMU_1.accelY = imu1.accelY;
-        internalIMU_1.accelZ = imu1.accelZ;  
+        this->internalIMU_1.accelX = imu1.accelX;
+        this->internalIMU_1.accelY = imu1.accelY;
+        this->internalIMU_1.accelZ = imu1.accelZ;  
 
     }
     else
     {
         // Update IMU2
-        internalIMU_2.time = imu2.time;
+        this->internalIMU_2.time = imu2.time;
 
-        internalIMU_2.gyroX = imu2.gyroX;
-        internalIMU_2.gyroY = imu2.gyroY;
-        internalIMU_2.gyroZ = imu2.gyroZ;
+        this->internalIMU_2.gyroX = imu2.gyroX;
+        this->internalIMU_2.gyroY = imu2.gyroY;
+        this->internalIMU_2.gyroZ = imu2.gyroZ;
 
-        internalIMU_2.accelX = imu2.accelX;
-        internalIMU_2.accelY = imu2.accelY;
-        internalIMU_2.accelZ = imu2.accelZ;
+        this->internalIMU_2.accelX = imu2.accelX;
+        this->internalIMU_2.accelY = imu2.accelY;
+        this->internalIMU_2.accelZ = imu2.accelZ;
 
     }
 
@@ -74,7 +97,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     // Wait for both IMUs to update
 
     // Calculate average of IMU parameters
-    #define averageIMU state.avgIMU
+    #define averageIMU this->state.avgIMU
 
     averageIMU.gyroX = (internalIMU_1.gyroX + internalIMU_2.gyroX) / 2.0;
     averageIMU.gyroY = (internalIMU_1.gyroY + internalIMU_2.gyroY) / 2.0;
@@ -86,10 +109,24 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 
     #undef averageIMU
 
-    // feed to Madgwick
-    // MadgwickAHRSupdateIMU(ahrs, averageIMU.gyroX, averageIMU.gyroY, 
-    // averageIMU.gyroZ, averageIMU.accelX, averageIMU.accelY, averageIMU.accelZ);
-    
+    // fed to Madgwick
+    MadgwickWrapper(state.avgIMU, madgwick);
+}
+
+void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro)
+{
+    // Update Baros
+    this->baro1.time = baro1.time;
+    this->baro1.pressure = baro1.pressure;
+
+    this->baro2.time = baro2.time;
+    this->baro2.pressure = baro2.pressure;
+
+    this->baro3.time = baro3.time;
+    this->baro3.pressure = baro3.pressure;
+
+    this->realBaro.time = realBaro.time;
+    this->realBaro.pressure = realBaro.pressure;
 
 }
 
@@ -98,12 +135,18 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 */
 int main()
 {
-    Everest everest = Everest();
+    // Instantiate Everest
+    Everest everest = getEverest();
 
+    // test purposes
     SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     everest.IMU_Update(imu1, imu2, 1);
+    everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
+
+    // Attach Madgwick to Everest
+    MadgwickSetup(everest);
 
     // printf()
     return 0;

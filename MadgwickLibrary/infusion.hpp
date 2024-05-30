@@ -159,7 +159,6 @@ typedef struct {
     double time;
     float gyroX, gyroY, gyroZ;
     float accelX, accelY, accelZ;
-    float magX, magY, magZ;
 }SensorDataNoMag;
 
 /**
@@ -790,47 +789,59 @@ void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate)
 
 madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
 
+madAhrs getMadAhrs(Infusion infusion) {return infusion.madAHRS;};
+
+madOffset getOffset(Infusion infusion) {return infusion.offset;};
+
 // The End
 // Class
 class Infusion {
-public:
-    Infusion();
-    ~Infusion();
-    void initialise();
-    void reset();
-    void setSettings(const madAhrsSettings& settings);
-    void update(const madVector& gyroscope, const madVector& accelerometer, const madVector& magnetometer, float deltaTime);
-    void updateNoMagnetometer(const madVector& gyroscope, const madVector& accelerometer, float deltaTime);
-    void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
-    void setQuaternion(const madQuaternion& quaternion);
-    madAhrsInternalStates getInternalStates() const;
-    madAhrsFlags getFlags() const;
-    void setHeading(float heading);
+    public:
+        Infusion();
+        ~Infusion();
+        void initialise();
+        void reset();
+        void setSettings(const madAhrsSettings& settings);
+        void update(const madVector& gyroscope, const madVector& accelerometer, const madVector& magnetometer, float deltaTime);
+        void updateNoMagnetometer(const madVector& gyroscope, const madVector& accelerometer, float deltaTime);
+        void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
+        void setQuaternion(const madQuaternion& quaternion);
+        madAhrsInternalStates getInternalStates() const;
+        madAhrsFlags getFlags() const;
+        void setHeading(float heading);
+        madAhrs madAHRS;
+        madOffset offset;
 
-private:
-    madAhrsSettings settings;
-    madQuaternion quaternion;
-    madVector accelerometer;
-    bool initialising;
-    float rampedGain;
-    float rampedGainStep;
-    bool angularRateRecovery;
-    madVector halfAccelerometerFeedback;
-    madVector halfMagnetometerFeedback;
-    bool accelerometerIgnored;
-    int accelerationRecoveryTrigger;
-    int accelerationRecoveryTimeout;
-    bool magnetometerIgnored;
-    int magneticRecoveryTrigger;
-    int magneticRecoveryTimeout;
+        madAhrs getMadAhrs(Infusion infusion);
+        madOffset getOffset(Infusion infusion);
 
-    madVector halfGravity() const;
-    madVector halfMagnetic() const;
-    madVector feedback(const madVector& sensor, const madVector& reference) const;
-    int clamp(int value, int min, int max) const;
+    private:
+        madAhrsSettings settings;
+        madQuaternion quaternion;
+        madVector accelerometer;
+        bool initialising;
+        float rampedGain;
+        float rampedGainStep;
+        bool angularRateRecovery;
+        madVector halfAccelerometerFeedback;
+        madVector halfMagnetometerFeedback;
+        bool accelerometerIgnored;
+        int accelerationRecoveryTrigger;
+        int accelerationRecoveryTimeout;
+        bool magnetometerIgnored;
+        int magneticRecoveryTrigger;
+        int magneticRecoveryTimeout;
+
+        madVector halfGravity() const;
+        madVector halfMagnetic() const;
+        madVector feedback(const madVector& sensor, const madVector& reference) const;
+        int clamp(int value, int min, int max) const;
+
+    protected:
 };
 
-Infusion::Infusion() {
-    initialise();
-    return this;
-}
+// Infusion::Infusion() {
+//     initialise();
+
+//     return Infusion();
+// }
