@@ -2,24 +2,15 @@
 #include "everest.hpp"
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 
-// Initialize structs 
-IMUData internalIMU_1, internalIMU_2;
 
-// Initialize system state
-systemState state;
-
-// Initialize baros
-BarosData baro1, baro2, baro3, realBaro;
 
 // Initialize Madgwick filter
-
-
 
 
 // 2 IMUs report on same refresh rate
 // dont know if they are in sync
 // Asynchronous complementary filter
-void IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
+void Everest::IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne)
 {
     if(whichOne == 1)
     {

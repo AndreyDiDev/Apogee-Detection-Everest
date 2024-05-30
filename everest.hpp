@@ -39,4 +39,22 @@ typedef struct{
     float pressure;
 } BarosData;
 
+class Everest{
+    public:
+        Everest();
+        ~Everest();
+
+        void IMU_Update(const IMUData& imu1, const IMUData& imu2, int whichOne);
+
+    private:
+        IMUData internalIMU_1;
+        IMUData internalIMU_2;
+
+        BarosData baro1, baro2, baro3, realBaro;
+
+        // Initialize system state
+        systemState state; 
+};
+
+
 
