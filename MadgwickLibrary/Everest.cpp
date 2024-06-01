@@ -215,6 +215,7 @@ systemState Everest::dynamite(){
 }
 
 // new gain = 1 / abs(estimate - measurement)
+// TO DO : put the derivative of the altitude in the recalculateGain function
 void Everest::recalculateGain(double estimate){
     this->state.gain_IMU = 1/abs(estimate-this->state.avgIMU.altitude); // change to previous trusts
     this->state.gain_Baro1 = 1/abs(estimate-this->baro1.altitude);
