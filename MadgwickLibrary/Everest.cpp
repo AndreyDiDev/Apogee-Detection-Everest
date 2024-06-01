@@ -147,10 +147,16 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
 /**
  * @brief External update function, calls internal ones
 */
-void Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
+double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
     everest.IMU_Update(imu1, imu2);
     everest.Baro_Update(baro1, baro2, baro3, realBaro);
-    everest.dynamite();
+    double finalAlt = everest.dynamite();
+
+    // Update altitude list
+    this->AltitudeList.secondLastAltitude = this->AltitudeList.lastAltitude;
+    this->AltitudeList.lastAltitude = finalAlt;
+
+    return finalAlt;
 }
 
 double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
@@ -176,7 +182,7 @@ double convertToAltitude(double pressure){
 /**
  * @brief Multi-system trust algorithm. Assumes measurements are updated
 */
-systemState Everest::dynamite(){
+double Everest::dynamite(){
     double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU);
     this->state.avgIMU.altitude = IMUAltitude;
 
@@ -221,6 +227,8 @@ systemState Everest::dynamite(){
 
     recalculateGain(normalised_Altitude);
 
+    return normalised_Altitude;
+
 }
 
 // new gain = 1 / abs(estimate - measurement)
@@ -228,6 +236,7 @@ systemState Everest::dynamite(){
 // do first derivative estimated altitude and times it by time then 1/(new - old)
 void Everest::recalculateGain(double estimate){
     double gainedEstimate = calculateGainFactor(estimate);
+    gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
     this->state.gain_IMU = 1/abs(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
     this->state.gain_Baro1 = 1/abs(gainedEstimate-this->baro1.altitude);
@@ -237,7 +246,7 @@ void Everest::recalculateGain(double estimate){
 }
 
 double Everest::calculateGainFactor(double estimate){
-    double velocityZ = (everest.AltitudeList->secondLastAltitude - 4* lastEstimatedAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
+    double velocityZ = (this->AltitudeList.secondLastAltitude - 4* this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
     return velocityZ;
 }
 
@@ -250,29 +259,22 @@ double getFinalAltitude(){
 */
 int main()
 {
-    // Instantiate Everest
-    // Everest everest = getEverest();
-
     // Setup Madgwick
     // Attach Madgwick to Everest
     MadgwickSetup();
 
     // test purposes
-    SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    SensorDataNoMag imu1 = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0};
+    SensorDataNoMag imu2 = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    BarosData baro1 = {100, 100.0};
-    BarosData baro2 = {100, 100.0};
-    BarosData baro3 = {100, 100.0};
-    BarosData realBaro = {100, 100.0};
+    BarosData baro1 = {100, 100.0, 0};
+    BarosData baro2 = {100, 100.0, 0};
+    BarosData baro3 = {100, 100.0, 0};
+    BarosData realBaro = {100, 100.0, 0};
 
+    // everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
 
-    // everest.IMU_Update(imu1, imu2);
-    // everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
-
-    everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
-
-    printf("Altitude: %f\n", getFinalAltitude());
+    printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
 
     return 0;
 }

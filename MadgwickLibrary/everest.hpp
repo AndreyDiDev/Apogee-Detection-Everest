@@ -71,7 +71,7 @@ class Everest{
 
         void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
 
-        systemState dynamite();
+        double dynamite();
 
         kinematics Kinematics;
 
@@ -83,9 +83,9 @@ class Everest{
 
         void recalculateGain(double estimate);
 
-        double Everest::calculateGainFactor(double estimate);
+        double calculateGainFactor(double estimate);
 
-        void ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+        double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;

@@ -828,7 +828,6 @@ class Infusion {
 
         madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
 
-
         madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
 
         void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
