@@ -123,7 +123,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 
     #undef averageIMU
 
-    // fed to Madgwick
+    // feed to Madgwick
     MadgwickWrapper(state.avgIMU);
 }
 
@@ -142,6 +142,15 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
     this->realBaro.time = realBaro.time;
     this->realBaro.pressure = realBaro.pressure;
 
+}
+
+/**
+ * @brief External update function, calls internal ones
+*/
+void Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
+    everest.IMU_Update(imu1, imu2);
+    everest.Baro_Update(baro1, baro2, baro3, realBaro);
+    everest.dynamite();
 }
 
 double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
@@ -241,11 +250,19 @@ int main()
     MadgwickSetup();
 
     // test purposes
-    SensorDataNoMag imu1 = {100, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0};
-    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0};
+    SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    everest.IMU_Update(imu1, imu2);
-    everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
+    BarosData baro1 = {100, 100.0};
+    BarosData baro2 = {100, 100.0};
+    BarosData baro3 = {100, 100.0};
+    BarosData realBaro = {100, 100.0};
+
+
+    // everest.IMU_Update(imu1, imu2);
+    // everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
+
+    everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
 
     printf("Altitude: %f\n", getFinalAltitude());
 

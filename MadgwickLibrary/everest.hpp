@@ -76,6 +76,8 @@ class Everest{
 
         void recalculateGain(double estimate);
 
+        void ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
