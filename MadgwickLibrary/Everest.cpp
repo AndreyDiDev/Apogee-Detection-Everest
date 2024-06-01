@@ -169,11 +169,19 @@ double convertToAltitude(double pressure){
 */
 systemState Everest::dynamite(){
     double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU);
+    this->state.avgIMU.altitude = IMUAltitude;
 
     double BaroAltitude1 = convertToAltitude(everest.baro1.pressure);
+    this->baro1.altitude = BaroAltitude1;
+
     double BaroAltitude2 = convertToAltitude(everest.baro2.pressure);
+    this->baro2.altitude = BaroAltitude2;
+
     double BaroAltitude3 = convertToAltitude(everest.baro3.pressure);
+    this->baro3.altitude = BaroAltitude3;
+
     double RealBaroAltitude = convertToAltitude(everest.realBaro.pressure);
+    this->realBaro.altitude = RealBaroAltitude;
 
     // distributing measurement
     double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/everest.state.std_IMU;
@@ -202,6 +210,17 @@ systemState Everest::dynamite(){
     // update altitude
     Kinematics.initialAlt = Kinematics.finalAltitude;
 
+    recalculateGain(normalised_Altitude);
+
+}
+
+// new gain = 1 / abs(estimate - measurement)
+void Everest::recalculateGain(double estimate){
+    this->state.gain_IMU = 1/abs(estimate-this->state.avgIMU.altitude); // change to previous trusts
+    this->state.gain_Baro1 = 1/abs(estimate-this->baro1.altitude);
+    this->state.gain_Baro2 = 1/abs(estimate-this->baro2.altitude);
+    this->state.gain_Baro3 = 1/abs(estimate-this->baro3.altitude);
+    this->state.gain_Real_Baro = 1/abs(estimate-this->realBaro.altitude);
 }
 
 double getFinalAltitude(){
@@ -221,8 +240,8 @@ int main()
     MadgwickSetup();
 
     // test purposes
-    SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    SensorDataNoMag imu1 = {100, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0};
+    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0};
 
     everest.IMU_Update(imu1, imu2);
     everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});

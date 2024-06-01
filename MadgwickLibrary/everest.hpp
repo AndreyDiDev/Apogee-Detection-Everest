@@ -47,6 +47,7 @@ typedef union {
 typedef struct{
     float time;
     float pressure;
+    float altitude;
 } BarosData;
 
 class Everest{
@@ -72,6 +73,8 @@ class Everest{
         kinematics* getKinematics();
 
         Infusion madgwick;
+
+        void Everest::recalculateGain(double estimate);
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;

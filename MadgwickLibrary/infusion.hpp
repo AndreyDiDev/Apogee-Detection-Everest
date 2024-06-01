@@ -160,6 +160,7 @@ typedef struct {
     double time;
     float gyroX, gyroY, gyroZ;
     float accelX, accelY, accelZ;
+    float altitude;
 }SensorDataNoMag;
 
 /**
