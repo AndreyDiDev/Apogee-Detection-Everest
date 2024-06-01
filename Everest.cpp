@@ -142,8 +142,6 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
     this->realBaro.time = realBaro.time;
     this->realBaro.pressure = realBaro.pressure;
 
-    // Double Derivation of Baros for velocity?
-
 }
 
 double deriveForAltitudeIMU(SensorDataNoMag avgIMU, kinematics Kinematics){
@@ -160,19 +158,16 @@ double deriveForAltitudeIMU(SensorDataNoMag avgIMU, kinematics Kinematics){
 
 double convertToAltitude(double pressure){
     // Convert pressure to altitude
-    return 0.0;
+    // Convert from 100*millibars to m
+    double seaLevelPressure = 1013.25; // sea level pressure in hPa
+    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284));
+    return altitude;
 }
 
 /**
  * @brief Multi-system trust algorithm. Assumes measurements are updated
 */
 systemState Everest::dynamite(){
-    // maybe move to kinematicsStruct
-    double initialVelocity = 0.0;
-    double initialAltitude = 0.0;
-
-    kinematics Kinematics = {initialVelocity, initialAltitude};
-
     double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU, Kinematics);
 
     double BaroAltitude1 = convertToAltitude(everest.baro1.pressure);
@@ -198,8 +193,13 @@ systemState Everest::dynamite(){
 
     double normalised_Altitude = (distributed_Sum/sumSTD)/sumGain;
 
+    // Update Kinematics
     Kinematics.finalAltitude = normalised_Altitude;
 
+    // update velocity
+    Kinematics.initialVelo = (Kinematics.finalAltitude - Kinematics.initialAlt)/(1.0/SAMPLE_RATE);
+
+    // update altitude
     Kinematics.initialAlt = Kinematics.finalAltitude;
 
 }
