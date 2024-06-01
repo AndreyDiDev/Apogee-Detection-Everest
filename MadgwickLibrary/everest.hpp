@@ -100,18 +100,21 @@ class Everest{
 
 void Everest::initialize(systemState& state){
     // Initially we trust systems equally
-    state.gain_IMU = 1/3.0; // change to actual initial trusts 
-    state.gain_Baro1 = 1/3.0;
-    state.gain_Baro2 = 1/3.0;
-    state.gain_Baro3 = 1/3.0;
-    state.gain_Real_Baro = 1/3.0;
+    state.gain_IMU = 4/10.0; // change to actual initial trusts 
+    state.gain_Baro1 = 1/10.0;
+    state.gain_Baro2 = 1/10.0;
+    state.gain_Baro3 = 1/10.0;
+    state.gain_Real_Baro = 3/10.0;
 
-    state.std_IMU = 0.0;
-    state.std_Baro1 = 0.0;
-    state.std_Baro2 = 0.0;
-    state.std_Baro3 = 0.0;
-    state.std_Real_Baro = 0.0;
+    state.std_IMU = 0.1;
+    state.std_Baro1 = 0.1;
+    state.std_Baro2 = 0.1;
+    state.std_Baro3 = 0.1;
+    state.std_Real_Baro = 0.1;
 
+    Kinematics.initialVelo = 0;
+    Kinematics.initialAlt = 0;
+    Kinematics.finalAltitude = 0;
 }
 
 Infusion* Everest::Initialize(){

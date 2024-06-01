@@ -238,11 +238,11 @@ void Everest::recalculateGain(double estimate){
     double gainedEstimate = calculateGainFactor(estimate);
     gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
-    this->state.gain_IMU = 1/abs(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
-    this->state.gain_Baro1 = 1/abs(gainedEstimate-this->baro1.altitude);
-    this->state.gain_Baro2 = 1/abs(gainedEstimate-this->baro2.altitude);
-    this->state.gain_Baro3 = 1/abs(gainedEstimate-this->baro3.altitude);
-    this->state.gain_Real_Baro = 1/abs(gainedEstimate-this->realBaro.altitude);
+    this->state.gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
+    this->state.gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
+    this->state.gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
+    this->state.gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
+    this->state.gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
 }
 
 double Everest::calculateGainFactor(double estimate){
