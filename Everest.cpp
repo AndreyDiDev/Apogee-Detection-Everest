@@ -43,16 +43,17 @@ void MadgwickSetup(Everest everest)
 void MadgwickWrapper(SensorDataNoMag data, Infusion *infusion){
 // #define ahrs infusion->getMadAhrs(infusion)
 
-    madAhrs *ahrs = infusion.getMadAhrs(infusion);
+    madAhrs *ahrs = infusion->getMadAhrs();
+    // Infusion infusion = infusion;
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    madEuler euler = getEuler(ahrs);
-    madVector earth = madAhrsGetEarthAcceleration(ahrs);
+    madEuler euler = infusion->getEuler(ahrs);
+    madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
 
     // Update gyroscope offset correction algorithm
-    madOffset offset = getOffset(infusion);
+    madOffset offset = infusion->getOffset();
     gyroscope = madOffsetUpdate(&offset, gyroscope);
 
     // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
@@ -68,7 +69,7 @@ void MadgwickWrapper(SensorDataNoMag data, Infusion *infusion){
     previousTimestamp = timestamp;
 
     // Update gyroscope AHRS algorithm
-    madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
 
 // #undef ahrs
 

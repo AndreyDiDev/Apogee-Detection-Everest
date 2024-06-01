@@ -805,7 +805,7 @@ class Infusion {
         void reset();
         void setSettings(const madAhrsSettings& settings);
         void update(const madVector& gyroscope, const madVector& accelerometer, const madVector& magnetometer, float deltaTime);
-        void updateNoMagnetometer(const madVector& gyroscope, const madVector& accelerometer, float deltaTime);
+        void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
         void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
         void setQuaternion(const madQuaternion& quaternion);
         madAhrsInternalStates getInternalStates() const;
