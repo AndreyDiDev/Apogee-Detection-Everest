@@ -6,20 +6,28 @@
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
 
+typedef struct{
+    float initialVelo;
+    float initialAlt;
+    float finalAltitude;
+} kinematics;
+
 /**
  * @brief Keeps whole system's states, including apogee detection results and confidence values 
  * for each system
 */
 typedef union {
-    bool apogeeDetected_IMU;
-    bool apogeeDetected_Baros;
-    bool apogeeDetected_Real_Baro;
+    float gain_IMU;
+    float gain_Baro1;
+    float gain_Baro2;
+    float gain_Baro3;
+    float gain_Real_Baro;
 
-    float confidence_IMU;
-    float confidence_Baros;
-    float confidence_Real_Baro;
-
-    bool finalApogeeDetected;
+    float std_IMU;
+    float std_Baro1;
+    float std_Baro2;
+    float std_Baro3;
+    float std_Real_Baro;
 
     SensorDataNoMag avgIMU;
 } systemState;
@@ -43,22 +51,23 @@ class Everest{
         Everest();
         ~Everest();
 
-        void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, int whichOne);
+        void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
         Infusion Initialize();
 
         Everest getEverest();
 
-        void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
-
-    private:
-        SensorDataNoMag internalIMU_1;
-        SensorDataNoMag internalIMU_2;
-
-        BarosData baro1, baro2, baro3, realBaro;
-
         // Initialize system state
         systemState state;
+
+        void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
+
+        systemState Everest::dynamite();
+
+    protected:
+        SensorDataNoMag internalIMU_1, internalIMU_2;
+
+        BarosData baro1, baro2, baro3, realBaro;
 
         // Initialize Madgwick Library
         Infusion madgwick = Infusion();
@@ -68,15 +77,9 @@ class Everest{
 
 void initialize(systemState& state){
     // Initially we trust systems equally
-    state.confidence_IMU = 1/3.0;
+    state.confidence_IMU = 1/3.0; // change to actual initial trusts 
     state.confidence_Baros = 1/3.0;
     state.confidence_Real_Baro = 1/3.0;
-
-    // Initially no apogee detected
-    state.apogeeDetected_IMU = false;
-    state.apogeeDetected_Baros = false;
-    state.apogeeDetected_Real_Baro = false;
-    state.finalApogeeDetected = false;
 }
 
 Infusion Everest::Initialize(){
@@ -92,9 +95,6 @@ Everest getEverest(){
     return everest;
 }
 
-// Infusion getMadgwick(){
-//     return madgwick;
-// }
 
 
 

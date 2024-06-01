@@ -1,12 +1,21 @@
-// Asynchornous complementary filter 
+// Altitude estimation using multiple sensors
 #include "everest.hpp"
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
 
+madAhrs *ahrs;
+Infusion infusion;
+
+Everest everest = getEverest();
+
+kinematics Kinematics = {0.0, 0.0, 0.0}; // tare to ground
+
 void MadgwickSetup(Everest everest)
 {
     // Attaches Madgwick to Everest
-    Infusion infusion = everest.Initialize();
+    infusion = everest.Initialize();
+    *ahrs = infusion.getMadAhrs();
+
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     const madVector gyroscopeSensitivity = {1.0f, 1.0f, 1.0f};
@@ -22,12 +31,12 @@ void MadgwickSetup(Everest everest)
 
     // Initialise algorithms
     madOffset offset = infusion.getOffset();
-    madAhrs *ahrs = infusion.getMadAhrs();
+    // *ahrs = infusion.getMadAhrs();
 
     madOffsetInitialise(&offset, SAMPLE_RATE);
     madAhrsInitialise(ahrs);
 
-        // Set AHRS algorithm settings
+    // Set AHRS algorithm settings
     const madAhrsSettings settings = {
             .convention = EarthConventionNed,
             .gain = 0.5f,
@@ -40,20 +49,18 @@ void MadgwickSetup(Everest everest)
     madAhrsSetSettings(ahrs, &settings);
 }
 
-void MadgwickWrapper(SensorDataNoMag data, Infusion *infusion){
+void MadgwickWrapper(SensorDataNoMag data){
 // #define ahrs infusion->getMadAhrs(infusion)
-
-    madAhrs *ahrs = infusion->getMadAhrs();
     // Infusion infusion = infusion;
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    madEuler euler = infusion->getEuler(ahrs);
-    madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
+    madEuler euler = infusion.getEuler(ahrs);
+    madVector earth = infusion.madAhrsGetEarthAcceleration(ahrs);
 
     // Update gyroscope offset correction algorithm
-    madOffset offset = infusion->getOffset();
+    madOffset offset = infusion.getOffset();
     gyroscope = madOffsetUpdate(&offset, gyroscope);
 
     // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
@@ -69,7 +76,7 @@ void MadgwickWrapper(SensorDataNoMag data, Infusion *infusion){
     previousTimestamp = timestamp;
 
     // Update gyroscope AHRS algorithm
-    infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    infusion.madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
 
 // #undef ahrs
 
@@ -80,39 +87,28 @@ void MadgwickWrapper(SensorDataNoMag data, Infusion *infusion){
 // 2 IMUs report on same refresh rate
 // dont know if they are in sync
 // Asynchronous complementary filter
-void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, int whichOne)
+void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2)
 {
-    if(whichOne == 1)
-    {
-        // Update IMU1
-        this->internalIMU_1.time = imu1.time;
-        this->internalIMU_1.gyroX = imu1.gyroX;
-        this->internalIMU_1.gyroZ = imu1.gyroZ;
-        this->internalIMU_1.gyroY = imu1.gyroY;
+    // Update IMU1
+    this->internalIMU_1.time = imu1.time;
+    this->internalIMU_1.gyroX = imu1.gyroX;
+    this->internalIMU_1.gyroZ = imu1.gyroZ;
+    this->internalIMU_1.gyroY = imu1.gyroY;
 
-        this->internalIMU_1.accelX = imu1.accelX;
-        this->internalIMU_1.accelY = imu1.accelY;
-        this->internalIMU_1.accelZ = imu1.accelZ;  
+    this->internalIMU_1.accelX = imu1.accelX;
+    this->internalIMU_1.accelY = imu1.accelY;
+    this->internalIMU_1.accelZ = imu1.accelZ;  
 
-    }
-    else
-    {
-        // Update IMU2
-        this->internalIMU_2.time = imu2.time;
+    // Update IMU2
+    this->internalIMU_2.time = imu2.time;
 
-        this->internalIMU_2.gyroX = imu2.gyroX;
-        this->internalIMU_2.gyroY = imu2.gyroY;
-        this->internalIMU_2.gyroZ = imu2.gyroZ;
+    this->internalIMU_2.gyroX = imu2.gyroX;
+    this->internalIMU_2.gyroY = imu2.gyroY;
+    this->internalIMU_2.gyroZ = imu2.gyroZ;
 
-        this->internalIMU_2.accelX = imu2.accelX;
-        this->internalIMU_2.accelY = imu2.accelY;
-        this->internalIMU_2.accelZ = imu2.accelZ;
-
-    }
-
-    // Update system state
-
-    // Wait for both IMUs to update
+    this->internalIMU_2.accelX = imu2.accelX;
+    this->internalIMU_2.accelY = imu2.accelY;
+    this->internalIMU_2.accelZ = imu2.accelZ;
 
     // Calculate average of IMU parameters
     #define averageIMU this->state.avgIMU
@@ -128,7 +124,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     #undef averageIMU
 
     // fed to Madgwick
-    MadgwickWrapper(state.avgIMU, ahrs);
+    MadgwickWrapper(state.avgIMU);
 }
 
 void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro)
@@ -150,6 +146,64 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
 
 }
 
+double deriveForAltitudeIMU(SensorDataNoMag avgIMU, kinematics Kinematics){
+    double accelerationZ = avgIMU.accelZ;
+    double initialVelocity = Kinematics.initialVelo;
+    double initialAltitude = Kinematics.initialAlt;
+
+    // Derive altitude from IMU
+    double altitude = (double) (initialAltitude + initialVelocity * (1.0/SAMPLE_RATE) + 0.5 * accelerationZ * pow((1.0/SAMPLE_RATE), 2));
+
+    // return altitude
+    return altitude;
+}
+
+double convertToAltitude(double pressure){
+    // Convert pressure to altitude
+    return 0.0;
+}
+
+/**
+ * @brief Multi-system trust algorithm. Assumes measurements are updated
+*/
+systemState Everest::dynamite(){
+    // maybe move to kinematicsStruct
+    double initialVelocity = 0.0;
+    double initialAltitude = 0.0;
+
+    kinematics Kinematics = {initialVelocity, initialAltitude};
+
+    double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU, Kinematics);
+
+    double BaroAltitude1 = convertToAltitude(everest.baro1.pressure);
+    double BaroAltitude2 = convertToAltitude(everest.baro2.pressure);
+    double BaroAltitude3 = convertToAltitude(everest.baro3.pressure);
+    double RealBaroAltitude = convertToAltitude(everest.realBaro.pressure);
+
+    // distributing measurement
+    double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/everest.state.std_IMU;
+    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/everest.state.std_Baro1;
+    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/everest.state.std_Baro2;
+    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/everest.state.std_Baro3;
+    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/everest.state.std_Real_Baro;
+
+    double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2 
+                            + distributed_Baro_Altitude3 + distributed_RealBaro_Altitude;
+
+    double sumSTD = everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2 
+                    + everest.state.std_Baro3 + everest.state.std_Real_Baro;
+
+    double sumGain = everest.state.gain_IMU + everest.state.gain_Baro1 + everest.state.gain_Baro2 
+                    + everest.state.gain_Baro3 + everest.state.gain_Real_Baro;
+
+    double normalised_Altitude = (distributed_Sum/sumSTD)/sumGain;
+
+    Kinematics.finalAltitude = normalised_Altitude;
+
+    Kinematics.initialAlt = Kinematics.finalAltitude;
+
+}
+
 /**
  * Serves to just initialize structs 
 */
@@ -166,7 +220,7 @@ int main()
     SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    everest.IMU_Update(imu1, imu2, 1);
+    everest.IMU_Update(imu1, imu2);
     everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
 
     return 0;
