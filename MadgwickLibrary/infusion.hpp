@@ -576,8 +576,6 @@ void madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settin
 
 void madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime);
 
-void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
-
 void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float heading, const float deltaTime);
 
 void madAhrsSetQuaternion(madAhrs *const ahrs, const madQuaternion quaternion);
@@ -800,13 +798,13 @@ madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
 // Class
 class Infusion {
     public:
-        Infusion();
-        ~Infusion();
+        // Infusion();
+        // ~Infusion();
         void initialise();
         void reset();
         void setSettings(const madAhrsSettings& settings);
         void update(const madVector& gyroscope, const madVector& accelerometer, const madVector& magnetometer, float deltaTime);
-        void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
+        // void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
         void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
         void setQuaternion(const madQuaternion& quaternion);
         // madAhrsInternalStates getInternalStates() const;
@@ -825,11 +823,14 @@ class Infusion {
 
         madVector madAhrsGetEarthAcceleration(const madAhrs *ahrs);
 
-        madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
-
         madQuaternion madAhrsGetQuaternion(const madAhrs *ahrs);
 
+        madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
+
+
         madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
+
+        void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
 
     private:
         madAhrsSettings settings;

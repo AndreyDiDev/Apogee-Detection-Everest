@@ -382,7 +382,7 @@ static inline int Clamp(const int value, const int min, const int max) {
  * @param accelerometer Accelerometer measurement in g.
  * @param deltaTime Delta time in seconds.
  */
-void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime) {
+void Infusion::madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime) {
 
     // Update AHRS algorithm
     madAhrsUpdate(ahrs, gyroscope, accelerometer, VECTOR_ZERO, deltaTime);
@@ -427,7 +427,7 @@ void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope
  * @param ahrs AHRS algorithm structure.
  * @return Quaternion describing the sensor relative to the Earth.
  */
-madQuaternion madAhrsGetQuaternion(const madAhrs *const ahrs) {
+madQuaternion Infusion::madAhrsGetQuaternion(const madAhrs *const ahrs) {
     return ahrs->quaternion;
 }
 
@@ -476,7 +476,7 @@ madVector madAhrsGetLinearAcceleration(const madAhrs *const ahrs) {
  * @param ahrs AHRS algorithm structure.
  * @return Earth acceleration measurement in g.
  */
-madVector madAhrsGetEarthAcceleration(const madAhrs *const ahrs) {
+madVector Infusion::madAhrsGetEarthAcceleration(const madAhrs *const ahrs) {
 #define Q ahrs->quaternion.element
 #define A ahrs->accelerometer.axis
 
@@ -531,7 +531,7 @@ madAhrsInternalStates Infusion::madAhrsGetInternalStates(const madAhrs *const ah
  * @param ahrs AHRS algorithm structure.
  * @return AHRS algorithm flags.
  */
-madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs) {
+madAhrsFlags Infusion::madAhrsGetFlags(const madAhrs *const ahrs) {
     const madAhrsFlags flags = {
             .initialising = ahrs->initialising,
             .angularRateRecovery = ahrs->angularRateRecovery,

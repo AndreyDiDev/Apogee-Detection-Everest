@@ -51,12 +51,12 @@ typedef struct{
 
 class Everest{
     public:
-        Everest();
-        ~Everest();
+        // Everest();
+        // ~Everest();
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
-        Infusion Initialize();
+        Infusion* Initialize();
 
         static Everest getEverest();
 
@@ -67,13 +67,19 @@ class Everest{
 
         systemState dynamite();
 
+        kinematics Kinematics;
+
+        kinematics* getKinematics();
+
+        Infusion madgwick;
+
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
 
         // Initialize Madgwick Library
-        Infusion madgwick = Infusion();
+        // Infusion madgwick = Infusion();
         
         void initialize(systemState& state);
 };
@@ -94,16 +100,18 @@ void Everest::initialize(systemState& state){
 
 }
 
-Infusion Everest::Initialize(){
+Infusion* Everest::Initialize(){
     initialize(state);
-    Infusion madgwick = Infusion();
-
-    return madgwick;
+    return &madgwick;
 }
 
 Everest Everest::getEverest(){
     Everest everest = Everest();
     return everest;
+}
+
+kinematics* Everest::getKinematics(){
+    return &Kinematics;
 }
 
 #endif

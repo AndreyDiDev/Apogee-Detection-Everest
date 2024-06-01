@@ -7,15 +7,15 @@ using namespace std;
 
 // Instantiate Everest
 madAhrs *ahrs;
-Infusion infusion;
+Infusion *infusion;
 Everest everest = Everest::getEverest();
-kinematics Kinematics = {0.0, 0.0, 0.0}; // tare to ground
+kinematics *Kinematics = everest.getKinematics(); // tare to ground
 
 void MadgwickSetup()
 {
     // Attaches Madgwick to Everest
     infusion = everest.Initialize();
-    ahrs = infusion.getMadAhrs();
+    ahrs = infusion->getMadAhrs();
 
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
@@ -26,12 +26,12 @@ void MadgwickSetup()
     const madVector accelerometerOffset = {0.0f, 0.0f, 0.0f};
     const madMatrix softIronMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-    madAhrsInternalStates internal = infusion.madAhrsGetInternalStates(ahrs);
-    madAhrsFlags flags = infusion.madAhrsGetFlags(ahrs);
+    madAhrsInternalStates internal = infusion->madAhrsGetInternalStates(ahrs);
+    madAhrsFlags flags = infusion->madAhrsGetFlags(ahrs);
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
     // Initialise algorithms
-    madOffset offset = infusion.getOffset();
+    madOffset offset = infusion->getOffset();
     // *ahrs = infusion.getMadAhrs();
 
     madOffsetInitialise(&offset, SAMPLE_RATE);
@@ -56,11 +56,11 @@ void MadgwickWrapper(SensorDataNoMag data){
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    madEuler euler = infusion.getEuler(ahrs);
-    madVector earth = infusion.madAhrsGetEarthAcceleration(ahrs);
+    madEuler euler = infusion->getEuler(ahrs);
+    madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
 
     // Update gyroscope offset correction algorithm
-    madOffset offset = infusion.getOffset();
+    madOffset offset = infusion->getOffset();
     gyroscope = madOffsetUpdate(&offset, gyroscope);
 
     // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
@@ -76,7 +76,7 @@ void MadgwickWrapper(SensorDataNoMag data){
     previousTimestamp = timestamp;
 
     // Update gyroscope AHRS algorithm
-    infusion.madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
 
 // #undef ahrs
 
@@ -146,8 +146,8 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
 
 double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     double accelerationZ = avgIMU.accelZ;
-    double initialVelocity = Kinematics.initialVelo;
-    double initialAltitude = Kinematics.initialAlt;
+    double initialVelocity = Kinematics->initialVelo;
+    double initialAltitude = Kinematics->initialAlt;
 
     // Derive altitude from IMU
     double altitude = (double) (initialAltitude + initialVelocity * (1.0/SAMPLE_RATE) + 0.5 * accelerationZ * pow((1.0/SAMPLE_RATE), 2));
@@ -205,7 +205,7 @@ systemState Everest::dynamite(){
 }
 
 double getFinalAltitude(){
-    return Kinematics.finalAltitude;
+    return Kinematics->finalAltitude;
 }
 
 /**
