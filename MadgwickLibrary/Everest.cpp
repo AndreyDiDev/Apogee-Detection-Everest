@@ -3,7 +3,7 @@
 #include <stdio.h>
 using namespace std;
 
-#define SAMPLE_RATE (100) // replace this with actual sample rate
+#define SAMPLE_RATE (1) // replace this with actual sample rate
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -246,7 +246,7 @@ void Everest::recalculateGain(double estimate){
 }
 
 double Everest::calculateGainFactor(double estimate){
-    double velocityZ = (this->AltitudeList.secondLastAltitude - 4* this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
+    double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
     return velocityZ;
 }
 
@@ -264,13 +264,13 @@ int main()
     MadgwickSetup();
 
     // test purposes
-    SensorDataNoMag imu1 = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0};
-    SensorDataNoMag imu2 = {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    BarosData baro1 = {100, 100.0, 0};
-    BarosData baro2 = {100, 100.0, 0};
-    BarosData baro3 = {100, 100.0, 0};
-    BarosData realBaro = {100, 100.0, 0};
+    BarosData baro1 = {0, 0.0, 0};
+    BarosData baro2 = {0, 0.0, 0};
+    BarosData baro3 = {0, 0.0, 0};
+    BarosData realBaro = {0, 0.0, 0};
 
     // everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
 
