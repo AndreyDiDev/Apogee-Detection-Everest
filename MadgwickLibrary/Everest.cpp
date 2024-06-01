@@ -1,13 +1,14 @@
 // Altitude estimation using multiple sensors
 #include "everest.hpp"
 #include <stdio.h>
+using namespace std;
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
 
 // Instantiate Everest
 madAhrs *ahrs;
 Infusion infusion;
-Everest everest = getEverest();
+Everest everest = Everest::getEverest();
 kinematics Kinematics = {0.0, 0.0, 0.0}; // tare to ground
 
 void MadgwickSetup()
@@ -25,8 +26,8 @@ void MadgwickSetup()
     const madVector accelerometerOffset = {0.0f, 0.0f, 0.0f};
     const madMatrix softIronMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-    madAhrsInternalStates internal = infusion.getInternalStates();
-    madAhrsFlags flags = infusion.getFlags();
+    madAhrsInternalStates internal = infusion.madAhrsGetInternalStates(ahrs);
+    madAhrsFlags flags = infusion.madAhrsGetFlags(ahrs);
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
     // Initialise algorithms

@@ -3,6 +3,9 @@
  * @file everest.hpp
  * @brief 
 */
+#ifndef EVEREST_HPP
+#define EVEREST_HPP
+
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
 
@@ -55,7 +58,7 @@ class Everest{
 
         Infusion Initialize();
 
-        Everest getEverest();
+        static Everest getEverest();
 
         // Initialize system state
         systemState state;
@@ -75,7 +78,7 @@ class Everest{
         void initialize(systemState& state);
 };
 
-void initialize(systemState& state){
+void Everest::initialize(systemState& state){
     // Initially we trust systems equally
     state.gain_IMU = 1/3.0; // change to actual initial trusts 
     state.gain_Baro1 = 1/3.0;
@@ -98,11 +101,11 @@ Infusion Everest::Initialize(){
     return madgwick;
 }
 
-Everest getEverest(){
+Everest Everest::getEverest(){
     Everest everest = Everest();
     return everest;
 }
 
-
+#endif
 
 

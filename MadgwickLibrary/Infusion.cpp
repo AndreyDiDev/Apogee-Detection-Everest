@@ -23,6 +23,8 @@
 #include <ctime>
 #include <string>
 
+using namespace std;
+
 //------------------------------------------------------------------------------
 // Definitions
 
@@ -512,7 +514,7 @@ madVector madAhrsGetEarthAcceleration(const madAhrs *const ahrs) {
  * @param ahrs AHRS algorithm structure.
  * @return AHRS algorithm internal states.
  */
-madAhrsInternalStates madAhrsGetInternalStates(const madAhrs *const ahrs) {
+madAhrsInternalStates Infusion::madAhrsGetInternalStates(const madAhrs *const ahrs) {
     const madAhrsInternalStates internalStates = {
             .accelerationError = RadiansToDegrees(Asin(2.0f * madVectorMagnitude(ahrs->halfAccelerometerFeedback))),
             .accelerometerIgnored = ahrs->accelerometerIgnored,
@@ -651,388 +653,388 @@ madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope) {
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
 
-void test(madMatrix gyroscopeMisalignment,
-    madVector gyroscopeSensitivity,
-    madVector gyroscopeOffset,
-    madMatrix accelerometerMisalignment,
-    madVector accelerometerSensitivity,
-    madVector accelerometerOffset,
-    madMatrix softIronMatrix,
-    madVector hardIronOffset, 
-    madOffset offset, 
-    madAhrs *ahrs,
-    SensorData data,
-    FILE *file){
-        // Acquire latest sensor data
-        // const clock_t timestamp = clock(); // replace this with actual gyroscope timestamp
-        const float timestamp = data.time;
-        madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
-        madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
-        madVector magnetometer = {data.magX, data.magY, data.magZ}; // replace this with actual magnetometer data in arbitrary units
+// void test(madMatrix gyroscopeMisalignment,
+//     madVector gyroscopeSensitivity,
+//     madVector gyroscopeOffset,
+//     madMatrix accelerometerMisalignment,
+//     madVector accelerometerSensitivity,
+//     madVector accelerometerOffset,
+//     madMatrix softIronMatrix,
+//     madVector hardIronOffset, 
+//     madOffset offset, 
+//     madAhrs *ahrs,
+//     SensorData data,
+//     FILE *file){
+//         // Acquire latest sensor data
+//         // const clock_t timestamp = clock(); // replace this with actual gyroscope timestamp
+//         const float timestamp = data.time;
+//         madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
+//         madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
+//         madVector magnetometer = {data.magX, data.magY, data.magZ}; // replace this with actual magnetometer data in arbitrary units
 
-        madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
-        madVector earth = madAhrsGetEarthAcceleration(ahrs);
+//         madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
+//         madVector earth = madAhrsGetEarthAcceleration(ahrs);
 
-        // printf("Before anything Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
-        //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
+//         // printf("Before anything Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
+//         //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
 
-        // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
-        //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
-        //        earth.axis.x, earth.axis.y, earth.axis.z);
+//         // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
+//         //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
+//         //        earth.axis.x, earth.axis.y, earth.axis.z);
 
-        // Apply calibration
-        // gyroscope = madCalibrationInertial(gyroscope, gyroscopeMisalignment, gyroscopeSensitivity, gyroscopeOffset);
-        // accelerometer = madCalibrationInertial(accelerometer, accelerometerMisalignment, accelerometerSensitivity, accelerometerOffset);
-        // magnetometer = madCalibrationMagnetic(magnetometer, softIronMatrix, hardIronOffset);
+//         // Apply calibration
+//         // gyroscope = madCalibrationInertial(gyroscope, gyroscopeMisalignment, gyroscopeSensitivity, gyroscopeOffset);
+//         // accelerometer = madCalibrationInertial(accelerometer, accelerometerMisalignment, accelerometerSensitivity, accelerometerOffset);
+//         // magnetometer = madCalibrationMagnetic(magnetometer, softIronMatrix, hardIronOffset);
 
-        // Update gyroscope offset correction algorithm
-        gyroscope = madOffsetUpdate(&offset, gyroscope);
+//         // Update gyroscope offset correction algorithm
+//         gyroscope = madOffsetUpdate(&offset, gyroscope);
 
-        // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
-        //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
+//         // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
+//         //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
 
-        // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
-        //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
-        //        earth.axis.x, earth.axis.y, earth.axis.z);
+//         // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
+//         //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
+//         //        earth.axis.x, earth.axis.y, earth.axis.z);
 
-        // Calculate delta time (in seconds) to account for gyroscope sample clock error
-        static float previousTimestamp;
-        float deltaTime = (float) (timestamp - previousTimestamp);
-        previousTimestamp = timestamp;
+//         // Calculate delta time (in seconds) to account for gyroscope sample clock error
+//         static float previousTimestamp;
+//         float deltaTime = (float) (timestamp - previousTimestamp);
+//         previousTimestamp = timestamp;
 
-        // Update gyroscope AHRS algorithm
-        madAhrsUpdate(ahrs, gyroscope, accelerometer, magnetometer, deltaTime);
+//         // Update gyroscope AHRS algorithm
+//         madAhrsUpdate(ahrs, gyroscope, accelerometer, magnetometer, deltaTime);
 
-        // printf("After Update - Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT, deltaT: %.10f\n",
-        //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ, deltaTime);
+//         // printf("After Update - Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT, deltaT: %.10f\n",
+//         //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ, deltaTime);
 
-        // Print algorithm outputs
-        madAhrsInternalStates internal;
-        madAhrsFlags flags;
+//         // Print algorithm outputs
+//         madAhrsInternalStates internal;
+//         madAhrsFlags flags;
 
-        euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
+//         euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
 
-        internal = madAhrsGetInternalStates(ahrs);
-        flags = madAhrsGetFlags(ahrs);
+//         internal = madAhrsGetInternalStates(ahrs);
+//         flags = madAhrsGetFlags(ahrs);
 
-        fprintf(file, "%f,", timestamp);
+//         fprintf(file, "%f,", timestamp);
 
-        fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
+//         fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
-        fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError,  
-        internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, internal.magneticError, 
-        internal.magnetometerIgnored, internal.magneticRecoveryTrigger, flags.initialising, 
-        flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
+//         fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError,  
+//         internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, internal.magneticError, 
+//         internal.magnetometerIgnored, internal.magneticRecoveryTrigger, flags.initialising, 
+//         flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
 
-        fprintf(file, "\n");
+//         fprintf(file, "\n");
 
-        // printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError, 
-        // internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, 
-        // internal.magneticError, internal.magnetometerIgnored, internal.magneticRecoveryTrigger, 
-        // flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
+//         // printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError, 
+//         // internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, 
+//         // internal.magneticError, internal.magnetometerIgnored, internal.magneticRecoveryTrigger, 
+//         // flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
 
-        // printf("\n");
-}
+//         // printf("\n");
+// }
 
-void testNoMagInternal(madOffset offset, 
-    madAhrs *ahrs,
-    SensorDataNoMag data,
-    FILE *file)
-{
-    // Acquire latest sensor data
-        // const clock_t timestamp = clock(); // replace this with actual gyroscope timestamp
-        const double timestamp = data.time;
-        madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
-        madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
-        // madVector magnetometer = {data.magX, data.magY, data.magZ}; // replace this with actual magnetometer data in arbitrary units
+// void testNoMagInternal(madOffset offset, 
+//     madAhrs *ahrs,
+//     SensorDataNoMag data,
+//     FILE *file)
+// {
+//     // Acquire latest sensor data
+//         // const clock_t timestamp = clock(); // replace this with actual gyroscope timestamp
+//         const double timestamp = data.time;
+//         madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
+//         madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
+//         // madVector magnetometer = {data.magX, data.magY, data.magZ}; // replace this with actual magnetometer data in arbitrary units
 
-        madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
-        madVector earth = madAhrsGetEarthAcceleration(ahrs);
+//         madEuler euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
+//         madVector earth = madAhrsGetEarthAcceleration(ahrs);
 
-        // printf("Before anything Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
-        //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
+//         // printf("Before anything Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
+//         //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
 
-        // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
-        //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
-        //        earth.axis.x, earth.axis.y, earth.axis.z);
+//         // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
+//         //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
+//         //        earth.axis.x, earth.axis.y, earth.axis.z);
 
-        // Apply calibration
-        // gyroscope = madCalibrationInertial(gyroscope, gyroscopeMisalignment, gyroscopeSensitivity, gyroscopeOffset);
-        // accelerometer = madCalibrationInertial(accelerometer, accelerometerMisalignment, accelerometerSensitivity, accelerometerOffset);
-        // magnetometer = madCalibrationMagnetic(magnetometer, softIronMatrix, hardIronOffset);
+//         // Apply calibration
+//         // gyroscope = madCalibrationInertial(gyroscope, gyroscopeMisalignment, gyroscopeSensitivity, gyroscopeOffset);
+//         // accelerometer = madCalibrationInertial(accelerometer, accelerometerMisalignment, accelerometerSensitivity, accelerometerOffset);
+//         // magnetometer = madCalibrationMagnetic(magnetometer, softIronMatrix, hardIronOffset);
 
-        // Update gyroscope offset correction algorithm
-        gyroscope = madOffsetUpdate(&offset, gyroscope);
+//         // Update gyroscope offset correction algorithm
+//         gyroscope = madOffsetUpdate(&offset, gyroscope);
 
-        // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
-        //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
+//         // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
+//         //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
 
-        // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
-        //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
-        //        earth.axis.x, earth.axis.y, earth.axis.z);
+//         // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
+//         //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
+//         //        earth.axis.x, earth.axis.y, earth.axis.z);
 
-        // Calculate delta time (in seconds) to account for gyroscope sample clock error
-        static double previousTimestamp;
-        double deltaTime = (double) (timestamp - previousTimestamp);
-        previousTimestamp = timestamp;
+//         // Calculate delta time (in seconds) to account for gyroscope sample clock error
+//         static double previousTimestamp;
+//         double deltaTime = (double) (timestamp - previousTimestamp);
+//         previousTimestamp = timestamp;
 
-        // Update gyroscope AHRS algorithm
-        madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+//         // Update gyroscope AHRS algorithm
+//         madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
 
-        // printf("After Update - Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT, deltaT: %.10f\n",
-        //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ, deltaTime);
+//         // printf("After Update - Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT, deltaT: %.10f\n",
+//         //     data.time, data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ, deltaTime);
 
-        // Print algorithm outputs
-        madAhrsInternalStates internal;
-        madAhrsFlags flags;
+//         // Print algorithm outputs
+//         madAhrsInternalStates internal;
+//         madAhrsFlags flags;
 
-        euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
+//         euler = madQuaternionToEuler(madAhrsGetQuaternion(ahrs));
 
-        internal = madAhrsGetInternalStates(ahrs);
-        flags = madAhrsGetFlags(ahrs);
+//         internal = madAhrsGetInternalStates(ahrs);
+//         flags = madAhrsGetFlags(ahrs);
 
-        fprintf(file, "%f,", timestamp);
+//         fprintf(file, "%f,", timestamp);
 
-        fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
+//         fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
-        fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError,  
-        internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, internal.magneticError, 
-        internal.magnetometerIgnored, internal.magneticRecoveryTrigger, flags.initialising, 
-        flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
+//         fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError,  
+//         internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, internal.magneticError, 
+//         internal.magnetometerIgnored, internal.magneticRecoveryTrigger, flags.initialising, 
+//         flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
 
-        fprintf(file, "%f,%f,%f", earth.axis.x, earth.axis.y, earth.axis.z);
+//         fprintf(file, "%f,%f,%f", earth.axis.x, earth.axis.y, earth.axis.z);
 
-        fprintf(file, "\n");
+//         fprintf(file, "\n");
 
-}
+// }
 
-void testNoMag(){
+// void testNoMag(){
 
-    FILE *fileOut = fopen("noMag1.txt", "w+"); 
-    if (!fileOut) {
-        fprintf(stderr, "Error opening file...exiting\n");
-        exit(1);
-    }
+//     FILE *fileOut = fopen("noMag1.txt", "w+"); 
+//     if (!fileOut) {
+//         fprintf(stderr, "Error opening file...exiting\n");
+//         exit(1);
+//     }
 
-    // std::ifstream inputFile(fileOutName); // Opens the file
-    // if (inputFile.is_open()) {
-    //     // File opened successfully
-    //     // Read data from the file
-    //     // ...
-    //     inputFile.close(); // Close the file when done
-    // } else {
-    //     std::cout << "Error opening file." << std::endl;
-    // }
+//     // std::ifstream inputFile(fileOutName); // Opens the file
+//     // if (inputFile.is_open()) {
+//     //     // File opened successfully
+//     //     // Read data from the file
+//     //     // ...
+//     //     inputFile.close(); // Close the file when done
+//     // } else {
+//     //     std::cout << "Error opening file." << std::endl;
+//     // }
 
-    // Initialise algorithms
-    madOffset offset;
-    madAhrs ahrs;
+//     // Initialise algorithms
+//     madOffset offset;
+//     madAhrs ahrs;
 
-    madOffsetInitialise(&offset, SAMPLE_RATE);
-    madAhrsInitialise(&ahrs);
+//     madOffsetInitialise(&offset, SAMPLE_RATE);
+//     madAhrsInitialise(&ahrs);
 
-    // Set AHRS algorithm settings
-    const madAhrsSettings settings = {
-            .convention = EarthConventionNed,
-            .gain = 0.5f,
-            .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
-            .accelerationRejection = 10.0f,
-            .magneticRejection = 10.0f,
-            .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
-    };
+//     // Set AHRS algorithm settings
+//     const madAhrsSettings settings = {
+//             .convention = EarthConventionNed,
+//             .gain = 0.5f,
+//             .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
+//             .accelerationRejection = 10.0f,
+//             .magneticRejection = 10.0f,
+//             .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
+//     };
 
-    madAhrsSetSettings(&ahrs, &settings);
+//     madAhrsSetSettings(&ahrs, &settings);
 
-    FILE *fileIn = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
+//     FILE *fileIn = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
 
-    // if (!fileIn) {
-    //     perror("Error opening file");
-    //     // return 1;
-    // }
-    // read first line and preset the deltaTime to timestamp 
-    char line[MAX_LINE_LENGTH];
-    std::clock_t start;
-    double duration;
+//     // if (!fileIn) {
+//     //     perror("Error opening file");
+//     //     // return 1;
+//     // }
+//     // read first line and preset the deltaTime to timestamp 
+//     char line[MAX_LINE_LENGTH];
+//     std::clock_t start;
+//     double duration;
     
-    while (fgets(line, sizeof(line), fileIn)) {
-        // Tokenize the line using strtok
-        char *token = strtok(line, ",");
-        float time = atof(token); // Convert the time value to float
+//     while (fgets(line, sizeof(line), fileIn)) {
+//         // Tokenize the line using strtok
+//         char *token = strtok(line, ",");
+//         float time = atof(token); // Convert the time value to float
 
-        // Parse accelerometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float accelX = atof(token);
-        token = strtok(NULL, ",");
-        float accelY = atof(token);
-        token = strtok(NULL, ",");
-        float accelZ = atof(token);
+//         // Parse accelerometer readings (X, Y, Z)
+//         token = strtok(NULL, ",");
+//         float accelX = atof(token);
+//         token = strtok(NULL, ",");
+//         float accelY = atof(token);
+//         token = strtok(NULL, ",");
+//         float accelZ = atof(token);
 
-        // Parse gyroscope readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float gyroX = atof(token);
-        token = strtok(NULL, ",");
-        float gyroY = atof(token);
-        token = strtok(NULL, ",");
-        float gyroZ = atof(token);
+//         // Parse gyroscope readings (X, Y, Z)
+//         token = strtok(NULL, ",");
+//         float gyroX = atof(token);
+//         token = strtok(NULL, ",");
+//         float gyroY = atof(token);
+//         token = strtok(NULL, ",");
+//         float gyroZ = atof(token);
 
-        // Parse magnetometer readings (X, Y, Z)
-        // token = strtok(NULL, ",");
-        // float magX = atof(token);
-        // token = strtok(NULL, ",");
-        // float magY = atof(token);
-        // token = strtok(NULL, ",");
-        // float magZ = atof(token);
+//         // Parse magnetometer readings (X, Y, Z)
+//         // token = strtok(NULL, ",");
+//         // float magX = atof(token);
+//         // token = strtok(NULL, ",");
+//         // float magY = atof(token);
+//         // token = strtok(NULL, ",");
+//         // float magZ = atof(token);
 
-        SensorDataNoMag sensorData = {
-            time,
-            gyroX,
-            gyroY,
-            gyroZ,
-            accelX,
-            accelY,
-            accelZ,
-            // magX,
-            // magY,
-            // magZ,
-        };
+//         SensorDataNoMag sensorData = {
+//             time,
+//             gyroX,
+//             gyroY,
+//             gyroZ,
+//             accelX,
+//             accelY,
+//             accelZ,
+//             // magX,
+//             // magY,
+//             // magZ,
+//         };
 
-        // Example: Print all sensor readings
-        printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
-               time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ);
+//         // Example: Print all sensor readings
+//         printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+//                time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ);
 
-        start = std::clock();
+//         start = std::clock();
 
-        testNoMagInternal(offset, &ahrs, sensorData, fileOut);
+//         testNoMagInternal(offset, &ahrs, sensorData, fileOut);
 
-        clock_t endTime = std::clock();
+//         clock_t endTime = std::clock();
 
-        duration += endTime - start;
+//         duration += endTime - start;
 
-        printf("Time for noMag (seconds): %f\n", duration/CLOCKS_PER_SEC);
-    }
+//         printf("Time for noMag (seconds): %f\n", duration/CLOCKS_PER_SEC);
+//     }
 
-    printf("Final for noMag: %f", duration/CLOCKS_PER_SEC);
+//     printf("Final for noMag: %f", duration/CLOCKS_PER_SEC);
 
-    fclose(fileIn);
-    fclose(fileOut);
+//     fclose(fileIn);
+//     fclose(fileOut);
 
-}
+// }
 
-int main() {
+// int main() {
 
-    // Define calibration (replace with actual calibration data if available)
-    const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-    const madVector gyroscopeSensitivity = {1.0f, 1.0f, 1.0f};
-    const madVector gyroscopeOffset = {0.0f, 0.0f, 0.0f};
-    const madMatrix accelerometerMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-    const madVector accelerometerSensitivity = {1.0f, 1.0f, 1.0f};
-    const madVector accelerometerOffset = {0.0f, 0.0f, 0.0f};
-    const madMatrix softIronMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+//     // Define calibration (replace with actual calibration data if available)
+//     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+//     const madVector gyroscopeSensitivity = {1.0f, 1.0f, 1.0f};
+//     const madVector gyroscopeOffset = {0.0f, 0.0f, 0.0f};
+//     const madMatrix accelerometerMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+//     const madVector accelerometerSensitivity = {1.0f, 1.0f, 1.0f};
+//     const madVector accelerometerOffset = {0.0f, 0.0f, 0.0f};
+//     const madMatrix softIronMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-    madAhrsInternalStates internal;
-    madAhrsFlags flags;
-    const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
+//     madAhrsInternalStates internal;
+//     madAhrsFlags flags;
+//     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
-    FILE *file = fopen("infusion.txt", "w+"); // Open the file for appending or create it if it doesn't exist
-    if (!file) {
-        fprintf(stderr, "Error opening file...exiting\n");
-        exit(1);
-    }
+//     FILE *file = fopen("infusion.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+//     if (!file) {
+//         fprintf(stderr, "Error opening file...exiting\n");
+//         exit(1);
+//     }
 
 
-    // Initialise algorithms
-    madOffset offset;
-    madAhrs ahrs;
+//     // Initialise algorithms
+//     madOffset offset;
+//     madAhrs ahrs;
 
-    madOffsetInitialise(&offset, SAMPLE_RATE);
-    madAhrsInitialise(&ahrs);
+//     madOffsetInitialise(&offset, SAMPLE_RATE);
+//     madAhrsInitialise(&ahrs);
 
-    // Set AHRS algorithm settings
-    const madAhrsSettings settings = {
-            .convention = EarthConventionNed,
-            .gain = 0.5f,
-            .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
-            .accelerationRejection = 10.0f,
-            .magneticRejection = 10.0f,
-            .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
-    };
-    madAhrsSetSettings(&ahrs, &settings);
+//     // Set AHRS algorithm settings
+//     const madAhrsSettings settings = {
+//             .convention = EarthConventionNed,
+//             .gain = 0.5f,
+//             .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
+//             .accelerationRejection = 10.0f,
+//             .magneticRejection = 10.0f,
+//             .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
+//     };
+//     madAhrsSetSettings(&ahrs, &settings);
 
-    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
-    if (!file1) {
-        perror("Error opening file");
-        return 1;
-    }
-    // read first line and preset the deltaTime to timestamp 
-    char line[MAX_LINE_LENGTH];
-    std::clock_t start;
-    double duration;
+//     FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
+//     if (!file1) {
+//         perror("Error opening file");
+//         return 1;
+//     }
+//     // read first line and preset the deltaTime to timestamp 
+//     char line[MAX_LINE_LENGTH];
+//     std::clock_t start;
+//     double duration;
     
-    while (fgets(line, sizeof(line), file1)) {
-        // Tokenize the line using strtok
-        char *token = strtok(line, ",");
-        float time = atof(token); // Convert the time value to float
+//     while (fgets(line, sizeof(line), file1)) {
+//         // Tokenize the line using strtok
+//         char *token = strtok(line, ",");
+//         float time = atof(token); // Convert the time value to float
 
-        // Parse gyroscope readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float gyroX = atof(token);
-        token = strtok(NULL, ",");
-        float gyroY = atof(token);
-        token = strtok(NULL, ",");
-        float gyroZ = atof(token);
+//         // Parse gyroscope readings (X, Y, Z)
+//         token = strtok(NULL, ",");
+//         float gyroX = atof(token);
+//         token = strtok(NULL, ",");
+//         float gyroY = atof(token);
+//         token = strtok(NULL, ",");
+//         float gyroZ = atof(token);
 
-        // Parse accelerometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float accelX = atof(token);
-        token = strtok(NULL, ",");
-        float accelY = atof(token);
-        token = strtok(NULL, ",");
-        float accelZ = atof(token);
+//         // Parse accelerometer readings (X, Y, Z)
+//         token = strtok(NULL, ",");
+//         float accelX = atof(token);
+//         token = strtok(NULL, ",");
+//         float accelY = atof(token);
+//         token = strtok(NULL, ",");
+//         float accelZ = atof(token);
 
-        // Parse magnetometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float magX = atof(token);
-        token = strtok(NULL, ",");
-        float magY = atof(token);
-        token = strtok(NULL, ",");
-        float magZ = atof(token);
+//         // Parse magnetometer readings (X, Y, Z)
+//         token = strtok(NULL, ",");
+//         float magX = atof(token);
+//         token = strtok(NULL, ",");
+//         float magY = atof(token);
+//         token = strtok(NULL, ",");
+//         float magZ = atof(token);
 
-        SensorData sensorData = {
-            time,
-            gyroX,
-            gyroY,
-            gyroZ,
-            accelX,
-            accelY,
-            accelZ,
-            magX,
-            magY,
-            magZ,
-        };
+//         SensorData sensorData = {
+//             time,
+//             gyroX,
+//             gyroY,
+//             gyroZ,
+//             accelX,
+//             accelY,
+//             accelZ,
+//             magX,
+//             magY,
+//             magZ,
+//         };
 
-        // Example: Print all sensor readings
-        // printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
-        //        time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
-        start = std::clock();
+//         // Example: Print all sensor readings
+//         // printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
+//         //        time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
+//         start = std::clock();
 
-        test(gyroscopeMisalignment, gyroscopeSensitivity, gyroscopeOffset, 
-        accelerometerMisalignment,accelerometerSensitivity,accelerometerOffset,
-        softIronMatrix, hardIronOffset, offset, &ahrs, sensorData, file);
+//         test(gyroscopeMisalignment, gyroscopeSensitivity, gyroscopeOffset, 
+//         accelerometerMisalignment,accelerometerSensitivity,accelerometerOffset,
+//         softIronMatrix, hardIronOffset, offset, &ahrs, sensorData, file);
 
-        clock_t endTime = std::clock();
+//         clock_t endTime = std::clock();
 
-        duration += endTime - start;
+//         duration += endTime - start;
 
-        printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
-    }
+//         printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
+//     }
 
-    printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
+//     printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
 
-    fclose(file1);
-    fclose(file);
+//     fclose(file1);
+//     fclose(file);
 
-    testNoMag();
+//     testNoMag();
 
-    // testCircle();
+//     // testCircle();
 
-}
+// }

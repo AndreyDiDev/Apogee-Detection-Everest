@@ -8,7 +8,8 @@
  * measurements into a filtered orientation relative to the Earth's frame of reference
  */
 // -----------------------------------------------------------------------------
-
+#ifndef INFUSION_HPP
+#define INFUSION_HPP
 //Math--------------------------------------------------------------------------
 // Includes
 
@@ -581,9 +582,9 @@ void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope
 
 void madAhrsSetQuaternion(madAhrs *const ahrs, const madQuaternion quaternion);
 
-madAhrsInternalStates madAhrsGetInternalStates(const madAhrs *const ahrs);
+// madAhrsInternalStates Infusion::madAhrsGetInternalStates(const madAhrs *const ahrs);
 
-madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
+// madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
 
 void madAhrsSetHeading(madAhrs *const ahrs, const float heading);
 
@@ -808,8 +809,9 @@ class Infusion {
         void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
         void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
         void setQuaternion(const madQuaternion& quaternion);
-        madAhrsInternalStates getInternalStates() const;
-        madAhrsFlags getFlags() const;
+        // madAhrsInternalStates getInternalStates() const;
+        madAhrsInternalStates madAhrsGetInternalStates(const madAhrs *const ahrs);
+        // madAhrsFlags getFlags() const;
         void setHeading(float heading);
         madAhrs madAHRS;
         madOffset offset;
@@ -826,6 +828,8 @@ class Infusion {
         madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
 
         madQuaternion madAhrsGetQuaternion(const madAhrs *ahrs);
+
+        madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
 
     private:
         madAhrsSettings settings;
@@ -846,10 +850,12 @@ class Infusion {
         madVector halfGravity() const;
         madVector halfMagnetic() const;
         madVector feedback(const madVector& sensor, const madVector& reference) const;
-        int clamp(int value, int min, int max) const;
+        int clamp(int value, int min, int max) const; // uint32_t
 
     protected:
 };
+
+#endif // INFUSION_HPP
 
 // Infusion::Infusion() {
 //     initialise();
