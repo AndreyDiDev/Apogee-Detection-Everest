@@ -819,18 +819,16 @@ class Infusion {
 
         madOffset getOffset() {return offset;};
 
-        // madQuaternion getQuaternion(Infusion infusion);
-        madQuaternion madAhrsGetQuaternion(const madAhrs *const ahrs);
+        // madEuler getEuler(const madAhrs *const ahrs);
 
-        madEuler getEuler(const madAhrs *const ahrs);
+        madVector madAhrsGetEarthAcceleration(const madAhrs *ahrs);
 
-        madVector madAhrsGetEarthAcceleration(const madAhrs *const ahrs);
+        madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
 
-        madQuaternion madAhrsGetQuaternion(const madAhrs *const ahrs);
+        madQuaternion madAhrsGetQuaternion(const madAhrs *ahrs);
 
     private:
         madAhrsSettings settings;
-        madQuaternion quaternion;
         madVector accelerometer;
         bool initialising;
         float rampedGain;
@@ -858,5 +856,3 @@ class Infusion {
 
 //     return Infusion();
 // }
-
-madEuler getEuler(const madAhrs *const ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};

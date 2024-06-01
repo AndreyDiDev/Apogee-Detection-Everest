@@ -60,9 +60,9 @@ class Everest{
         // Initialize system state
         systemState state;
 
-        void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
+        void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
 
-        systemState Everest::dynamite();
+        systemState dynamite();
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
@@ -77,13 +77,21 @@ class Everest{
 
 void initialize(systemState& state){
     // Initially we trust systems equally
-    state.confidence_IMU = 1/3.0; // change to actual initial trusts 
-    state.confidence_Baros = 1/3.0;
-    state.confidence_Real_Baro = 1/3.0;
+    state.gain_IMU = 1/3.0; // change to actual initial trusts 
+    state.gain_Baro1 = 1/3.0;
+    state.gain_Baro2 = 1/3.0;
+    state.gain_Baro3 = 1/3.0;
+    state.gain_Real_Baro = 1/3.0;
+
+    state.std_IMU = 0.0;
+    state.std_Baro1 = 0.0;
+    state.std_Baro2 = 0.0;
+    state.std_Baro3 = 0.0;
+    state.std_Real_Baro = 0.0;
+
 }
 
 Infusion Everest::Initialize(){
-
     initialize(state);
     Infusion madgwick = Infusion();
 

@@ -1,20 +1,20 @@
 // Altitude estimation using multiple sensors
 #include "everest.hpp"
+#include <stdio.h>
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
 
+// Instantiate Everest
 madAhrs *ahrs;
 Infusion infusion;
-
 Everest everest = getEverest();
-
 kinematics Kinematics = {0.0, 0.0, 0.0}; // tare to ground
 
-void MadgwickSetup(Everest everest)
+void MadgwickSetup()
 {
     // Attaches Madgwick to Everest
     infusion = everest.Initialize();
-    *ahrs = infusion.getMadAhrs();
+    ahrs = infusion.getMadAhrs();
 
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
@@ -37,13 +37,12 @@ void MadgwickSetup(Everest everest)
     madAhrsInitialise(ahrs);
 
     // Set AHRS algorithm settings
-    const madAhrsSettings settings = {
-            .convention = EarthConventionNed,
-            .gain = 0.5f,
-            .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
-            .accelerationRejection = 10.0f,
-            .magneticRejection = 10.0f,
-            .recoveryTriggerPeriod = 5 * SAMPLE_RATE, /* 5 seconds */
+    madAhrsSettings settings = {
+            EarthConventionNed,
+            0.5f,
+            2000.0f, /* replace this with actual gyroscope range in degrees/s */
+            10.0f,
+            5 * SAMPLE_RATE, /* 5 seconds */
     };
 
     madAhrsSetSettings(ahrs, &settings);
@@ -144,7 +143,7 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
 
 }
 
-double deriveForAltitudeIMU(SensorDataNoMag avgIMU, kinematics Kinematics){
+double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     double accelerationZ = avgIMU.accelZ;
     double initialVelocity = Kinematics.initialVelo;
     double initialAltitude = Kinematics.initialAlt;
@@ -168,7 +167,7 @@ double convertToAltitude(double pressure){
  * @brief Multi-system trust algorithm. Assumes measurements are updated
 */
 systemState Everest::dynamite(){
-    double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU, Kinematics);
+    double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU);
 
     double BaroAltitude1 = convertToAltitude(everest.baro1.pressure);
     double BaroAltitude2 = convertToAltitude(everest.baro2.pressure);
@@ -204,17 +203,21 @@ systemState Everest::dynamite(){
 
 }
 
+double getFinalAltitude(){
+    return Kinematics.finalAltitude;
+}
+
 /**
  * Serves to just initialize structs 
 */
 int main()
 {
     // Instantiate Everest
-    Everest everest = getEverest();
+    // Everest everest = getEverest();
 
     // Setup Madgwick
     // Attach Madgwick to Everest
-    MadgwickSetup(everest);
+    MadgwickSetup();
 
     // test purposes
     SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -222,6 +225,8 @@ int main()
 
     everest.IMU_Update(imu1, imu2);
     everest.Baro_Update({0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0});
+
+    printf("Altitude: %f\n", getFinalAltitude());
 
     return 0;
 }
