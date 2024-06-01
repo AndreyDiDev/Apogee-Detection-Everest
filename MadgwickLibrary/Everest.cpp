@@ -227,11 +227,18 @@ systemState Everest::dynamite(){
 // TO DO : put the derivative of the altitude in the recalculateGain function
 // do first derivative estimated altitude and times it by time then 1/(new - old)
 void Everest::recalculateGain(double estimate){
-    this->state.gain_IMU = 1/abs(estimate-this->state.avgIMU.altitude); // change to previous trusts
-    this->state.gain_Baro1 = 1/abs(estimate-this->baro1.altitude);
-    this->state.gain_Baro2 = 1/abs(estimate-this->baro2.altitude);
-    this->state.gain_Baro3 = 1/abs(estimate-this->baro3.altitude);
-    this->state.gain_Real_Baro = 1/abs(estimate-this->realBaro.altitude);
+    double gainedEstimate = calculateGainFactor(estimate);
+
+    this->state.gain_IMU = 1/abs(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
+    this->state.gain_Baro1 = 1/abs(gainedEstimate-this->baro1.altitude);
+    this->state.gain_Baro2 = 1/abs(gainedEstimate-this->baro2.altitude);
+    this->state.gain_Baro3 = 1/abs(gainedEstimate-this->baro3.altitude);
+    this->state.gain_Real_Baro = 1/abs(gainedEstimate-this->realBaro.altitude);
+}
+
+double Everest::calculateGainFactor(double estimate){
+    double velocityZ = (everest.AltitudeList->secondLastAltitude - 4* lastEstimatedAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
+    return velocityZ;
 }
 
 double getFinalAltitude(){

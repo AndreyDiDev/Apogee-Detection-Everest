@@ -35,6 +35,11 @@ typedef union {
     SensorDataNoMag avgIMU;
 } systemState;
 
+typedef struct{
+    float secondLastAltitude;
+    float lastAltitude;
+} altitudeList;
+
 /**
  * @brief Keeps the data from the IMU sensor #1
 */
@@ -74,7 +79,11 @@ class Everest{
 
         Infusion madgwick;
 
+        altitudeList AltitudeList;
+
         void recalculateGain(double estimate);
+
+        double Everest::calculateGainFactor(double estimate);
 
         void ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
 
