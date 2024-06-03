@@ -176,6 +176,8 @@ madVector magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer
     // Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
     if (madVectorIsZero(magnetometer) == false) {
 
+        // printf("Mag: (%.6f, %.6f, %.6f) uT\n", magnetometer.axis.x, magnetometer.axis.y, magnetometer.axis.z);
+
         // Calculate direction of magnetic field indicated by algorithm
         const madVector halfMagnetic = HalfMagnetic(ahrs);
 

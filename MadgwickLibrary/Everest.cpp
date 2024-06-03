@@ -92,14 +92,11 @@ void MadgwickSetup()
  * @param data SensorDataNoMag struct
  * 
 */
-void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
-// #define ahrs infusion->getMadAhrs(infusion)
+void Everest::MadgwickWrapper(SensorDataNoMag data){
     // Infusion infusion = infusion;
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
-
-    
 
     // Update gyroscope offset correction algorithm
     madOffset offset = infusion->getOffset();
@@ -117,11 +114,15 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
     float deltaTime = (float) (timestamp - previousTimestamp);
     previousTimestamp = timestamp;
 
-    madVector mag = {x, y, z};
+    // madVector mag = {.axis = {x, y, z,}};
+
+    // printf("Mag: (%.6f, %.6f, %.6f) uT\n", mag.axis.x, mag.axis.y, mag.axis.z);
+
+    // madVector mag = axis.{x, y, z};
 
     // Update gyroscope AHRS algorithm
-    // infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
-    infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, mag, deltaTime);
+    infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    // infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, mag, deltaTime);
 
     // madAhrsInternalStates internal;
     // madAhrsFlags flags;
@@ -151,7 +152,6 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
     internalStates.magneticError, internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, 
     flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery); 
 
-// #undef ahrs
 }
 
 /**
@@ -160,7 +160,7 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
  * 
  *    Internal
 */
-void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ)
+void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2)
 {
     // Update IMU1
     this->internalIMU_1.time = imu1.time;
@@ -200,7 +200,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 
     // feed to Madgwick
     // MadgwickWrapper(state.avgIMU);
-    this->MadgwickWrapper(state.avgIMU, magX, magY, magZ);
+    this->MadgwickWrapper(state.avgIMU);
 }
 
 /**
@@ -235,7 +235,7 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
  *  sensor data to Everest for altitude calculation)
 */
 double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
-    // everest.IMU_Update(imu1, imu2);
+    everest.IMU_Update(imu1, imu2);
     everest.Baro_Update(baro1, baro2, baro3, realBaro);
     double finalAlt = everest.dynamite();
 
@@ -387,13 +387,6 @@ int main()
     MadgwickSetup();
 
     // test purposes
-    // SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    // SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-    // BarosData baro1 = {0, 0.0, 0};
-    // BarosData baro2 = {0, 0.0, 0};
-    // BarosData baro3 = {0, 0.0, 0};
-    // BarosData realBaro = {0, 0.0, 0};
 
     // everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
 
@@ -469,7 +462,7 @@ int main()
 
         start = std::clock();
 
-        everest.IMU_Update(sensorData, sensorData2, magX, magY, magZ);
+        everest.IMU_Update(sensorData, sensorData2);
 
         clock_t endTime = std::clock();
 
@@ -484,4 +477,8 @@ int main()
     fclose(file);
 
     return 0;
+}
+
+void testDynamite(){
+
 }

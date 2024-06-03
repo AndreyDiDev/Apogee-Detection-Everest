@@ -89,11 +89,9 @@ class Everest{
 
         double deriveForVelocity(double estimate);
 
-        void MadgwickWrapper(SensorDataNoMag data, float x, float y, float z);
+        void MadgwickWrapper(SensorDataNoMag data);
 
-        void IMU_Update1(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
-
-        void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
+        // void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
 
         double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
 
