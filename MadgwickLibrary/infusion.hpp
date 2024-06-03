@@ -840,6 +840,8 @@ class Infusion {
 
         madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
 
+        void madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime);
+
         void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
 
     private:

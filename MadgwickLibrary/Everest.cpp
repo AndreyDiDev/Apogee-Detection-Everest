@@ -6,6 +6,7 @@
 using namespace std;
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
+FILE *file;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -82,7 +83,7 @@ void MadgwickSetup()
  * @param data SensorDataNoMag struct
  * 
 */
-void MadgwickWrapper(SensorDataNoMag data){
+void MadgwickWrapper(SensorDataNoMag data, double x, double y, double z){
 // #define ahrs infusion->getMadAhrs(infusion)
     // Infusion infusion = infusion;
     const float timestamp = data.time;
@@ -108,8 +109,28 @@ void MadgwickWrapper(SensorDataNoMag data){
     float deltaTime = (float) (timestamp - previousTimestamp);
     previousTimestamp = timestamp;
 
+    madVector test = {x, y, z};
+
     // Update gyroscope AHRS algorithm
-    infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    // infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, test, deltaTime);
+
+    // write to file
+    fprintf(file, "%f,", timestamp);
+
+    fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
+
+    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError,  
+    internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, internal.magneticError, 
+    internal.magnetometerIgnored, internal.magneticRecoveryTrigger, flags.initialising, 
+    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
+
+    fprintf(file, "\n");
+
+    // printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError, 
+    // internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, 
+    // internal.magneticError, internal.magnetometerIgnored, internal.magneticRecoveryTrigger, 
+    // flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery); 
 
 // #undef ahrs
 
@@ -162,7 +183,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     #undef averageIMU
 
     // feed to Madgwick
-    MadgwickWrapper(state.avgIMU);
+    // MadgwickWrapper(state.avgIMU);
 }
 
 /**
@@ -360,7 +381,7 @@ int main()
 
     // printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
 
-    FILE *file = fopen("infusion.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    file = fopen("infusion.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
         fprintf(stderr, "Error opening file...exiting\n");
         exit(1);

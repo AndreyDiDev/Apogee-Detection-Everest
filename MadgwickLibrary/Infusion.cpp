@@ -235,7 +235,7 @@ madVector magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer
  * @param magnetometer Magnetometer measurement in arbitrary units.
  * @param deltaTime Delta time in seconds.
  */
-void madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime) {
+void Infusion::madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime) {
 #define Q ahrs->quaternion.element
 
     // Store accelerometer
