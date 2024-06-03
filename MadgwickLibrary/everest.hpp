@@ -64,6 +64,8 @@ class Everest{
 
         Infusion* Initialize();
 
+        // Infusion* Initialize2();
+
         static Everest getEverest();
 
         // Initialize system state
@@ -79,11 +81,13 @@ class Everest{
 
         Infusion madgwick;
 
+        Infusion madgwick2;
+
         altitudeList AltitudeList;
 
         void recalculateGain(double estimate);
 
-        double calculateGainFactor(double estimate);
+        double deriveForVelocity(double estimate);
 
         double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
 
@@ -121,6 +125,10 @@ Infusion* Everest::Initialize(){
     initialize(state);
     return &madgwick;
 }
+
+// Infusion* Everest::Initialize2(){
+//     return &madgwick2;
+// }
 
 Everest Everest::getEverest(){
     Everest everest = Everest();

@@ -1,21 +1,34 @@
 // Altitude estimation using multiple sensors
 #include "everest.hpp"
 #include <stdio.h>
+#include <ctime>
+#include <string.h>
 using namespace std;
 
-#define SAMPLE_RATE (1) // replace this with actual sample rate
+#define SAMPLE_RATE (100) // replace this with actual sample rate
 
 // Instantiate Everest
 madAhrs *ahrs;
 Infusion *infusion;
+
+// madAhrs *ahrs2;
+// Infusion *infusion2;
+
 Everest everest = Everest::getEverest();
 kinematics *Kinematics = everest.getKinematics(); // tare to ground
 
+/**
+ * @brief Only done once. Sets pointers for Madgwick
+ *     Internal
+*/
 void MadgwickSetup()
 {
     // Attaches Madgwick to Everest
     infusion = everest.Initialize();
     ahrs = infusion->getMadAhrs();
+
+    // infusion2 = everest.Initialize2();
+    // ahrs2 = infusion2->getMadAhrs();
 
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
@@ -28,14 +41,24 @@ void MadgwickSetup()
 
     madAhrsInternalStates internal = infusion->madAhrsGetInternalStates(ahrs);
     madAhrsFlags flags = infusion->madAhrsGetFlags(ahrs);
+
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
+
+    // madAhrsInternalStates internal2 = infusion2->madAhrsGetInternalStates(ahrs2);
+    // madAhrsFlags flags2 = infusion2->madAhrsGetFlags(ahrs2);
 
     // Initialise algorithms
     madOffset offset = infusion->getOffset();
+    // madOffset offset2 = infusion2->getOffset();
+    // madOffset offset2 = infusion->getOffset();
+
     // *ahrs = infusion.getMadAhrs();
 
-    madOffsetInitialise(&offset, SAMPLE_RATE);
-    madAhrsInitialise(ahrs);
+    infusion->madOffsetInitialise(&offset, SAMPLE_RATE);
+    infusion->madAhrsInitialise(ahrs);
+
+    // infusion2->madOffsetInitialise(&offset2, SAMPLE_RATE);
+    // infusion2->madAhrsInitialise(ahrs2);
 
     // Set AHRS algorithm settings
     madAhrsSettings settings = {
@@ -46,9 +69,19 @@ void MadgwickSetup()
             5 * SAMPLE_RATE, /* 5 seconds */
     };
 
-    madAhrsSetSettings(ahrs, &settings);
+    infusion->madAhrsSetSettings(ahrs, &settings);
+    // infusion2->madAhrsSetSettings(ahrs2, &settings);
+
 }
 
+/**
+ * @brief Wrapper for Madgwick, does offset calc and passes
+ *       data to Madgwick
+ * 
+ *      Internal
+ * @param data SensorDataNoMag struct
+ * 
+*/
 void MadgwickWrapper(SensorDataNoMag data){
 // #define ahrs infusion->getMadAhrs(infusion)
     // Infusion infusion = infusion;
@@ -61,7 +94,7 @@ void MadgwickWrapper(SensorDataNoMag data){
 
     // Update gyroscope offset correction algorithm
     madOffset offset = infusion->getOffset();
-    gyroscope = madOffsetUpdate(&offset, gyroscope);
+    gyroscope = infusion->madOffsetUpdate(&offset, gyroscope);
 
     // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
     //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
@@ -84,9 +117,12 @@ void MadgwickWrapper(SensorDataNoMag data){
     // or run numerical integration on accelerationZ
 }
 
-// 2 IMUs report on same refresh rate
-// dont know if they are in sync
-// Asynchronous complementary filter
+/**
+ * @brief Averages IMUs and feeds them to Madgwick wrapper
+ *      Should be called every time IMU data is updated
+ * 
+ *    Internal
+*/
 void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2)
 {
     // Update IMU1
@@ -121,12 +157,19 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     averageIMU.accelY = (internalIMU_1.accelY + internalIMU_2.accelY) / 2.0;
     averageIMU.accelZ = (internalIMU_1.accelZ + internalIMU_2.accelZ) / 2.0;
 
+    averageIMU.time = (internalIMU_1.time + internalIMU_2.time) / 2.0;
+
     #undef averageIMU
 
     // feed to Madgwick
     MadgwickWrapper(state.avgIMU);
 }
 
+/**
+ * @brief takes external data and updates internal baro data
+ *     Should be called every time baro data is updated
+ *      Internal
+*/
 void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro)
 {
     // Update Baros
@@ -145,7 +188,12 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
 }
 
 /**
- * @brief External update function, calls internal ones
+ * @brief Calls IMU and Baro update functions and calculates altitude
+ *      calls Dynamite and updates altitude list
+ * @return calculated altitude
+ * 
+ *    External (only function that should be called after instantiation of Everest to pass
+ *  sensor data to Everest for altitude calculation)
 */
 double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
     everest.IMU_Update(imu1, imu2);
@@ -159,6 +207,15 @@ double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, Baros
     return finalAlt;
 }
 
+/**
+ * Calculates altitude using IMU sensor data and kinematic equations.
+ * 
+ * @param avgIMU with the average sensor data from the IMU
+ * 
+ *  Internal
+ * 
+ * @return calculated altitude
+ */
 double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     double accelerationZ = avgIMU.accelZ;
     double initialVelocity = Kinematics->initialVelo;
@@ -171,6 +228,13 @@ double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     return altitude;
 }
 
+/**
+ * Calculates the altitude based on the given pressure using the barometric formula
+ * 
+ * @param pressure pressure from baros
+ * 
+ * @return altitude
+ */
 double convertToAltitude(double pressure){
     // Convert pressure to altitude
     // Convert from 100*millibars to m
@@ -181,6 +245,9 @@ double convertToAltitude(double pressure){
 
 /**
  * @brief Multi-system trust algorithm. Assumes measurements are updated
+ * @returns normalised altitude
+ * 
+ *   Internal
 */
 double Everest::dynamite(){
     double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU);
@@ -235,7 +302,7 @@ double Everest::dynamite(){
 // TO DO : put the derivative of the altitude in the recalculateGain function
 // do first derivative estimated altitude and times it by time then 1/(new - old)
 void Everest::recalculateGain(double estimate){
-    double gainedEstimate = calculateGainFactor(estimate);
+    double gainedEstimate = deriveForVelocity(estimate);
     gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
     this->state.gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
@@ -245,14 +312,31 @@ void Everest::recalculateGain(double estimate){
     this->state.gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
 }
 
-double Everest::calculateGainFactor(double estimate){
+/**
+ * @brief Calculates the derivative of the altitude
+ * 
+ * @param estimate the estimated altitude
+ * 
+ * @return velocity
+ * 
+ *   Internal
+ */
+double Everest::deriveForVelocity(double estimate){
     double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
     return velocityZ;
 }
 
+/**
+ * @brief Getter for finalAltitude
+ * 
+ * @return kinematics struct
+ * 
+ */
 double getFinalAltitude(){
     return Kinematics->finalAltitude;
 }
+
+#define MAX_LINE_LENGTH 1024
 
 /**
  * Serves to just initialize structs 
@@ -264,17 +348,107 @@ int main()
     MadgwickSetup();
 
     // test purposes
-    SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    // SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    // SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    BarosData baro1 = {0, 0.0, 0};
-    BarosData baro2 = {0, 0.0, 0};
-    BarosData baro3 = {0, 0.0, 0};
-    BarosData realBaro = {0, 0.0, 0};
+    // BarosData baro1 = {0, 0.0, 0};
+    // BarosData baro2 = {0, 0.0, 0};
+    // BarosData baro3 = {0, 0.0, 0};
+    // BarosData realBaro = {0, 0.0, 0};
 
     // everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
 
-    printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
+    // printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
+
+    FILE *file = fopen("infusion.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    if (!file) {
+        fprintf(stderr, "Error opening file...exiting\n");
+        exit(1);
+    }
+
+    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
+    if (!file1) {
+        perror("Error opening file");
+        return 1;
+    }
+    // read first line and preset the deltaTime to timestamp 
+    char line[MAX_LINE_LENGTH];
+    std::clock_t start;
+    double duration;
+    
+    while (fgets(line, sizeof(line), file1)) {
+        // Tokenize the line using strtok
+        char *token = strtok(line, ",");
+        float time = atof(token); // Convert the time value to float
+
+        // Parse gyroscope readings (X, Y, Z)
+        token = strtok(NULL, ",");
+        float gyroX = atof(token);
+        token = strtok(NULL, ",");
+        float gyroY = atof(token);
+        token = strtok(NULL, ",");
+        float gyroZ = atof(token);
+
+        // Parse accelerometer readings (X, Y, Z)
+        token = strtok(NULL, ",");
+        float accelX = atof(token);
+        token = strtok(NULL, ",");
+        float accelY = atof(token);
+        token = strtok(NULL, ",");
+        float accelZ = atof(token);
+
+        // Parse magnetometer readings (X, Y, Z)
+        token = strtok(NULL, ",");
+        float magX = atof(token);
+        token = strtok(NULL, ",");
+        float magY = atof(token);
+        token = strtok(NULL, ",");
+        float magZ = atof(token);
+
+        SensorData sensorData = {
+            time,
+            gyroX,
+            gyroY,
+            gyroZ,
+            accelX,
+            accelY,
+            accelZ,
+            magX,
+            magY,
+            magZ,
+        };
+
+        // Example: Print all sensor readings
+        // printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
+        //        time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
+        SensorData sensorData2 = {
+            time,
+            gyroX,
+            gyroY,
+            gyroZ,
+            accelX,
+            accelY,
+            accelZ,
+            magX,
+            magY,
+            magZ,
+        };
+
+        start = std::clock();
+
+        everest.IMU_Update(sensorData, sensorData2);
+
+        clock_t endTime = std::clock();
+
+        duration += endTime - start;
+
+        printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
+    }
+
+    printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
+
+    fclose(file1);
+    fclose(file);
 
     return 0;
 }

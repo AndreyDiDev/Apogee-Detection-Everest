@@ -812,7 +812,9 @@ class Infusion {
         madAhrsInternalStates madAhrsGetInternalStates(const madAhrs *const ahrs);
         // madAhrsFlags getFlags() const;
         void setHeading(float heading);
+
         madAhrs madAHRS;
+
         madOffset offset;
         madQuaternion quaternion;
 
@@ -820,11 +822,19 @@ class Infusion {
 
         madOffset getOffset() {return offset;};
 
+        void madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settings);
+
+        void madAhrsInitialise(madAhrs *const ahrs);
+
+        void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate);
+
         // madEuler getEuler(const madAhrs *const ahrs);
 
         madVector madAhrsGetEarthAcceleration(const madAhrs *ahrs);
 
         madQuaternion madAhrsGetQuaternion(const madAhrs *ahrs);
+
+        madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
 
         madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
 

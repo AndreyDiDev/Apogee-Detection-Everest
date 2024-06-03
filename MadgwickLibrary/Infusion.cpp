@@ -60,7 +60,7 @@ using namespace std;
  * @brief Initialises the AHRS algorithm structure.
  * @param ahrs AHRS algorithm structure.
  */
-void madAhrsInitialise(madAhrs *const ahrs) {
+void Infusion::madAhrsInitialise(madAhrs *const ahrs) {
     const madAhrsSettings settings = {
             .convention = EarthConventionNwu,
             .gain = 0.5f,
@@ -99,7 +99,7 @@ void madAhrsReset(madAhrs *const ahrs) {
  * @param ahrs AHRS algorithm structure.
  * @param settings Settings.
  */
-void madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settings) {
+void Infusion::madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settings) {
     ahrs->settings.convention = settings->convention;
     ahrs->settings.gain = settings->gain;
     ahrs->settings.gyroscopeRange = settings->gyroscopeRange == 0.0f ? FLT_MAX : 0.98f * settings->gyroscopeRange;
@@ -613,7 +613,7 @@ float compassCalculateHeading(const EarthConvention convention, const madVector 
  * @param offset Gyroscope offset algorithm structure.
  * @param sampleRate Sample rate in Hz.
  */
-void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate) {
+void Infusion::madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate) {
     offset->filterCoefficient = 2.0f * (float) M_PI * CUTOFF_FREQUENCY * (1.0f / (float) sampleRate);
     offset->timeout = TIMEOUT * sampleRate;
     offset->timer = 0;
@@ -627,7 +627,7 @@ void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate)
  * @param gyroscope Gyroscope measurement in degrees per second.
  * @return Corrected gyroscope measurement in degrees per second.
  */
-madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope) {
+madVector Infusion::madOffsetUpdate(madOffset *const offset, madVector gyroscope) {
 
     // Subtract offset from gyroscope measurement
     gyroscope = madVectorSubtract(gyroscope, offset->gyroscopeOffset);
