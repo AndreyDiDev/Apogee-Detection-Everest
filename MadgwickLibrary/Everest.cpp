@@ -131,8 +131,8 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
 
     // euler = infusion->getEuler(ahrs);
 
-    internalStates = infusion->madAhrsGetInternalStates(ahrs);
-    flags = infusion->madAhrsGetFlags(ahrs);
+    internalStates = infusion->madAhrsGetInternalStates(infusion->getMadAhrs());
+    flags = infusion->madAhrsGetFlags(infusion->getMadAhrs());
 
     // write to file
     fprintf(file, "%f,", timestamp);
@@ -146,15 +146,12 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
 
     fprintf(file, "\n");
 
-    // printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError, 
-    // internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, 
-    // internal.magneticError, internal.magnetometerIgnored, internal.magneticRecoveryTrigger, 
-    // flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery); 
+    printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internalStates.accelerationError, 
+    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, 
+    internalStates.magneticError, internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, 
+    flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery); 
 
 // #undef ahrs
-
-    // return accelerationZ
-    // or run numerical integration on accelerationZ
 }
 
 /**
@@ -189,21 +186,21 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
     // Calculate average of IMU parameters
     #define averageIMU this->state.avgIMU
 
-    averageIMU.gyroX = (internalIMU_1.gyroX + internalIMU_2.gyroX) / 2.0;
-    averageIMU.gyroY = (internalIMU_1.gyroY + internalIMU_2.gyroY) / 2.0;
-    averageIMU.gyroZ = (internalIMU_1.gyroZ + internalIMU_2.gyroZ) / 2.0;
+    averageIMU.gyroX = (this->internalIMU_1.gyroX + this->internalIMU_2.gyroX) / 2.0;
+    averageIMU.gyroY = (this->internalIMU_1.gyroY + this->internalIMU_2.gyroY) / 2.0;
+    averageIMU.gyroZ = (this->internalIMU_1.gyroZ + this->internalIMU_2.gyroZ) / 2.0;
 
-    averageIMU.accelX = (internalIMU_1.accelX + internalIMU_2.accelX) / 2.0;
-    averageIMU.accelY = (internalIMU_1.accelY + internalIMU_2.accelY) / 2.0;
-    averageIMU.accelZ = (internalIMU_1.accelZ + internalIMU_2.accelZ) / 2.0;
+    averageIMU.accelX = (this->internalIMU_1.accelX + this->internalIMU_2.accelX) / 2.0;
+    averageIMU.accelY = (this->internalIMU_1.accelY + this->internalIMU_2.accelY) / 2.0;
+    averageIMU.accelZ = (this->internalIMU_1.accelZ + this->internalIMU_2.accelZ) / 2.0;
 
-    averageIMU.time = (internalIMU_1.time + internalIMU_2.time) / 2.0;
+    averageIMU.time = (this->internalIMU_1.time + this->internalIMU_2.time) / 2.0;
 
     #undef averageIMU
 
     // feed to Madgwick
     // MadgwickWrapper(state.avgIMU);
-    everest.MadgwickWrapper(state.avgIMU, magX, magY, magZ);
+    this->MadgwickWrapper(state.avgIMU, magX, magY, magZ);
 }
 
 /**
@@ -231,6 +228,7 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
 /**
  * @brief Calls IMU and Baro update functions and calculates altitude
  *      calls Dynamite and updates altitude list
+ * 
  * @return calculated altitude
  * 
  *    External (only function that should be called after instantiation of Everest to pass
