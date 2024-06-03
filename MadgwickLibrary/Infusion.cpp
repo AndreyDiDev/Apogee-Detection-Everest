@@ -385,7 +385,7 @@ static inline int Clamp(const int value, const int min, const int max) {
 void Infusion::madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime) {
 
     // Update AHRS algorithm
-    madAhrsUpdate(ahrs, gyroscope, accelerometer, VECTOR_ZERO, deltaTime);
+    this->madAhrsUpdate(ahrs, gyroscope, accelerometer, VECTOR_ZERO, deltaTime);
 
     // Zero heading during initialisation
     if (ahrs->initialising) {
@@ -402,7 +402,7 @@ void Infusion::madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector 
  * @param heading Heading measurement in degrees.
  * @param deltaTime Delta time in seconds.
  */
-void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float heading, const float deltaTime) {
+void Infusion::madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float heading, const float deltaTime) {
 #define Q ahrs->quaternion.element
 
     // Calculate roll
@@ -418,7 +418,7 @@ void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope
     }};
 
     // Update AHRS algorithm
-    madAhrsUpdate(ahrs, gyroscope, accelerometer, magnetometer, deltaTime);
+    this->madAhrsUpdate(ahrs, gyroscope, accelerometer, magnetometer, deltaTime);
 #undef Q
 }
 

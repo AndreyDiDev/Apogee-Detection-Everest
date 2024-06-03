@@ -13,8 +13,11 @@ import numpy
 
 print("running this 2")
 
+original = "C:/Users/Andrey/Documents/Fusion-main_new/Fusion-main/Fusion/file11.txt"
+everest = "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/everest.txt"
+
 # Import sensor data
-data = numpy.genfromtxt("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.txt", delimiter=",", skip_header=1)
+data = numpy.genfromtxt(everest, delimiter=",", skip_header=1)
 
 # with open('C:/Users/Andrey/Documents/AHRSRepo/MadgwickAHRS/newSimsTxt.txt') as fin, open('newfile.txt', 'w') as fout:
 #     for line in fin:

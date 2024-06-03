@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <ctime>
 #include <string.h>
+
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 using namespace std;
 
 #define SAMPLE_RATE (100) // replace this with actual sample rate
@@ -17,6 +23,9 @@ Infusion *infusion;
 
 Everest everest = Everest::getEverest();
 kinematics *Kinematics = everest.getKinematics(); // tare to ground
+
+madAhrsFlags flags;
+madAhrsInternalStates internalStates;
 
 /**
  * @brief Only done once. Sets pointers for Madgwick
@@ -40,8 +49,8 @@ void MadgwickSetup()
     const madVector accelerometerOffset = {0.0f, 0.0f, 0.0f};
     const madMatrix softIronMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-    madAhrsInternalStates internal = infusion->madAhrsGetInternalStates(ahrs);
-    madAhrsFlags flags = infusion->madAhrsGetFlags(ahrs);
+    internalStates = infusion->madAhrsGetInternalStates(ahrs);
+    flags  = infusion->madAhrsGetFlags(ahrs);
 
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
@@ -83,15 +92,14 @@ void MadgwickSetup()
  * @param data SensorDataNoMag struct
  * 
 */
-void MadgwickWrapper(SensorDataNoMag data, double x, double y, double z){
+void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
 // #define ahrs infusion->getMadAhrs(infusion)
     // Infusion infusion = infusion;
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    madEuler euler = infusion->getEuler(ahrs);
-    madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
+    
 
     // Update gyroscope offset correction algorithm
     madOffset offset = infusion->getOffset();
@@ -109,20 +117,31 @@ void MadgwickWrapper(SensorDataNoMag data, double x, double y, double z){
     float deltaTime = (float) (timestamp - previousTimestamp);
     previousTimestamp = timestamp;
 
-    madVector test = {x, y, z};
+    madVector mag = {x, y, z};
 
     // Update gyroscope AHRS algorithm
     // infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
-    infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, test, deltaTime);
+    infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, mag, deltaTime);
+
+    // madAhrsInternalStates internal;
+    // madAhrsFlags flags;
+
+    madEuler euler = infusion->getEuler(ahrs);
+    madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
+
+    // euler = infusion->getEuler(ahrs);
+
+    internalStates = infusion->madAhrsGetInternalStates(ahrs);
+    flags = infusion->madAhrsGetFlags(ahrs);
 
     // write to file
     fprintf(file, "%f,", timestamp);
 
     fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
-    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internal.accelerationError,  
-    internal.accelerometerIgnored, internal.accelerationRecoveryTrigger, internal.magneticError, 
-    internal.magnetometerIgnored, internal.magneticRecoveryTrigger, flags.initialising, 
+    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internalStates.accelerationError,  
+    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError, 
+    internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising, 
     flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
 
     fprintf(file, "\n");
@@ -144,7 +163,7 @@ void MadgwickWrapper(SensorDataNoMag data, double x, double y, double z){
  * 
  *    Internal
 */
-void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2)
+void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ)
 {
     // Update IMU1
     this->internalIMU_1.time = imu1.time;
@@ -184,6 +203,7 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 
     // feed to Madgwick
     // MadgwickWrapper(state.avgIMU);
+    everest.MadgwickWrapper(state.avgIMU, magX, magY, magZ);
 }
 
 /**
@@ -217,7 +237,7 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
  *  sensor data to Everest for altitude calculation)
 */
 double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
-    everest.IMU_Update(imu1, imu2);
+    // everest.IMU_Update(imu1, imu2);
     everest.Baro_Update(baro1, baro2, baro3, realBaro);
     double finalAlt = everest.dynamite();
 
@@ -381,7 +401,7 @@ int main()
 
     // printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
 
-    file = fopen("infusion.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    file = fopen("everest.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
         fprintf(stderr, "Error opening file...exiting\n");
         exit(1);
@@ -426,7 +446,7 @@ int main()
         token = strtok(NULL, ",");
         float magZ = atof(token);
 
-        SensorData sensorData = {
+        SensorDataNoMag sensorData = {
             time,
             gyroX,
             gyroY,
@@ -434,15 +454,12 @@ int main()
             accelX,
             accelY,
             accelZ,
-            magX,
-            magY,
-            magZ,
         };
 
         // Example: Print all sensor readings
         // printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
         //        time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
-        SensorData sensorData2 = {
+        SensorDataNoMag sensorData2 = {
             time,
             gyroX,
             gyroY,
@@ -450,14 +467,11 @@ int main()
             accelX,
             accelY,
             accelZ,
-            magX,
-            magY,
-            magZ,
         };
 
         start = std::clock();
 
-        everest.IMU_Update(sensorData, sensorData2);
+        everest.IMU_Update(sensorData, sensorData2, magX, magY, magZ);
 
         clock_t endTime = std::clock();
 
