@@ -11,7 +11,8 @@
 
 using namespace std;
 
-#define SAMPLE_RATE (100) // replace this with actual sample rate
+#define SAMPLE_RATE (3) // replace this with actual sample rate
+#define DELTA_TIME (1.0f / 3.0f)
 FILE *file;
 
 // Instantiate Everest
@@ -76,6 +77,7 @@ void MadgwickSetup()
             0.5f,
             2000.0f, /* replace this with actual gyroscope range in degrees/s */
             10.0f,
+            10.0f,
             5 * SAMPLE_RATE, /* 5 seconds */
     };
 
@@ -102,8 +104,8 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     madOffset offset = infusion->getOffset();
     gyroscope = infusion->madOffsetUpdate(&offset, gyroscope);
 
-    // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
-    //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
+    printf("Averaged: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+        data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ);
 
     // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
     //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
@@ -392,13 +394,13 @@ int main()
 
     // printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
 
-    file = fopen("everest.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    file = fopen("everest1.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
         fprintf(stderr, "Error opening file...exiting\n");
         exit(1);
     }
 
-    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
+    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/Imu 1.csv", "r");
     if (!file1) {
         perror("Error opening file");
         return 1;
@@ -407,11 +409,21 @@ int main()
     char line[MAX_LINE_LENGTH];
     std::clock_t start;
     double duration;
+
+    int i = 0;
     
     while (fgets(line, sizeof(line), file1)) {
         // Tokenize the line using strtok
         char *token = strtok(line, ",");
-        float time = atof(token); // Convert the time value to float
+        float accelX = atof(token); // Convert the time value to float
+
+        // Parse accelerometer readings (X, Y, Z)
+        // token = strtok(NULL, ",");
+        // float accelX = atof(token);
+        token = strtok(NULL, ",");
+        float accelY = atof(token);
+        token = strtok(NULL, ",");
+        float accelZ = atof(token);
 
         // Parse gyroscope readings (X, Y, Z)
         token = strtok(NULL, ",");
@@ -421,14 +433,6 @@ int main()
         token = strtok(NULL, ",");
         float gyroZ = atof(token);
 
-        // Parse accelerometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float accelX = atof(token);
-        token = strtok(NULL, ",");
-        float accelY = atof(token);
-        token = strtok(NULL, ",");
-        float accelZ = atof(token);
-
         // Parse magnetometer readings (X, Y, Z)
         token = strtok(NULL, ",");
         float magX = atof(token);
@@ -437,27 +441,35 @@ int main()
         token = strtok(NULL, ",");
         float magZ = atof(token);
 
+        token = strtok(NULL, ",");
+        float time = atof(token); // Convert the time value to float
+
+        time = i * DELTA_TIME;
+
+        i++;
+
         SensorDataNoMag sensorData = {
             time,
-            gyroX,
-            gyroY,
-            gyroZ,
-            accelX,
-            accelY,
-            accelZ,
+            gyroX/1000,
+            gyroY/1000,
+            gyroZ/1000,
+            accelX/1000,
+            accelY/1000,
+            accelZ/1000,
         };
 
         // Example: Print all sensor readings
-        // printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
-        //        time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
+        printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
+            time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
+
         SensorDataNoMag sensorData2 = {
             time,
-            gyroX,
-            gyroY,
-            gyroZ,
-            accelX,
-            accelY,
-            accelZ,
+            gyroX/1000,
+            gyroY/1000,
+            gyroZ/1000,
+            accelX/1000,
+            accelY/1000,
+            accelZ/1000,
         };
 
         start = std::clock();
