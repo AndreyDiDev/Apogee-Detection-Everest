@@ -25,7 +25,7 @@ data = numpy.genfromtxt(everest, delimiter=",", skip_header=1)
 
 # data1 = numpy.genfromtxt("C:/Users/Andrey/Documents/AHRSRepo/MadgwickAHRS/newFile.txt", delimiter=",", skip_header=1)
 
-sample_rate = 100  # 100 Hz
+sample_rate = 3  # 100 Hz
 
 # print(data1)
 # print(data[0])

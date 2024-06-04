@@ -116,6 +116,8 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     float deltaTime = (float) (timestamp - previousTimestamp);
     previousTimestamp = timestamp;
 
+    this->state.deltaTimeIMU = deltaTime;
+
     // madVector mag = {.axis = {x, y, z,}};
 
     // printf("Mag: (%.6f, %.6f, %.6f) uT\n", mag.axis.x, mag.axis.y, mag.axis.z);
@@ -206,24 +208,32 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 }
 
 /**
- * @brief takes external data and updates internal baro data
+ * @brief updates baro and delta time
  *     Should be called every time baro data is updated
  *      Internal
 */
-void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro)
+void Everest::Baro_Update(const BarosData& Baro1, const BarosData& Baro2, const BarosData& Baro3, const BarosData& RealBaro)
 {
     // Update Baros
-    this->baro1.time = baro1.time;
-    this->baro1.pressure = baro1.pressure;
+    this->baro1.time = Baro1.time;
+    this->baro1.pressure = Baro1.pressure;
+    this->baro1.deltaTime = Baro1.time - this->baro1.previousTime;
+    this->baro1.previousTime = Baro1.time;
 
-    this->baro2.time = baro2.time;
-    this->baro2.pressure = baro2.pressure;
+    this->baro2.time = Baro2.time;
+    this->baro2.pressure = Baro2.pressure;
+    this->baro2.deltaTime = Baro2.time - this->baro2.previousTime;
+    this->baro2.previousTime = Baro2.time;
 
-    this->baro3.time = baro3.time;
-    this->baro3.pressure = baro3.pressure;
+    this->baro3.time = Baro3.time;
+    this->baro3.pressure = Baro3.pressure;
+    this->baro3.deltaTime = Baro3.time - this->baro3.previousTime;
+    this->baro3.previousTime = Baro3.time;
 
-    this->realBaro.time = realBaro.time;
-    this->realBaro.pressure = realBaro.pressure;
+    this->realBaro.time = RealBaro.time;
+    this->realBaro.pressure = RealBaro.pressure;
+    this->realBaro.deltaTime = RealBaro.time - this->realBaro.previousTime;
+    this->realBaro.previousTime = RealBaro.time;
 
 }
 
@@ -257,13 +267,14 @@ double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, Baros
  * 
  * @return calculated altitude
  */
-double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
+double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     double accelerationZ = avgIMU.accelZ;
-    double initialVelocity = Kinematics->initialVelo;
-    double initialAltitude = Kinematics->initialAlt;
+    double initialVelocity = this->getKinematics()->initialVelo;
+    double initialAltitude = this->getKinematics()->initialAlt;
+    double deltaTime = this->state.deltaTimeIMU;
 
     // Derive altitude from IMU
-    double altitude = (double) (initialAltitude + initialVelocity * (1.0/SAMPLE_RATE) + 0.5 * accelerationZ * pow((1.0/SAMPLE_RATE), 2));
+    double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
 
     // return altitude
     return altitude;
@@ -328,7 +339,7 @@ double Everest::dynamite(){
     Kinematics.finalAltitude = normalised_Altitude;
 
     // update velocity
-    Kinematics.initialVelo = (Kinematics.finalAltitude - Kinematics.initialAlt)/(1.0/SAMPLE_RATE);
+    Kinematics.initialVelo = (Kinematics.finalAltitude - Kinematics.initialAlt)/(this->state.deltaTimeIMU);
 
     // update altitude
     Kinematics.initialAlt = Kinematics.finalAltitude;
@@ -343,8 +354,8 @@ double Everest::dynamite(){
 // TO DO : put the derivative of the altitude in the recalculateGain function
 // do first derivative estimated altitude and times it by time then 1/(new - old)
 void Everest::recalculateGain(double estimate){
-    double gainedEstimate = deriveForVelocity(estimate);
-    gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
+    double gainedEstimate = deriveForVelocity(estimate); // pre integrated for altitude
+    // gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
     this->state.gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
     this->state.gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
@@ -363,8 +374,13 @@ void Everest::recalculateGain(double estimate){
  *   Internal
  */
 double Everest::deriveForVelocity(double estimate){
-    double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
-    return velocityZ;
+    double deltaTimeAverage = (this->baro1.deltaTime + this->baro2.deltaTime + this->baro3.deltaTime + this->realBaro.deltaTime + this->state.deltaTimeIMU)/5.0;
+
+    double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * deltaTimeAverage);
+
+    double newAltitude = velocityZ * deltaTimeAverage;
+
+    return newAltitude;
 }
 
 /**

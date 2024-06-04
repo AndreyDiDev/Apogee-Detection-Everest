@@ -846,6 +846,14 @@ class Infusion {
 
         void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
 
+        madVector magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer, madVector halfGravity, madVector halfMagnetometerFeedback);
+
+        madVector accelerometerFeedback(madAhrs *const ahrs, const madVector accelerometer, madVector halfGravity, madVector halfAccelerometerFeedback);
+
+        void rampDownGain(madAhrs *const ahrs, const float deltaTime);
+
+        void reinitialiseGyro(madAhrs *const ahrs, const madVector gyroscope);
+
     private:
         // madVector halfGravity() const;
         // madVector halfMagnetic() const;

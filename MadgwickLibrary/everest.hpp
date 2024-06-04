@@ -33,6 +33,7 @@ typedef union {
     float std_Real_Baro;
 
     SensorDataNoMag avgIMU;
+    float deltaTimeIMU;
 } systemState;
 
 typedef struct{
@@ -53,6 +54,9 @@ typedef struct{
     float time;
     float pressure;
     float altitude;
+
+    float deltaTime;
+    float previousTime;
 } BarosData;
 
 class Everest{
@@ -94,6 +98,8 @@ class Everest{
         // void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
 
         double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+
+        double deriveForAltitudeIMU(SensorDataNoMag avgIMU);
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
