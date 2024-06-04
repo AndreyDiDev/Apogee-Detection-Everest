@@ -120,11 +120,11 @@ void Everest::initialize(systemState& state){
     state.gain_Baro3 = 1/10.0;
     state.gain_Real_Baro = 3/10.0;
 
-    state.std_IMU = 0.1;
+    state.std_IMU = 0.05;
     state.std_Baro1 = 0.1;
     state.std_Baro2 = 0.1;
     state.std_Baro3 = 0.1;
-    state.std_Real_Baro = 0.1;
+    state.std_Real_Baro = 0.05;
 
     Kinematics.initialVelo = 0;
     Kinematics.initialAlt = 0;
