@@ -6,6 +6,15 @@
 #ifndef EVEREST_HPP
 #define EVEREST_HPP
 
+#include <stdio.h>
+#include <ctime>
+#include <string.h>
+
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
 
@@ -19,7 +28,7 @@ typedef struct{
  * @brief Keeps whole system's states, including apogee detection results and confidence values 
  * for each system
 */
-typedef union {
+typedef struct {
     float gain_IMU;
     float gain_Baro1;
     float gain_Baro2;
@@ -68,12 +77,10 @@ class Everest{
 
         Infusion* Initialize();
 
-        // Infusion* Initialize2();
-
         static Everest getEverest();
 
         // Initialize system state
-        systemState state;
+        systemState state = {};
 
         void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
 
@@ -114,8 +121,8 @@ class Everest{
 
 void Everest::initialize(systemState& state){
     // Initially we trust systems equally
-    state.gain_IMU = 4/10.0; // change to actual initial trusts 
-    state.gain_Baro1 = 1/10.0;
+    this->state.gain_IMU = 4/10.0; // change to actual initial trusts 
+    this->state.gain_Baro1 = 1/10.0;
     state.gain_Baro2 = 1/10.0;
     state.gain_Baro3 = 1/10.0;
     state.gain_Real_Baro = 3/10.0;
@@ -129,6 +136,8 @@ void Everest::initialize(systemState& state){
     Kinematics.initialVelo = 0;
     Kinematics.initialAlt = 0;
     Kinematics.finalAltitude = 0;
+
+    printf("Initialized\n");
 }
 
 Infusion* Everest::Initialize(){
