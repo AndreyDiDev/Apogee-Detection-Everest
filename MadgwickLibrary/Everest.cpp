@@ -156,10 +156,10 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
 
     fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
-    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internalStates.accelerationError,  
+    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d,%f", internalStates.accelerationError,  
     internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError, 
     internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising, 
-    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
+    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, earth.axis.z);
 
     // fprintf(file, "\n");
 
@@ -332,12 +332,12 @@ double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
 double convertToAltitude(double pressure){
     // Convert pressure to altitude
     // Convert from 100*millibars to m
-    double seaLevelPressure = 1013.25 * 1000; // sea level pressure in hPa
+    double seaLevelPressure = 1013.25 * 1000 * 100; // sea level pressure in milibars
     double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284));
 
     if(debug == Dynamite || debug == ALL){
-        printf("\n Conversion \n");
-        printf("Pressure: %f hPa, Altitude: %f m\n", pressure, altitude);
+        printf("\nConversion \n");
+        printf("Pressure: %f milliPa, Altitude: %f m\n", pressure, altitude);
     }
 
     return altitude;
@@ -353,7 +353,7 @@ double Everest::dynamite(){
     double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU);
     this->state.avgIMU.altitude = IMUAltitude;
 
-    double BaroAltitude1 = convertToAltitude(everest.baro1.pressure);
+    double BaroAltitude1 = convertToAltitude(this->baro1.pressure);
     this->baro1.altitude = BaroAltitude1;
 
     double BaroAltitude2 = convertToAltitude(everest.baro2.pressure);
@@ -366,7 +366,7 @@ double Everest::dynamite(){
     this->realBaro.altitude = RealBaroAltitude;
 
     if(debug == Dynamite || debug == ALL){
-        printf("\n Dynamite\n");
+        printf("\nDynamite\n");
         printf("Baro1 Altitude: %f\n", BaroAltitude1);
         printf("Baro2 Altitude: %f\n", BaroAltitude2);
         printf("Baro3 Altitude: %f\n", BaroAltitude3);
@@ -381,22 +381,58 @@ double Everest::dynamite(){
     double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/everest.state.std_Baro3;
     double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/everest.state.std_Real_Baro;
 
+    if(debug == Dynamite || debug == ALL){
+        printf("\nDistributed\n");
+        printf("Distributed IMU Altitude: %f\n", distributed_IMU_Altitude);
+        printf("Gain IMU: %f\n", everest.state.gain_IMU);
+        printf("STD IMU: %f\n", everest.state.std_IMU);
+
+        printf("Distributed Baro1 Altitude: %f\n", distributed_Baro_Altitude1);
+        printf("Distributed Baro2 Altitude: %f\n", distributed_Baro_Altitude2);
+        printf("Distributed Baro3 Altitude: %f\n", distributed_Baro_Altitude3);
+        printf("Distributed Real Baro Altitude: %f\n\n", distributed_RealBaro_Altitude);
+    }
+
     double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2 
                             + distributed_Baro_Altitude3 + distributed_RealBaro_Altitude;
+
+    if(debug == Dynamite || debug == ALL){
+        printf("Distributed Sum: %f\n", distributed_Sum);
+    }
 
     double sumSTD = everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2 
                     + everest.state.std_Baro3 + everest.state.std_Real_Baro;
 
+    if(debug == Dynamite || debug == ALL){
+        printf("Sum STD: %f\n", sumSTD);
+    }
+
     double sumGain = everest.state.gain_IMU + everest.state.gain_Baro1 + everest.state.gain_Baro2 
                     + everest.state.gain_Baro3 + everest.state.gain_Real_Baro;
 
+    if(debug == Dynamite || debug == ALL){
+        printf("Sum Gain: %f\n", sumGain);
+    }
+
     double normalised_Altitude = (distributed_Sum/sumSTD)/sumGain;
+
+    if(debug == Dynamite || debug == ALL){
+        printf("Normalised Altitude: %f\n", normalised_Altitude);
+    }
 
     // Update Kinematics
     Kinematics.finalAltitude = normalised_Altitude;
 
+    if(debug == Dynamite || debug == ALL){
+        printf("Final Altitude: %f\n", Kinematics.finalAltitude);
+    }
+
     // update velocity
     Kinematics.initialVelo = (Kinematics.finalAltitude - Kinematics.initialAlt)/(this->state.deltaTimeIMU);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("Initial Velocity: %f\n", Kinematics.initialVelo);
+    }
 
     // update altitude
     Kinematics.initialAlt = Kinematics.finalAltitude;
@@ -414,11 +450,24 @@ void Everest::recalculateGain(double estimate){
     double gainedEstimate = deriveForVelocity(estimate); // pre integrated for altitude
     // gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
+    if(debug == Third || debug == ALL){
+        printf("Gained Estimate: %f\n", gainedEstimate);
+    }
+
     this->state.gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
     this->state.gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
     this->state.gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
     this->state.gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
     this->state.gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nRecalculate Gain\n");
+        printf("New Gain IMU: %f\n", this->state.gain_IMU);
+        printf("New Gain Baro1: %f\n", this->state.gain_Baro1);
+        printf("New Gain Baro2: %f\n", this->state.gain_Baro2);
+        printf("New Gain Baro3: %f\n", this->state.gain_Baro3);
+        printf("New Gain Real Baro: %f\n", this->state.gain_Real_Baro);
+    }
 }
 
 /**
@@ -436,6 +485,13 @@ double Everest::deriveForVelocity(double estimate){
     double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * deltaTimeAverage);
 
     double newAltitude = velocityZ * deltaTimeAverage;
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nDerivative\n");
+        printf("Velocity: %f\n", velocityZ);
+        printf("New Altitude: %f\n", newAltitude);
+        printf("Delta Time Average: %f\n", deltaTimeAverage);
+    }
 
     return newAltitude;
 }
