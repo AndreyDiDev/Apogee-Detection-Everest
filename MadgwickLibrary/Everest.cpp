@@ -327,14 +327,13 @@ double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
 /**
  * Calculates the altitude based on the given pressure using the barometric formula
  * 
- * @param pressure pressure from baros in hPa
+ * @param pressure pressure from baros in Pa
  * 
  * @return altitude in meters
  */
 double convertToAltitude(double pressure){
-    // Convert pressure to altitude
-    // Convert from 100*millibars to m
-    double seaLevelPressure = 1013.25 ; // sea level pressure in milibars
+
+    double seaLevelPressure = 1013.25 ; // sea level pressure in hPa
     pressure = pressure / 100.0; // convert to hPa
     double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284));
     // altitude = altitude * 0.3048; // convert to meters
@@ -541,6 +540,10 @@ void tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro)
     // decrement the time
     theTime -= 1;
     sum = sum + convertToAltitude(baro1.pressure + baro2.pressure + baro3.pressure + realBaro.pressure) / 4.0;
+
+    if(debug == Secondary || debug == ALL){
+        printf("Sum: %f\n", sum);
+    }
 
     if(theTime > 0){
         sum = sum/(10*RATE_BARO);
