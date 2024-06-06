@@ -137,6 +137,12 @@ typedef enum {
     MadAxesAlignmentNZPXNY, /* -Z+X-Y */
 } MadAxesAlignment;
 
+// imu1 = AxesSwitch(imu1, MadAxesAlignmentPXPYPZ);
+//     both PX, PY, NZ
+
+// imu 
+//     NY, PX, NZ
+
 /**
  * @brief Gyroscope offset algorithm structure.  Structure members are used
  * internally and must not be accessed by the application.
