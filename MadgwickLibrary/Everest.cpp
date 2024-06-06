@@ -13,6 +13,7 @@ using namespace std;
 
 #define SAMPLE_RATE (3) // replace this with actual sample rate
 #define DELTA_TIME (1.0f / 3.0f)
+#define RATE_BARO (3)
 FILE *file;
 
 enum debug_level{
@@ -24,7 +25,7 @@ enum debug_level{
     NONE = 5        // none
 };
 
-debug_level debug = ALL;
+debug_level debug = Dynamite;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -252,7 +253,7 @@ void Everest::Baro_Update(const BarosData& Baro1, const BarosData& Baro2, const 
     this->realBaro.previousTime = RealBaro.time;
 
     if(debug == RAW || debug == ALL){
-        printf("Baro1: %.f milliPa, Baro2: %.f milliPa, Baro3: %.f milliPa, RealBaro: %.f milliPa\n",
+        printf("Baro1: %.f Pa, Baro2: %.f Pa, Baro3: %.f Pa, RealBaro: %.f Pa\n",
             baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
     }
 
@@ -333,9 +334,10 @@ double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
 double convertToAltitude(double pressure){
     // Convert pressure to altitude
     // Convert from 100*millibars to m
-    double seaLevelPressure = 1013.25 * 1000; // sea level pressure in milibars
+    double seaLevelPressure = 1013.25 ; // sea level pressure in milibars
+    pressure = pressure / 100.0; // convert to hPa
     double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284));
-    altitude = altitude * 0.3048; // convert to meters
+    // altitude = altitude * 0.3048; // convert to meters
 
     // If pressure is less than 100, altitude is 0
     if(pressure < 100){
@@ -344,7 +346,7 @@ double convertToAltitude(double pressure){
 
     if(debug == Dynamite || debug == ALL){
         printf("\nConversion \n");
-        printf("Pressure: %.f milliPa, Altitude: %.f m\n", pressure, altitude);
+        printf("Pressure: %.f Pa, Altitude: %.f m\n", pressure, altitude);
     }
 
     return altitude;
@@ -524,6 +526,29 @@ double getFinalAltitude(){
     return Kinematics->finalAltitude;
 }
 
+double theTime = 10 * RATE_BARO;
+double sum = 0;
+/**
+ * @brief Tares the altitude to the ground
+ * 
+ * Call function 10*RefreshRate times to get the initial altitude
+ * 
+ * Once finished will print the tared altitude and set it as the initial altitude
+*/
+void tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
+    // for 10 seconds collect baro
+
+    // decrement the time
+    theTime -= 1;
+    sum = sum + convertToAltitude(baro1.pressure + baro2.pressure + baro3.pressure + realBaro.pressure) / 4.0;
+
+    if(theTime > 0){
+        sum = sum/(10*RATE_BARO);
+        Kinematics->initialAlt = sum;
+        printf("Tare: %f\n", Kinematics->initialAlt);
+    }
+}
+
 #define MAX_LINE_LENGTH 1024
 
 /**
@@ -663,11 +688,11 @@ int main()
         // }
 
         // everest.IMU_Update(sensorData, sensorData2);
-        if(howMany == 2){
+        // if(howMany == 2){
             double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
 
             printf("Altitude: %f\n", eAltitude);
-        }
+        // }
 
         howMany++;
 
