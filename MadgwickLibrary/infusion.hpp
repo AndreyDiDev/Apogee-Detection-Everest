@@ -135,6 +135,7 @@ typedef enum {
     MadAxesAlignmentNZNXPY, /* -Z-X+Y */
     MadAxesAlignmentNZNYNX, /* -Z-Y-X */
     MadAxesAlignmentNZPXNY, /* -Z+X-Y */
+    MadAxesAlignmentPXPYNZ, /* +X+Y-NZ */
 } MadAxesAlignment;
 
 // imu1 = AxesSwitch(imu1, MadAxesAlignmentPXPYPZ);
@@ -616,7 +617,7 @@ static inline int Clamp(const int value, const int min, const int max);
  * @param alignment Axes alignment.
  * @return Sensor axes aligned with the body axes.
  */
-static inline madVector AxesSwitch(const madVector sensor, const MadAxesAlignment alignment) {
+madVector Infusion::AxesSwitch(const madVector sensor, const MadAxesAlignment alignment) {
     madVector result;
     switch (alignment) {
         case MadAxesAlignmentPXPYPZ:
@@ -626,6 +627,12 @@ static inline madVector AxesSwitch(const madVector sensor, const MadAxesAlignmen
             result.axis.y = -sensor.axis.z;
             result.axis.z = +sensor.axis.y;
             return result;
+        case MadAxesAlignmentPXPYNZ:
+            result.axis.x = +sensor.axis.x;
+            result.axis.y = +sensor.axis.y;
+            result.axis.z = -sensor.axis.z;
+            return result;
+
         case MadAxesAlignmentPXNYNZ:
             result.axis.x = +sensor.axis.x;
             result.axis.y = -sensor.axis.y;
@@ -827,6 +834,8 @@ class Infusion {
         madAhrs* getMadAhrs() {return &madAHRS;};
 
         madOffset getOffset() {return offset;};
+
+        madVector AxesSwitch(const madVector sensor, const MadAxesAlignment alignment);
 
         void madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settings);
 

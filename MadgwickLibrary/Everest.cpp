@@ -31,9 +31,6 @@ debug_level debug = Dynamite;
 madAhrs *ahrs;
 Infusion *infusion;
 
-// madAhrs *ahrs2;
-// Infusion *infusion2;
-
 Everest everest = Everest::getEverest();
 kinematics *Kinematics = everest.getKinematics(); // tare to ground
 
@@ -345,7 +342,7 @@ double convertToAltitude(double pressure){
 
     if(debug == Dynamite || debug == ALL){
         printf("\nConversion \n");
-        printf("Pressure: %.f Pa, Altitude: %.f m\n", pressure, altitude);
+        printf("Pressure: %.f hPa, Altitude: %.f m\n", pressure, altitude);
     }
 
     return altitude;
@@ -690,6 +687,41 @@ int main()
         //         baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
         // }
 
+        madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
+        madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
+
+        madVector imu1GyroAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
+        madVector imu1AccelAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+
+        madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
+        madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
+
+        madVector imu2GyroAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
+        madVector imu2AccelAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+
+        if(debug == Secondary || debug == ALL){
+            printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+                imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
+        }
+
+        // feed vectors into sensorData structs
+        sensorData.gyroX = imu1GyroAligned.axis.x;
+        sensorData.gyroY = imu1GyroAligned.axis.y;
+        sensorData.gyroZ = imu1GyroAligned.axis.z;
+
+        sensorData.accelX = imu1AccelAligned.axis.x;
+        sensorData.accelY = imu1AccelAligned.axis.y;
+        sensorData.accelZ = imu1AccelAligned.axis.z;
+
+        // second IMU
+        sensorData2.gyroX = imu2GyroAligned.axis.x;
+        sensorData2.gyroY = imu2GyroAligned.axis.y;
+        sensorData2.gyroZ = imu2GyroAligned.axis.z;
+
+        sensorData2.accelX = imu2AccelAligned.axis.x;
+        sensorData2.accelY = imu2AccelAligned.axis.y;
+        sensorData2.accelZ = imu2AccelAligned.axis.z;
+
         // everest.IMU_Update(sensorData, sensorData2);
         // if(howMany == 2){
             double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
@@ -713,3 +745,5 @@ int main()
 
     return 0;
 }
+
+// TO DO create alignedExternalUpdate(sensor..., alignement) function
