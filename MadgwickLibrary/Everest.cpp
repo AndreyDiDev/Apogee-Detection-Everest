@@ -25,7 +25,7 @@ enum debug_level{
     NONE = 5        // none
 };
 
-debug_level debug = Dynamite;
+debug_level debug = Secondary;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -290,16 +290,55 @@ double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, Baros
     return finalAlt;
 }
 
+/**
+ * @brief Wraps External Update with alignment, returns External Update with aligned data
+*/
 double Everest::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
             BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment){
-    
     // align
     madVector alignedIMU1 = infusion->AxesSwitch({imu1.accelX, imu1.accelY, imu1.accelZ}, alignment);
+    madVector alignedIMUGyro1 = infusion->AxesSwitch({imu1.gyroX, imu1.gyroY, imu1.gyroZ}, alignment);
+
     madVector alignedIMU2 = infusion->AxesSwitch({imu2.accelX, imu2.accelY, imu2.accelZ}, alignment);
+    madVector alignedIMUGyro2 = infusion->AxesSwitch({imu2.gyroX, imu2.gyroY, imu2.gyroZ}, alignment);
 
-    // do same and put back into structs then call external update
-    // return ExternalUpdate(alignedIMU1, alignedIMU2, baro1, baro2, baro3, realBaro);
+    if(debug == Secondary || debug == ALL){
+        printf("Unaligned IMU1: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n",
+            imu1.accelX, imu1.accelY, imu1.accelZ, imu1.gyroX, imu1.gyroY, imu1.gyroZ);
 
+        printf("Unaligned IMU2: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n", 
+            imu2.accelX, imu2.accelY, imu2.accelZ, imu2.gyroX, imu2.gyroY, imu2.gyroZ);
+
+        printf("Alignment: %d\n", alignment);
+    }
+
+    // put aligned data into SensorDataNoMag struct
+    imu1.accelX = alignedIMU1.axis.x;
+    imu1.accelY = alignedIMU1.axis.y;
+    imu1.accelZ = alignedIMU1.axis.z;
+
+    imu1.gyroX = alignedIMUGyro1.axis.x;
+    imu1.gyroY = alignedIMUGyro1.axis.y;
+    imu1.gyroZ = alignedIMUGyro1.axis.z;
+
+    // IMU 2
+    imu2.accelX = alignedIMU2.axis.x;
+    imu2.accelY = alignedIMU2.axis.y;
+    imu2.accelZ = alignedIMU2.axis.z;
+
+    imu2.gyroX = alignedIMUGyro2.axis.x;
+    imu2.gyroY = alignedIMUGyro2.axis.y;
+    imu2.gyroZ = alignedIMUGyro2.axis.z;
+
+    if(debug == Secondary || debug == ALL){
+        printf("Aligned IMU1: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n",
+            imu1.accelX, imu1.accelY, imu1.accelZ, imu1.gyroX, imu1.gyroY, imu1.gyroZ);
+
+        printf("Aligned IMU2: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n",   
+            imu2.accelX, imu2.accelY, imu2.accelZ, imu2.gyroX, imu2.gyroY, imu2.gyroZ);
+    }
+
+    return ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
 }
 
 
@@ -737,7 +776,7 @@ int main()
 
         // everest.IMU_Update(sensorData, sensorData2);
         // if(howMany == 2){
-            double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
+            double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
 
             printf("Altitude: %f\n", eAltitude);
         // }

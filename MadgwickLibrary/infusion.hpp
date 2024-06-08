@@ -611,141 +611,7 @@ static inline int Clamp(const int value, const int min, const int max);
 //------------------------------------------------------------------------------
 
 //Functions---------------------------------------------------------------------
-/**
- * @brief Swaps sensor axes for alignment with the body axes.
- * @param sensor Sensor axes.
- * @param alignment Axes alignment.
- * @return Sensor axes aligned with the body axes.
- */
-madVector Infusion::AxesSwitch(const madVector sensor, const MadAxesAlignment alignment) {
-    madVector result;
-    switch (alignment) {
-        case MadAxesAlignmentPXPYPZ:
-            break;
-        case MadAxesAlignmentPXNZPY:
-            result.axis.x = +sensor.axis.x;
-            result.axis.y = -sensor.axis.z;
-            result.axis.z = +sensor.axis.y;
-            return result;
-        case MadAxesAlignmentPXPYNZ:
-            result.axis.x = +sensor.axis.x;
-            result.axis.y = +sensor.axis.y;
-            result.axis.z = -sensor.axis.z;
-            return result;
 
-        case MadAxesAlignmentPXNYNZ:
-            result.axis.x = +sensor.axis.x;
-            result.axis.y = -sensor.axis.y;
-            result.axis.z = -sensor.axis.z;
-            return result;
-        case MadAxesAlignmentPXPZNY:
-            result.axis.x = +sensor.axis.x;
-            result.axis.y = +sensor.axis.z;
-            result.axis.z = -sensor.axis.y;
-            return result;
-        case MadAxesAlignmentNXPYNZ:
-            result.axis.x = -sensor.axis.x;
-            result.axis.y = +sensor.axis.y;
-            result.axis.z = -sensor.axis.z;
-            return result;
-        case MadAxesAlignmentNXPZPY:
-            result.axis.x = -sensor.axis.x;
-            result.axis.y = +sensor.axis.z;
-            result.axis.z = +sensor.axis.y;
-            return result;
-        case MadAxesAlignmentNXNYPZ:
-            result.axis.x = -sensor.axis.x;
-            result.axis.y = -sensor.axis.y;
-            result.axis.z = +sensor.axis.z;
-            return result;
-        case MadAxesAlignmentNXNZNY:
-            result.axis.x = -sensor.axis.x;
-            result.axis.y = -sensor.axis.z;
-            result.axis.z = -sensor.axis.y;
-            return result;
-        case MadAxesAlignmentPYNXPZ:
-            result.axis.x = +sensor.axis.y;
-            result.axis.y = -sensor.axis.x;
-            result.axis.z = +sensor.axis.z;
-            return result;
-        case MadAxesAlignmentPYNZNX:
-            result.axis.x = +sensor.axis.y;
-            result.axis.y = -sensor.axis.z;
-            result.axis.z = -sensor.axis.x;
-            return result;
-        case MadAxesAlignmentPYPXNZ:
-            result.axis.x = +sensor.axis.y;
-            result.axis.y = +sensor.axis.x;
-            result.axis.z = -sensor.axis.z;
-            return result;
-        case MadAxesAlignmentPYPZPX:
-            result.axis.x = +sensor.axis.y;
-            result.axis.y = +sensor.axis.z;
-            result.axis.z = +sensor.axis.x;
-            return result;
-        case MadAxesAlignmentNYPXPZ:
-            result.axis.x = -sensor.axis.y;
-            result.axis.y = +sensor.axis.x;
-            result.axis.z = +sensor.axis.z;
-            return result;
-        case MadAxesAlignmentNYNZPX:
-            result.axis.x = -sensor.axis.y;
-            result.axis.y = -sensor.axis.z;
-            result.axis.z = +sensor.axis.x;
-            return result;
-        case MadAxesAlignmentNYNXNZ:
-            result.axis.x = -sensor.axis.y;
-            result.axis.y = -sensor.axis.x;
-            result.axis.z = -sensor.axis.z;
-            return result;
-        case MadAxesAlignmentNYPZNX:
-            result.axis.x = -sensor.axis.y;
-            result.axis.y = +sensor.axis.z;
-            result.axis.z = -sensor.axis.x;
-            return result;
-        case MadAxesAlignmentPZPYNX:
-            result.axis.x = +sensor.axis.z;
-            result.axis.y = +sensor.axis.y;
-            result.axis.z = -sensor.axis.x;
-            return result;
-        case MadAxesAlignmentPZPXPY:
-            result.axis.x = +sensor.axis.z;
-            result.axis.y = +sensor.axis.x;
-            result.axis.z = +sensor.axis.y;
-            return result;
-        case MadAxesAlignmentPZNYPX:
-            result.axis.x = +sensor.axis.z;
-            result.axis.y = -sensor.axis.y;
-            result.axis.z = +sensor.axis.x;
-            return result;
-        case MadAxesAlignmentPZNXNY:
-            result.axis.x = +sensor.axis.z;
-            result.axis.y = -sensor.axis.x;
-            result.axis.z = -sensor.axis.y;
-            return result;
-        case MadAxesAlignmentNZPYPX:
-            result.axis.x = -sensor.axis.z;
-            result.axis.y = +sensor.axis.y;
-            result.axis.z = +sensor.axis.x;
-            return result;
-        case MadAxesAlignmentNZNXPY:
-            result.axis.x = -sensor.axis.z;
-            result.axis.y = -sensor.axis.x;
-            result.axis.z = +sensor.axis.y;
-            return result;
-        case MadAxesAlignmentNZNYNX:
-            result.axis.x = -sensor.axis.z;
-            result.axis.y = -sensor.axis.y;
-            result.axis.z = -sensor.axis.x;
-            return result;
-        case MadAxesAlignmentNZPXNY:
-            result.axis.x = -sensor.axis.z;
-            result.axis.y = +sensor.axis.x;
-            result.axis.z = -sensor.axis.y;
-            return result;
-    }
-    return sensor; // avoid compiler warning
-}
 
 //------------------------------------------------------------------------------
 
@@ -877,6 +743,143 @@ class Infusion {
 
     protected:
 };
+
+/**
+ * @brief Swaps sensor axes for alignment with the body axes.
+ * @param sensor Sensor axes.
+ * @param alignment Axes alignment.
+ * @return Sensor axes aligned with the body axes.
+ * @todo have absolutes then put sign to prevent bad inputs from user
+ */
+inline madVector Infusion::AxesSwitch(const madVector sensor, const MadAxesAlignment alignment) {
+    madVector result;
+    switch (alignment) {
+        case MadAxesAlignmentPXPYPZ:
+            break;
+        case MadAxesAlignmentPXNZPY:
+            result.axis.x = +sensor.axis.x;
+            result.axis.y = -sensor.axis.z;
+            result.axis.z = +sensor.axis.y;
+            return result;
+        case MadAxesAlignmentPXPYNZ:
+            result.axis.x = +sensor.axis.x;
+            result.axis.y = +sensor.axis.y;
+            result.axis.z = -sensor.axis.z;
+            return result;
+
+        case MadAxesAlignmentPXNYNZ:
+            result.axis.x = +sensor.axis.x;
+            result.axis.y = -sensor.axis.y;
+            result.axis.z = -sensor.axis.z;
+            return result;
+        case MadAxesAlignmentPXPZNY:
+            result.axis.x = +sensor.axis.x;
+            result.axis.y = +sensor.axis.z;
+            result.axis.z = -sensor.axis.y;
+            return result;
+        case MadAxesAlignmentNXPYNZ:
+            result.axis.x = -sensor.axis.x;
+            result.axis.y = +sensor.axis.y;
+            result.axis.z = -sensor.axis.z;
+            return result;
+        case MadAxesAlignmentNXPZPY:
+            result.axis.x = -sensor.axis.x;
+            result.axis.y = +sensor.axis.z;
+            result.axis.z = +sensor.axis.y;
+            return result;
+        case MadAxesAlignmentNXNYPZ:
+            result.axis.x = -sensor.axis.x;
+            result.axis.y = -sensor.axis.y;
+            result.axis.z = +sensor.axis.z;
+            return result;
+        case MadAxesAlignmentNXNZNY:
+            result.axis.x = -sensor.axis.x;
+            result.axis.y = -sensor.axis.z;
+            result.axis.z = -sensor.axis.y;
+            return result;
+        case MadAxesAlignmentPYNXPZ:
+            result.axis.x = +sensor.axis.y;
+            result.axis.y = -sensor.axis.x;
+            result.axis.z = +sensor.axis.z;
+            return result;
+        case MadAxesAlignmentPYNZNX:
+            result.axis.x = +sensor.axis.y;
+            result.axis.y = -sensor.axis.z;
+            result.axis.z = -sensor.axis.x;
+            return result;
+        case MadAxesAlignmentPYPXNZ:
+            result.axis.x = +sensor.axis.y;
+            result.axis.y = +sensor.axis.x;
+            result.axis.z = -sensor.axis.z;
+            return result;
+        case MadAxesAlignmentPYPZPX:
+            result.axis.x = +sensor.axis.y;
+            result.axis.y = +sensor.axis.z;
+            result.axis.z = +sensor.axis.x;
+            return result;
+        case MadAxesAlignmentNYPXPZ:
+            result.axis.x = -sensor.axis.y;
+            result.axis.y = +sensor.axis.x;
+            result.axis.z = +sensor.axis.z;
+            return result;
+        case MadAxesAlignmentNYNZPX:
+            result.axis.x = -sensor.axis.y;
+            result.axis.y = -sensor.axis.z;
+            result.axis.z = +sensor.axis.x;
+            return result;
+        case MadAxesAlignmentNYNXNZ:
+            result.axis.x = -sensor.axis.y;
+            result.axis.y = -sensor.axis.x;
+            result.axis.z = -sensor.axis.z;
+            return result;
+        case MadAxesAlignmentNYPZNX:
+            result.axis.x = -sensor.axis.y;
+            result.axis.y = +sensor.axis.z;
+            result.axis.z = -sensor.axis.x;
+            return result;
+        case MadAxesAlignmentPZPYNX:
+            result.axis.x = +sensor.axis.z;
+            result.axis.y = +sensor.axis.y;
+            result.axis.z = -sensor.axis.x;
+            return result;
+        case MadAxesAlignmentPZPXPY:
+            result.axis.x = +sensor.axis.z;
+            result.axis.y = +sensor.axis.x;
+            result.axis.z = +sensor.axis.y;
+            return result;
+        case MadAxesAlignmentPZNYPX:
+            result.axis.x = +sensor.axis.z;
+            result.axis.y = -sensor.axis.y;
+            result.axis.z = +sensor.axis.x;
+            return result;
+        case MadAxesAlignmentPZNXNY:
+            result.axis.x = +sensor.axis.z;
+            result.axis.y = -sensor.axis.x;
+            result.axis.z = -sensor.axis.y;
+            return result;
+        case MadAxesAlignmentNZPYPX:
+            result.axis.x = -sensor.axis.z;
+            result.axis.y = +sensor.axis.y;
+            result.axis.z = +sensor.axis.x;
+            return result;
+        case MadAxesAlignmentNZNXPY:
+            result.axis.x = -sensor.axis.z;
+            result.axis.y = -sensor.axis.x;
+            result.axis.z = +sensor.axis.y;
+            return result;
+        case MadAxesAlignmentNZNYNX:
+            result.axis.x = -sensor.axis.z;
+            result.axis.y = -sensor.axis.y;
+            result.axis.z = -sensor.axis.x;
+            return result;
+        case MadAxesAlignmentNZPXNY:
+            result.axis.x = -sensor.axis.z;
+            result.axis.y = +sensor.axis.x;
+            result.axis.z = -sensor.axis.y;
+            return result;
+    }
+    return sensor; // avoid compiler warning
+}
 
 #endif // INFUSION_HPP
 
