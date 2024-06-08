@@ -290,6 +290,19 @@ double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, Baros
     return finalAlt;
 }
 
+double Everest::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
+            BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment){
+    
+    // align
+    madVector alignedIMU1 = infusion->AxesSwitch({imu1.accelX, imu1.accelY, imu1.accelZ}, alignment);
+    madVector alignedIMU2 = infusion->AxesSwitch({imu2.accelX, imu2.accelY, imu2.accelZ}, alignment);
+
+    // do same and put back into structs then call external update
+    // return ExternalUpdate(alignedIMU1, alignedIMU2, baro1, baro2, baro3, realBaro);
+
+}
+
+
 /**
  * Calculates altitude using IMU sensor data and kinematic equations.
  * 
@@ -747,3 +760,5 @@ int main()
 }
 
 // TO DO create alignedExternalUpdate(sensor..., alignement) function
+
+

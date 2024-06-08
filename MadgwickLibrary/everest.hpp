@@ -104,9 +104,14 @@ class Everest{
 
         // void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
 
-        double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+        double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, 
+                                BarosData baro2, BarosData baro3, BarosData realBaro);
 
         double deriveForAltitudeIMU(SensorDataNoMag avgIMU);
+
+        double AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
+                    BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment);
+    
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
