@@ -11,9 +11,11 @@
 
 using namespace std;
 
+// CHANGE
 #define SAMPLE_RATE (3) // replace this with actual sample rate
 #define DELTA_TIME (1.0f / 3.0f)
 #define RATE_BARO (3)
+
 FILE *file;
 
 bool isTared = false;
@@ -23,11 +25,11 @@ enum debug_level{
     Secondary = 1,  // all operations before dynamite
     Dynamite = 2,   //everything during dynamite
     Third = 3,      // after dynamite
-    ALL = 4,         // all
+    ALL = 4,        // all
     NONE = 5        // none
 };
 
-debug_level debug = Secondary;
+debug_level debug = Dynamite;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -391,8 +393,7 @@ double convertToAltitude(double pressure){
 
     double seaLevelPressure = 1013.25 ; // sea level pressure in hPa
     pressure = pressure / 100.0; // convert to hPa
-    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284));
-    // altitude = altitude * 0.3048; // convert to meters
+    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284)); // barometric formula
 
     // If pressure is less than 100, altitude is 0
     if(pressure < 100){
@@ -581,7 +582,8 @@ double getFinalAltitude(){
     return Kinematics->finalAltitude;
 }
 
-double theTime = 10 * RATE_BARO;
+double timeInSeconds = 2;
+double theTime = timeInSeconds * RATE_BARO;
 double sum = 0;
 /**
  * @brief Tares the altitude to the ground
@@ -594,17 +596,25 @@ void Everest::tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData 
     // for 10 seconds collect baro
     // decrement the time
     theTime -= 1;
-    sum = sum + convertToAltitude(baro1.pressure + baro2.pressure + baro3.pressure + realBaro.pressure) / 4.0;
+
+    // average pressures   
+    // have to do since function is weird
+    sum = sum + convertToAltitude(baro1.pressure);
+    sum = sum + convertToAltitude(baro2.pressure);
+    sum = sum + convertToAltitude(baro3.pressure);
+    sum = sum + convertToAltitude(realBaro.pressure);
+
+    sum = sum/4;
 
     if(debug == Secondary || debug == ALL){
         printf("Sum: %f\n", sum);
     }
 
-    if(theTime > 0){
-        sum = sum/(10*RATE_BARO);
+    if(theTime == 0){
         this->Kinematics.initialAlt = sum;
         printf("Tare: %f\n", this->Kinematics.initialAlt);
         isTared = true;
+        sum = sum/(timeInSeconds*RATE_BARO);
     }
 }
 
@@ -620,11 +630,6 @@ int main()
     MadgwickSetup();
 
     // test purposes
-
-    // everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
-
-    // printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
-
     file = fopen("everest2.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
         fprintf(stderr, "Error opening file...exiting\n");
@@ -641,20 +646,15 @@ int main()
     std::clock_t start;
     double duration;
 
-    // correct for varying refresh rate 
-
     int howMany = 1;
 
     int i = 0;
     
     while (fgets(line, sizeof(line), file1)) {
         // Tokenize the line using strtok
+        // Parse accelerometer readings (X, Y, Z)
         char *token = strtok(line, ",");
         float accelX = atof(token); // Convert the time value to float
-
-        // Parse accelerometer readings (X, Y, Z)
-        // token = strtok(NULL, ",");
-        // float accelX = atof(token);
         token = strtok(NULL, ",");
         float accelY = atof(token);
         token = strtok(NULL, ",");
@@ -782,11 +782,11 @@ int main()
         // sensorData2.accelZ = imu2AccelAligned.axis.z;
 
         // everest.IMU_Update(sensorData, sensorData2);
-        // if(howMany == 2){
-            double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
+        if(howMany <= 31){
+            double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXNYNZ);
 
             printf("Altitude: %f\n", eAltitude);
-        // }
+        }
 
         howMany++;
 
