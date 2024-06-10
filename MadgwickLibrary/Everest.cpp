@@ -787,7 +787,7 @@ int main()
 
         BarosData baro1 = {
             time,
-            pressure*1000,
+            pressure,
             0,
             0
         };
