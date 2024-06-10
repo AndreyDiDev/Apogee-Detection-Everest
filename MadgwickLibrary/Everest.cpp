@@ -17,16 +17,18 @@ using namespace std;
 #define RATE_BARO (3)
 #define CALIBRATION_TIME (2)
 
+bool firstSampleAfterCalibration = true;
+
+bool isTared = false;
+
 // double timeInSeconds = 2;
 double theTime = CALIBRATION_TIME * RATE_BARO;
 double sum = 0;
 double pressureSum = 0;
 
-static float previousTimestamp = CALIBRATION_TIME;
+static float previousTimestamp = 0;
 
 FILE *file;
-
-bool isTared = false;
 
 enum debug_level{
     RAW = 0,        // raw data
@@ -279,10 +281,20 @@ void Everest::Baro_Update(const BarosData& Baro1, const BarosData& Baro2, const 
 */
 double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
     if(!isTared){
-        everest.tare(baro1, baro2, baro3, realBaro);
+        everest.tare(imu1, imu2, baro1, baro2, baro3, realBaro);
         printf("Taring in progress\n)");
         return 0;
     }
+
+    // if(firstSampleAfterCalibration){
+    //     imu1.time = CALIBRATION_TIME - DELTA_TIME;
+    //     imu2.time = CALIBRATION_TIME - DELTA_TIME;
+    //     baro1.time = CALIBRATION_TIME- DELTA_TIME;
+    //     baro2.time = CALIBRATION_TIME - DELTA_TIME;
+    //     baro3.time = CALIBRATION_TIME - DELTA_TIME;
+    //     realBaro.time = CALIBRATION_TIME - DELTA_TIME;
+    //     firstSampleAfterCalibration = false;
+    // }
 
     everest.IMU_Update(imu1, imu2);
 
@@ -379,7 +391,6 @@ double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     // Derive altitude from IMU
     // measures change in acceleration 
     // double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
-
 
     double finalVelocity = initialVelocity + accelerationZ * deltaTime;
     double altitude = initialAltitude + (initialVelocity + finalVelocity) * deltaTime / 2.0;
@@ -604,7 +615,7 @@ double getFinalAltitude(){
  * 
  * Once finished will print the tared altitude and set it as the initial altitude
 */
-void Everest::tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
+void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
     // for 10 seconds collect baro
     // decrement the time
 
@@ -626,6 +637,8 @@ void Everest::tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData 
         this->Kinematics.initialAlt = sum;
         printf("Tare: %f\n", this->Kinematics.initialAlt);
         isTared = true;
+
+        everest.IMU_Update(imu1, imu2);
     }
 
     theTime -= 1;
@@ -633,6 +646,7 @@ void Everest::tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData 
 
 #define MAX_LINE_LENGTH 1024
 
+// TO DO: move calibration procedure into initialization
 /**
  * Serves to just initialize structs 
 */
@@ -752,7 +766,7 @@ int main()
             0
         };
 
-        if(howMany <= 13){
+        if(howMany <= 10){
 
             printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
