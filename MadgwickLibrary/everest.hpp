@@ -98,7 +98,7 @@ class Everest{
 
         void recalculateGain(double estimate);
 
-        double deriveForVelocity(double estimate);
+        double deriveChangeInVelocityToGetAltitude(double estimate);
 
         void MadgwickWrapper(SensorDataNoMag data);
 

@@ -572,21 +572,33 @@ double Everest::dynamite(){
 // TO DO : put the derivative of the altitude in the recalculateGain function
 // do first derivative estimated altitude and times it by time then 1/(new - old)
 void Everest::recalculateGain(double estimate){
-    double gainedEstimate = deriveForVelocity(estimate); // pre integrated for altitude
+    double gainedEstimate = deriveChangeInVelocityToGetAltitude(estimate); // pre integrated for altitude
     // gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
     // cannot have the big estimate be feed into the derive velocity because its not divided by the 
     // sources 
-
-    if(debug == Third || debug == ALL){
-        printf("Gained Estimate: %f\n", gainedEstimate);
-    }
 
     double gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
     double gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
     double gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
     double gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
     double gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
+
+    if(debug == Third || debug == ALL){
+        printf("\nRecalculate Gain - Before normalization\n");
+        printf("Gain IMU: %f\n", gain_IMU);
+        printf("Gain Baro1: %f\n", gain_Baro1);
+        printf("Gain Baro2: %f\n", gain_Baro2);
+        printf("Gain Baro3: %f\n", gain_Baro3);
+        printf("Gain Real Baro: %f\n", gain_Real_Baro);
+        printf("Gained Estimate: %f\n", gainedEstimate);
+
+        printf("Altitude: %f\n", estimate);
+        printf("Baro1: %f\n", this->baro1.altitude);
+        printf("Baro2: %f\n", this->baro2.altitude);
+        printf("Baro3: %f\n", this->baro3.altitude);
+        printf("Real Baro: %f\n\n", this->realBaro.altitude);
+    }
 
     // normalise
     this->state.gain_IMU = gain_IMU / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
@@ -601,7 +613,7 @@ void Everest::recalculateGain(double estimate){
         printf("New Gain Baro1: %f\n", this->state.gain_Baro1);
         printf("New Gain Baro2: %f\n", this->state.gain_Baro2);
         printf("New Gain Baro3: %f\n", this->state.gain_Baro3);
-        printf("New Gain Real Baro: %f\n", this->state.gain_Real_Baro);
+        printf("New Gain Real Baro: %f\n\n", this->state.gain_Real_Baro);
     }
 }
 
@@ -614,19 +626,19 @@ void Everest::recalculateGain(double estimate){
  * 
  *   Internal
  */
-double Everest::deriveForVelocity(double estimate){
+double Everest::deriveChangeInVelocityToGetAltitude(double estimate){
     double deltaTimeAverage = (this->baro1.deltaTime + this->baro2.deltaTime 
                                 + this->baro3.deltaTime + this->realBaro.deltaTime + this->state.deltaTimeIMU)/5.0;
 
     double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * deltaTimeAverage);
 
-    double newAltitude = velocityZ * deltaTimeAverage;
+    double newAltitude = this->AltitudeList.lastAltitude + velocityZ * deltaTimeAverage;
 
     if(debug == Dynamite || debug == ALL){
-        printf("\nDerivative\n");
+        printf("\nDerivative for new gain\n");
         printf("Velocity: %f\n", velocityZ);
         printf("New Altitude: %f\n", newAltitude);
-        printf("Delta Time Average: %f\n", deltaTimeAverage);
+        printf("Delta Time Average: %f\n\n", deltaTimeAverage);
     }
 
     return newAltitude;
@@ -775,7 +787,7 @@ int main()
 
         BarosData baro1 = {
             time,
-            pressure,
+            pressure*1000,
             0,
             0
         };
