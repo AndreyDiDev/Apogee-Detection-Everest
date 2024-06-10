@@ -642,7 +642,14 @@ void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1
         printf("Tare: %f\n", this->Kinematics.initialAlt);
         isTared = true;
 
+        // call to update time for these structs
         everest.IMU_Update(imu1, imu2);
+        deriveForVelocity(0);
+        deriveForVelocity(0);
+
+        Baro_Update(baro1, baro2, baro3, realBaro);
+
+        deriveForAltitudeIMU(everest.state.avgIMU);
     }
 
     theTime -= 1;
