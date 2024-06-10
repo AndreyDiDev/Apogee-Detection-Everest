@@ -465,12 +465,18 @@ double Everest::dynamite(){
         printf("IMU Altitude: %f\n", IMUAltitude);
     }
 
-    // distributing measurement
-    double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/pow(everest.state.std_IMU, 2);
-    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/pow(everest.state.std_Baro1, 2);
-    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/pow(everest.state.std_Baro2, 2);
-    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/pow(everest.state.std_Baro3,2);
-    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/pow(everest.state.std_Real_Baro,2);
+    // // distributing measurement
+    // double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/pow(everest.state.std_IMU, 2);
+    // double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/pow(everest.state.std_Baro1, 2);
+    // double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/pow(everest.state.std_Baro2, 2);
+    // double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/pow(everest.state.std_Baro3,2);
+    // double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/pow(everest.state.std_Real_Baro,2);
+
+    double distributed_IMU_Altitude = IMUAltitude * everest.state.gain_IMU;
+    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1);
+    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2);
+    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3);
+    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro);
 
     if(debug == Dynamite || debug == ALL){
         printf("\nDistributed\n");
@@ -505,6 +511,9 @@ double Everest::dynamite(){
     double sumSTD = pow(everest.state.std_IMU,2) + pow(everest.state.std_Baro1,2) + pow(everest.state.std_Baro2,2)
                     + pow(everest.state.std_Baro3,2) + pow(everest.state.std_Real_Baro,2);
 
+    double sumSTD1 = pow(everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2
+                    + everest.state.std_Baro3 + everest.state.std_Real_Baro, 2);
+
     if(debug == Dynamite || debug == ALL){
         printf("Sum STD: %f\n\n", sumSTD);
     }
@@ -516,7 +525,21 @@ double Everest::dynamite(){
         printf("Sum Gain: %f\n\n", sumGain);
     }
 
-    double normalised_Altitude = (distributed_Sum*sumSTD)/sumGain;
+    double normalised_Altitude = (distributed_Sum)/sumGain;
+
+    // double normalised_Altitude = (distributed_Sum*sumSTD)/(everest.state.gain_IMU);
+    // double normalised_Altitude = distributed_Sum;
+    // double normalised_Altitude = (distributed_Sum* pow(everest.state.std_IMU,2));
+
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro1,2);
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro2,2);
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro3,2);
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Real_Baro,2);
+
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro1);
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro2);
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro3);
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Real_Baro);
 
     if(debug == Dynamite || debug == ALL){
         printf("Normalised Altitude: %f\n\n", normalised_Altitude);
@@ -559,11 +582,18 @@ void Everest::recalculateGain(double estimate){
         printf("Gained Estimate: %f\n", gainedEstimate);
     }
 
-    this->state.gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
-    this->state.gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
-    this->state.gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
-    this->state.gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
-    this->state.gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
+    double gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
+    double gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
+    double gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
+    double gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
+    double gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
+
+    // normalise
+    this->state.gain_IMU = gain_IMU / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Baro1 = gain_Baro1 / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Baro2 = gain_Baro2 / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Baro3 = gain_Baro3 / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Real_Baro = gain_Real_Baro / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
 
     if(debug == Dynamite || debug == ALL){
         printf("\nRecalculate Gain\n");
@@ -643,13 +673,7 @@ void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1
         isTared = true;
 
         // call to update time for these structs
-        everest.IMU_Update(imu1, imu2);
-        deriveForVelocity(0);
-        deriveForVelocity(0);
-
-        Baro_Update(baro1, baro2, baro3, realBaro);
-
-        deriveForAltitudeIMU(everest.state.avgIMU);
+        ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
     }
 
     theTime -= 1;
@@ -777,7 +801,7 @@ int main()
             0
         };
 
-        if(howMany <= 10){
+        // if(howMany <= 10){
 
             printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
@@ -831,7 +855,7 @@ int main()
             printf("Altitude: %f\n", eAltitude);
 
 
-        }
+        // }
 
         howMany++;
 
