@@ -516,7 +516,7 @@ double Everest::dynamite(){
         printf("Sum Gain: %f\n\n", sumGain);
     }
 
-    double normalised_Altitude = (distributed_Sum/sumSTD)/sumGain;
+    double normalised_Altitude = (distributed_Sum*sumSTD)/sumGain;
 
     if(debug == Dynamite || debug == ALL){
         printf("Normalised Altitude: %f\n\n", normalised_Altitude);
@@ -552,6 +552,9 @@ void Everest::recalculateGain(double estimate){
     double gainedEstimate = deriveForVelocity(estimate); // pre integrated for altitude
     // gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
+    // cannot have the big estimate be feed into the derive velocity because its not divided by the 
+    // sources 
+
     if(debug == Third || debug == ALL){
         printf("Gained Estimate: %f\n", gainedEstimate);
     }
@@ -582,7 +585,8 @@ void Everest::recalculateGain(double estimate){
  *   Internal
  */
 double Everest::deriveForVelocity(double estimate){
-    double deltaTimeAverage = (this->baro1.deltaTime + this->baro2.deltaTime + this->baro3.deltaTime + this->realBaro.deltaTime + this->state.deltaTimeIMU)/5.0;
+    double deltaTimeAverage = (this->baro1.deltaTime + this->baro2.deltaTime 
+                                + this->baro3.deltaTime + this->realBaro.deltaTime + this->state.deltaTimeIMU)/5.0;
 
     double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * deltaTimeAverage);
 
