@@ -15,10 +15,18 @@ using namespace std;
 #define SAMPLE_RATE (3) // replace this with actual sample rate
 #define DELTA_TIME (1.0f / 3.0f)
 #define RATE_BARO (3)
+#define CALIBRATION_TIME (2)
+
+// double timeInSeconds = 2;
+double theTime = CALIBRATION_TIME * RATE_BARO;
+double sum = 0;
+double pressureSum = 0;
+
+static float previousTimestamp = CALIBRATION_TIME;
 
 FILE *file;
 
-bool isTared = true;
+bool isTared = false;
 
 enum debug_level{
     RAW = 0,        // raw data
@@ -122,7 +130,7 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     //        earth.axis.x, earth.axis.y, earth.axis.z);
 
     // Calculate delta time (in seconds) to account for gyroscope sample clock error
-    static float previousTimestamp;
+    // static float previousTimestamp;
     float deltaTime = (float) (timestamp - previousTimestamp);
     previousTimestamp = timestamp;
 
@@ -360,14 +368,19 @@ double Everest::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2
  * 
  * @return calculated altitude
  */
+
+// TO DO - fix the negative and accelX to accelZ
 double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
-    double accelerationZ = avgIMU.accelZ; // * -9.81
+    double accelerationZ = avgIMU.accelX * -9.81;
     double initialVelocity = this->getKinematics()->initialVelo;
     double initialAltitude = this->Kinematics.initialAlt;
     double deltaTime = this->state.deltaTimeIMU;
 
     // Derive altitude from IMU
+    // measures change in acceleration 
     // double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
+
+
     double finalVelocity = initialVelocity + accelerationZ * deltaTime;
     double altitude = initialAltitude + (initialVelocity + finalVelocity) * deltaTime / 2.0;
 
@@ -584,10 +597,6 @@ double getFinalAltitude(){
     return Kinematics->finalAltitude;
 }
 
-double timeInSeconds = 2;
-double theTime = timeInSeconds * RATE_BARO;
-double sum = 0;
-double pressureSum = 0;
 /**
  * @brief Tares the altitude to the ground
  * 
@@ -613,7 +622,7 @@ void Everest::tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData 
     }
 
     if(theTime == 0){
-        sum = sum/(timeInSeconds*RATE_BARO);
+        sum = sum/(CALIBRATION_TIME*RATE_BARO);
         this->Kinematics.initialAlt = sum;
         printf("Tare: %f\n", this->Kinematics.initialAlt);
         isTared = true;
@@ -743,7 +752,9 @@ int main()
             0
         };
 
-        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+        if(howMany <= 13){
+
+            printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
         // Example: Print all sensor readings
         if(debug == RAW || debug == ALL){
@@ -788,13 +799,14 @@ int main()
         sensorData2.accelZ = imu2AccelAligned.axis.z;
 
         // everest.IMU_Update(sensorData, sensorData2);
-        // if(howMany <= 13){
             
             // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
             double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
 
             printf("Altitude: %f\n", eAltitude);
-        // }
+
+
+        }
 
         howMany++;
 
