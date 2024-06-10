@@ -29,7 +29,7 @@ enum debug_level{
     NONE = 5        // none
 };
 
-debug_level debug = Dynamite;
+debug_level debug = Secondary;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -367,7 +367,9 @@ double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
     double deltaTime = this->state.deltaTimeIMU;
 
     // Derive altitude from IMU
-    double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
+    // double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
+    double finalVelocity = initialVelocity + accelerationZ * deltaTime;
+    double altitude = initialAltitude + (initialVelocity + finalVelocity) * deltaTime / 2.0;
 
     if(debug == Secondary || debug == ALL){
         printf("\nKinematics\n");
@@ -440,11 +442,11 @@ double Everest::dynamite(){
     }
 
     // distributing measurement
-    double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/everest.state.std_IMU;
-    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/everest.state.std_Baro1;
-    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/everest.state.std_Baro2;
-    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/everest.state.std_Baro3;
-    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/everest.state.std_Real_Baro;
+    double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/pow(everest.state.std_IMU, 2);
+    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/pow(everest.state.std_Baro1, 2);
+    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/pow(everest.state.std_Baro2, 2);
+    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/pow(everest.state.std_Baro3,2);
+    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/pow(everest.state.std_Real_Baro,2);
 
     if(debug == Dynamite || debug == ALL){
         printf("\nDistributed\n");
@@ -476,8 +478,8 @@ double Everest::dynamite(){
         printf("Distributed Sum: %f\n\n", distributed_Sum);
     }
 
-    double sumSTD = everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2 
-                    + everest.state.std_Baro3 + everest.state.std_Real_Baro;
+    double sumSTD = pow(everest.state.std_IMU,2) + pow(everest.state.std_Baro1,2) + pow(everest.state.std_Baro2,2)
+                    + pow(everest.state.std_Baro3,2) + pow(everest.state.std_Real_Baro,2);
 
     if(debug == Dynamite || debug == ALL){
         printf("Sum STD: %f\n\n", sumSTD);
@@ -585,6 +587,7 @@ double getFinalAltitude(){
 double timeInSeconds = 2;
 double theTime = timeInSeconds * RATE_BARO;
 double sum = 0;
+double pressureSum = 0;
 /**
  * @brief Tares the altitude to the ground
  * 
@@ -595,27 +598,28 @@ double sum = 0;
 void Everest::tare(BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
     // for 10 seconds collect baro
     // decrement the time
-    theTime -= 1;
 
     // average pressures   
     // have to do since function is weird
-    sum = sum + convertToAltitude(baro1.pressure);
-    sum = sum + convertToAltitude(baro2.pressure);
-    sum = sum + convertToAltitude(baro3.pressure);
-    sum = sum + convertToAltitude(realBaro.pressure);
+    double average = convertToAltitude(baro1.pressure);
+    average = average + convertToAltitude(baro2.pressure);
+    average = average + convertToAltitude(baro3.pressure);
+    average = average + convertToAltitude(realBaro.pressure);
 
-    sum = sum/4;
+    sum += average/4;
 
     if(debug == Secondary || debug == ALL){
         printf("Sum: %f\n", sum);
     }
 
     if(theTime == 0){
+        sum = sum/(timeInSeconds*RATE_BARO);
         this->Kinematics.initialAlt = sum;
         printf("Tare: %f\n", this->Kinematics.initialAlt);
         isTared = true;
-        sum = sum/(timeInSeconds*RATE_BARO);
     }
+
+    theTime -= 1;
 }
 
 #define MAX_LINE_LENGTH 1024
@@ -782,8 +786,9 @@ int main()
         // sensorData2.accelZ = imu2AccelAligned.axis.z;
 
         // everest.IMU_Update(sensorData, sensorData2);
-        if(howMany <= 31){
-            double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXNYNZ);
+        if(howMany <= 13){
+            printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+            double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYPZ);
 
             printf("Altitude: %f\n", eAltitude);
         }
