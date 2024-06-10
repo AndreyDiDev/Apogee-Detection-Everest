@@ -18,7 +18,7 @@ using namespace std;
 
 FILE *file;
 
-bool isTared = false;
+bool isTared = true;
 
 enum debug_level{
     RAW = 0,        // raw data
@@ -29,7 +29,7 @@ enum debug_level{
     NONE = 5        // none
 };
 
-debug_level debug = Secondary;
+debug_level debug = ALL;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -117,11 +117,6 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     madOffset offset = infusion->getOffset();
     gyroscope = infusion->madOffsetUpdate(&offset, gyroscope);
 
-    if(debug == Secondary || debug == ALL){
-        printf("Averaged: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
-            data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ);
-    }
-
     // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
     //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
     //        earth.axis.x, earth.axis.y, earth.axis.z);
@@ -132,6 +127,11 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     previousTimestamp = timestamp;
 
     this->state.deltaTimeIMU = deltaTime;
+
+    if(debug == Secondary || debug == ALL){
+        printf("Averaged: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Time: %f\n",
+            data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, deltaTime);
+    }
 
     // madVector mag = {.axis = {x, y, z,}};
 
@@ -361,7 +361,7 @@ double Everest::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2
  * @return calculated altitude
  */
 double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
-    double accelerationZ = avgIMU.accelZ;
+    double accelerationZ = avgIMU.accelZ; // * -9.81
     double initialVelocity = this->getKinematics()->initialVelo;
     double initialAltitude = this->Kinematics.initialAlt;
     double deltaTime = this->state.deltaTimeIMU;
@@ -395,7 +395,7 @@ double convertToAltitude(double pressure){
 
     double seaLevelPressure = 1013.25 ; // sea level pressure in hPa
     pressure = pressure / 100.0; // convert to hPa
-    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284)); // barometric formula
+    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 1/5.2558)); // barometric formula
 
     // If pressure is less than 100, altitude is 0
     if(pressure < 100){
@@ -743,55 +743,58 @@ int main()
             0
         };
 
+        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+
         // Example: Print all sensor readings
-        // if(debug == RAW || debug == ALL){
-        //     printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
-        //         time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ, 
-        //         baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
-        // }
+        if(debug == RAW || debug == ALL){
+            printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
+                time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ, 
+                baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
+        }
 
-        // madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
-        // madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
+        madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
+        madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
 
-        // madVector imu1GyroAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
-        // madVector imu1AccelAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
 
-        // madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
-        // madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
+        madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
+        madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
 
-        // madVector imu2GyroAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
-        // madVector imu2AccelAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
 
-        // if(debug == Secondary || debug == ALL){
-        //     printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
-        //         imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
-        // }
+        if(debug == Secondary || debug == ALL){
+            printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+                imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
+        }
 
-        // // feed vectors into sensorData structs
-        // sensorData.gyroX = imu1GyroAligned.axis.x;
-        // sensorData.gyroY = imu1GyroAligned.axis.y;
-        // sensorData.gyroZ = imu1GyroAligned.axis.z;
+        // feed vectors into sensorData structs
+        sensorData.gyroX = imu1GyroAligned.axis.x;
+        sensorData.gyroY = imu1GyroAligned.axis.y;
+        sensorData.gyroZ = imu1GyroAligned.axis.z;
 
-        // sensorData.accelX = imu1AccelAligned.axis.x;
-        // sensorData.accelY = imu1AccelAligned.axis.y;
-        // sensorData.accelZ = imu1AccelAligned.axis.z;
+        sensorData.accelX = imu1AccelAligned.axis.x;
+        sensorData.accelY = imu1AccelAligned.axis.y;
+        sensorData.accelZ = imu1AccelAligned.axis.z;
 
-        // // second IMU
-        // sensorData2.gyroX = imu2GyroAligned.axis.x;
-        // sensorData2.gyroY = imu2GyroAligned.axis.y;
-        // sensorData2.gyroZ = imu2GyroAligned.axis.z;
+        // second IMU
+        sensorData2.gyroX = imu2GyroAligned.axis.x;
+        sensorData2.gyroY = imu2GyroAligned.axis.y;
+        sensorData2.gyroZ = imu2GyroAligned.axis.z;
 
-        // sensorData2.accelX = imu2AccelAligned.axis.x;
-        // sensorData2.accelY = imu2AccelAligned.axis.y;
-        // sensorData2.accelZ = imu2AccelAligned.axis.z;
+        sensorData2.accelX = imu2AccelAligned.axis.x;
+        sensorData2.accelY = imu2AccelAligned.axis.y;
+        sensorData2.accelZ = imu2AccelAligned.axis.z;
 
         // everest.IMU_Update(sensorData, sensorData2);
-        if(howMany <= 13){
-            printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
-            double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYPZ);
+        // if(howMany <= 13){
+            
+            // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
+            double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
 
             printf("Altitude: %f\n", eAltitude);
-        }
+        // }
 
         howMany++;
 
