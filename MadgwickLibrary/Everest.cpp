@@ -58,7 +58,7 @@ madAhrsInternalStates internalStates;
 void MadgwickSetup()
 {
     // Attaches Madgwick to Everest
-    infusion = everest.Initialize();
+    infusion = everest.ExternalInitialize();
     ahrs = infusion->getMadAhrs();
 
     // infusion2 = everest.Initialize2();
@@ -693,7 +693,6 @@ void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1
 
 #define MAX_LINE_LENGTH 1024
 
-// TO DO: move calibration procedure into initialization
 /**
  * Serves to just initialize structs 
 */
@@ -756,9 +755,6 @@ int main()
         token = strtok(NULL, ",");
         float pressure = atof(token);
 
-        // token = strtok(NULL, ",");
-        // float realPressure = atof(token);
-
         time = i * DELTA_TIME;
 
         i++;
@@ -815,7 +811,7 @@ int main()
 
         // if(howMany <= 10){
 
-            printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
         // Example: Print all sensor readings
         if(debug == RAW || debug == ALL){
@@ -885,5 +881,7 @@ int main()
 
     return 0;
 }
+
+
 
 

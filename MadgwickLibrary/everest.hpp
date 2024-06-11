@@ -75,7 +75,7 @@ class Everest{
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
-        Infusion* Initialize();
+        Infusion* ExternalInitialize();
 
         static Everest getEverest();
 
@@ -118,9 +118,6 @@ class Everest{
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
-
-        // Initialize Madgwick Library
-        // Infusion madgwick = Infusion();
         
         void initialize(systemState& state);
 };
@@ -146,7 +143,7 @@ void Everest::initialize(systemState& state){
     printf("Initialized\n");
 }
 
-Infusion* Everest::Initialize(){
+Infusion* Everest::ExternalInitialize(){
     initialize(state);
     return &madgwick;
 }
