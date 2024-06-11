@@ -8,6 +8,10 @@ int main() {
 
     printf("Hello, World!\n");
 
+    Everest everest = Everest::getEverest();
+    everest.MadgwickSetup();
+
+
 
     return 0;
 }

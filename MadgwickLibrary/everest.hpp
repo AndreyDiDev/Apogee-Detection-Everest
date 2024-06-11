@@ -92,6 +92,8 @@ class Everest{
 
         Infusion madgwick;
 
+        void MadgwickSetup();
+
         // Infusion madgwick2;
 
         altitudeList AltitudeList;
