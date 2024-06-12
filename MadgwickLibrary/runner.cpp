@@ -1,8 +1,12 @@
 #include "everest.hpp"
+#include "infusion.hpp"
 
 
 #define MAX_LINE_LENGTH 1024
-FILE *file;
+extern FILE *file;
+
+// extern Everest everest;
+Everest everest = Everest::getEverest();
 
 /**
  * Serves to just initialize structs 
@@ -11,7 +15,7 @@ int main()
 {
     // Setup Madgwick
     // Attach Madgwick to Everest
-    MadgwickSetup();
+    everest.MadgwickSetup();
 
     // test purposes
     file = fopen("everest2.txt", "w+"); // Open the file for appending or create it if it doesn't exist
@@ -134,14 +138,14 @@ int main()
         madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
         madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
 
-        madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
-        madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
+        madVector imu1GyroAligned = AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu1AccelAligned = AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
 
         madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
         madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
 
-        madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
-        madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
+        madVector imu2GyroAligned = AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu2AccelAligned = AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
 
         // if(debug == Secondary || debug == ALL){
             printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",

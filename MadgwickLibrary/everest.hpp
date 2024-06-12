@@ -118,7 +118,8 @@ class Everest{
                     BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment);
 
         void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
-    
+
+        void MadgwickSetup();
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 

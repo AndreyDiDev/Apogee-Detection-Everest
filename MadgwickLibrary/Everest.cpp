@@ -33,7 +33,7 @@ enum debug_level{
     NONE = 5        // none
 };
 
-debug_level debug = ALL;
+debug_level debug = NONE;
 
 // Instantiate Everest
 madAhrs *ahrs;
@@ -49,7 +49,7 @@ madAhrsInternalStates internalStates;
  * @brief Only done once. Sets pointers for Madgwick
  *     Internal
 */
-void MadgwickSetup()
+void Everest::MadgwickSetup()
 {
     // Attaches Madgwick to Everest
     infusion = everest.ExternalInitialize();
@@ -690,11 +690,11 @@ void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1
 /**
  * Serves to just initialize structs 
 */
-int main()
+int main1()
 {
     // Setup Madgwick
     // Attach Madgwick to Everest
-    MadgwickSetup();
+    everest.MadgwickSetup();
 
     // test purposes
     file = fopen("everest2.txt", "w+"); // Open the file for appending or create it if it doesn't exist
@@ -805,7 +805,7 @@ int main()
 
         // if(howMany <= 10){
 
-        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+        // printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
         // Example: Print all sensor readings
         if(debug == RAW || debug == ALL){
@@ -854,7 +854,7 @@ int main()
             // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
             double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
 
-            printf("Altitude: %f\n", eAltitude);
+            // printf("Altitude: %f\n", eAltitude);
 
 
         // }
