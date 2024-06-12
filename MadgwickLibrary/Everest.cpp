@@ -11,12 +11,6 @@
 
 using namespace std;
 
-// CHANGE
-#define SAMPLE_RATE (3) // replace this with actual sample rate
-#define DELTA_TIME (1.0f / 3.0f)
-#define RATE_BARO (3)
-#define CALIBRATION_TIME (2)
-
 bool firstSampleAfterCalibration = true;
 
 bool isTared = false;
@@ -61,9 +55,6 @@ void Everest::MadgwickSetup()
     infusion = everest.ExternalInitialize();
     ahrs = infusion->getMadAhrs();
 
-    // infusion2 = everest.Initialize2();
-    // ahrs2 = infusion2->getMadAhrs();
-
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     const madVector gyroscopeSensitivity = {1.0f, 1.0f, 1.0f};
@@ -78,21 +69,11 @@ void Everest::MadgwickSetup()
 
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
-    // madAhrsInternalStates internal2 = infusion2->madAhrsGetInternalStates(ahrs2);
-    // madAhrsFlags flags2 = infusion2->madAhrsGetFlags(ahrs2);
-
     // Initialise algorithms
     madOffset offset = infusion->getOffset();
-    // madOffset offset2 = infusion2->getOffset();
-    // madOffset offset2 = infusion->getOffset();
-
-    // *ahrs = infusion.getMadAhrs();
 
     infusion->madOffsetInitialise(&offset, SAMPLE_RATE);
     infusion->madAhrsInitialise(ahrs);
-
-    // infusion2->madOffsetInitialise(&offset2, SAMPLE_RATE);
-    // infusion2->madAhrsInitialise(ahrs2);
 
     // Set AHRS algorithm settings
     madAhrsSettings settings = {
@@ -105,7 +86,6 @@ void Everest::MadgwickSetup()
     };
 
     infusion->madAhrsSetSettings(ahrs, &settings);
-    // infusion2->madAhrsSetSettings(ahrs2, &settings);
 
 }
 
@@ -118,7 +98,6 @@ void Everest::MadgwickSetup()
  * 
 */
 void Everest::MadgwickWrapper(SensorDataNoMag data){
-    // Infusion infusion = infusion;
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
@@ -153,13 +132,8 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
     // infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, mag, deltaTime);
 
-    // madAhrsInternalStates internal;
-    // madAhrsFlags flags;
-
     madEuler euler = infusion->getEuler(ahrs);
     madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
-
-    // euler = infusion->getEuler(ahrs);
 
     internalStates = infusion->madAhrsGetInternalStates(infusion->getMadAhrs());
     flags = infusion->madAhrsGetFlags(infusion->getMadAhrs());

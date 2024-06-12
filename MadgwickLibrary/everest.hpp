@@ -17,6 +17,11 @@
 
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
+// CHANGE
+#define SAMPLE_RATE (3) // replace this with actual sample rate
+#define DELTA_TIME (1.0f / 3.0f)
+#define RATE_BARO (3)
+#define CALIBRATION_TIME (2)
 
 typedef struct{
     float initialVelo;
