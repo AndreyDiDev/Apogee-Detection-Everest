@@ -1,12 +1,12 @@
 #include "everest.hpp"
-#include "infusion.hpp"
 
 
 #define MAX_LINE_LENGTH 1024
-extern FILE *file;
+FILE *file;
 
 // extern Everest everest;
-Everest everest = Everest::getEverest();
+// Everest& everest = Everest::idk();
+
 
 /**
  * Serves to just initialize structs 
@@ -15,6 +15,7 @@ int main()
 {
     // Setup Madgwick
     // Attach Madgwick to Everest
+    Everest everest = Everest();
     everest.MadgwickSetup();
 
     // test purposes

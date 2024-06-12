@@ -75,7 +75,7 @@ typedef struct{
 
 class Everest{
     public:
-        // Everest();
+        Everest();
         // ~Everest();
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
@@ -120,15 +120,22 @@ class Everest{
         void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
 
         void MadgwickSetup();
+
+        void initialize1(systemState& state);
+
+        static Everest& idk() {
+        static Everest instance;
+        return instance;
+        }
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
         
-        void initialize(systemState& state);
+        
 };
 
-void Everest::initialize(systemState& state){
+void Everest::initialize1(systemState& state){
     // Initially we trust systems equally
     this->state.gain_IMU = 4/10.0; // change to actual initial trusts 
     this->state.gain_Baro1 = 1/10.0;
@@ -150,7 +157,7 @@ void Everest::initialize(systemState& state){
 }
 
 Infusion* Everest::ExternalInitialize(){
-    initialize(state);
+    initialize1(state);
     return &madgwick;
 }
 

@@ -42,6 +42,11 @@ Infusion *infusion;
 Everest everest = Everest::getEverest();
 kinematics *Kinematics = everest.getKinematics(); // tare to ground
 
+Everest::Everest() {
+    // Constructor implementation
+    // Initialize your members here...
+}
+
 madAhrsFlags flags;
 madAhrsInternalStates internalStates;
 
