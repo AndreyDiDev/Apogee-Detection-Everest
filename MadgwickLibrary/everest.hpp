@@ -15,6 +15,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "runner.hpp"
+
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
 // CHANGE
@@ -78,11 +80,17 @@ class Everest{
         // Everest();
         // ~Everest();
 
+        // Everest everestPtr;
+
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
         Infusion* ExternalInitialize();
 
-        static Everest getEverest();
+        // Everest* getEverest();
+
+        // static Everest* getPointer();
+
+        void setPointer(Everest* everest);
 
         // Initialize system state
         systemState state = {};
@@ -99,7 +107,7 @@ class Everest{
 
         void MadgwickSetup();
 
-        // Infusion madgwick2;
+        void createEverest();
 
         altitudeList AltitudeList;
 
@@ -121,12 +129,27 @@ class Everest{
 
         void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
     
+        // static Everest* everest;
+
+        // static Everest* getPointer() {
+        //     if (everest == nullptr) {
+        //         everest = new Everest();
+        //     }
+        //     return everest;
+        // }
+
+        // Everest() {};
+
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
         
         void initialize(systemState& state);
+
+        
+
+        // static Everest* everest;
 };
 
 void Everest::initialize(systemState& state){
@@ -155,18 +178,26 @@ Infusion* Everest::ExternalInitialize(){
     return &madgwick;
 }
 
-// Infusion* Everest::Initialize2(){
-//     return &madgwick2;
+// void Everest::createEverest(){
+//     everest = Everest();
 // }
 
-Everest Everest::getEverest(){
-    Everest everest = Everest();
-    return everest;
-}
+// Everest* Everest::getEverest(){
+//     return &everest;
+// }
 
 kinematics* Everest::getKinematics(){
     return &Kinematics;
 }
+
+// Everest everest;
+
+// Everest* Everest::getPointer(){
+//     if (everest == nullptr) {
+//         everest = Everest();
+//     }
+//     return &everest;
+// }
 
 #endif
 

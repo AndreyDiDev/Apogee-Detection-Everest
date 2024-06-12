@@ -1,22 +1,24 @@
-#include "everest.hpp"
+#include "runner.hpp"
+
 
 #define MAX_LINE_LENGTH 1024
 FILE *file;
 
 
-
 int main() {
-    kinematics kin;
-    systemState sys;
-    altitudeList alt;
+    Runner runner;
+    Everest* everest1 = runner.getThat();
 
     printf("Hello, World!\n");
 
     // initialization
-    Everest everest = Everest::getEverest();
-    everest.MadgwickSetup();
+    // Everest everest = Everest();
+    // Everest* everest = Everest::getPointer();
+    // everest.setPointer(&everest);
+    // everest.createEverest();
+    everest1->MadgwickSetup();
 
-    Infusion *infusion = everest.ExternalInitialize();
+    Infusion *infusion = everest1->ExternalInitialize();
 
         // test purposes
     file = fopen("everest2.txt", "w+"); // Open the file for appending or create it if it doesn't exist
@@ -172,7 +174,7 @@ int main() {
         sensorData2.accelZ = imu2AccelAligned.axis.z;
             
         // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
-        double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
+        double eAltitude = everest1->ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
 
         printf("Altitude: %f\n", eAltitude);
 
