@@ -55,6 +55,7 @@ typedef struct {
 
     SensorDataNoMag avgIMU;
     float deltaTimeIMU;
+    float earthAcceleration;
 } systemState;
 
 typedef struct{
@@ -129,6 +130,8 @@ class Everest{
         void MadgwickSetup();
 
         void initialize1(systemState& state);
+
+        void calculateSTDCoefficients();
 
         static Everest& idk() {
         static Everest instance;

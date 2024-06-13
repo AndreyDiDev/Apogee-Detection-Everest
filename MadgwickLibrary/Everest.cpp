@@ -60,8 +60,7 @@ void Everest::MadgwickSetup()
     infusion = everest.ExternalInitialize();
     ahrs = infusion->getMadAhrs();
 
-    // infusion2 = everest.Initialize2();
-    // ahrs2 = infusion2->getMadAhrs();
+    calculateSTDCoefficients();
 
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
@@ -77,21 +76,11 @@ void Everest::MadgwickSetup()
 
     const madVector hardIronOffset = {0.0f, 0.0f, 0.0f};
 
-    // madAhrsInternalStates internal2 = infusion2->madAhrsGetInternalStates(ahrs2);
-    // madAhrsFlags flags2 = infusion2->madAhrsGetFlags(ahrs2);
-
     // Initialise algorithms
     madOffset offset = infusion->getOffset();
-    // madOffset offset2 = infusion2->getOffset();
-    // madOffset offset2 = infusion->getOffset();
-
-    // *ahrs = infusion.getMadAhrs();
 
     infusion->madOffsetInitialise(&offset, SAMPLE_RATE);
     infusion->madAhrsInitialise(ahrs);
-
-    // infusion2->madOffsetInitialise(&offset2, SAMPLE_RATE);
-    // infusion2->madAhrsInitialise(ahrs2);
 
     // Set AHRS algorithm settings
     madAhrsSettings settings = {
@@ -104,7 +93,6 @@ void Everest::MadgwickSetup()
     };
 
     infusion->madAhrsSetSettings(ahrs, &settings);
-    // infusion2->madAhrsSetSettings(ahrs2, &settings);
 
 }
 
@@ -158,8 +146,6 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     madEuler euler = infusion->getEuler(ahrs);
     madVector earth = infusion->madAhrsGetEarthAcceleration(ahrs);
 
-    // euler = infusion->getEuler(ahrs);
-
     internalStates = infusion->madAhrsGetInternalStates(infusion->getMadAhrs());
     flags = infusion->madAhrsGetFlags(infusion->getMadAhrs());
 
@@ -172,6 +158,8 @@ void Everest::MadgwickWrapper(SensorDataNoMag data){
     internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError, 
     internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising, 
     flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, earth.axis.z);
+
+    everest.state.earthAcceleration = earth.axis.z;
 
     // fprintf(file, "\n");
 
@@ -372,15 +360,13 @@ double Everest::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2
 
 // TO DO - fix the negative and accelX to accelZ
 double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
-    double accelerationZ = avgIMU.accelX * -9.81;
+    // double accelerationZ = avgIMU.accelX * -9.81;
+    double accelerationZ = everest.state.earthAcceleration * -9.81;
     double initialVelocity = this->getKinematics()->initialVelo;
     double initialAltitude = this->Kinematics.initialAlt;
     double deltaTime = this->state.deltaTimeIMU;
 
     // Derive altitude from IMU
-    // measures change in acceleration 
-    // double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
-
     double finalVelocity = initialVelocity + accelerationZ * deltaTime;
     double altitude = initialAltitude + (initialVelocity + finalVelocity) * deltaTime / 2.0;
 
@@ -523,6 +509,13 @@ double Everest::dynamite(){
         printf("STD Real Baro: %f\n\n", everest.state.std_Real_Baro);
     }
 
+    // assumes stds are already converted to coefficients -> variances
+    // distributed_IMU_Altitude = distributed_IMU_Altitude / everest.state.std_IMU;
+    // distributed_Baro_Altitude1 = distributed_Baro_Altitude1 / everest.state.std_Baro1;
+    // distributed_Baro_Altitude2 = distributed_Baro_Altitude2 / everest.state.std_Baro2;
+    // distributed_Baro_Altitude3 = distributed_Baro_Altitude3 / everest.state.std_Baro3;
+    // distributed_RealBaro_Altitude = distributed_RealBaro_Altitude / everest.state.std_Real_Baro;
+
     // summation of distributed measurements
     double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2 
                             + distributed_Baro_Altitude3 + distributed_RealBaro_Altitude;
@@ -532,11 +525,13 @@ double Everest::dynamite(){
     }
 
     // summation of standard deviations
-    double sumSTD1 = pow(everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2
-                    + everest.state.std_Baro3 + everest.state.std_Real_Baro, 2);
+    // double sumSTD1 = pow(everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2
+    //                 + everest.state.std_Baro3 + everest.state.std_Real_Baro, 2);
+    // double sumSTD1 = pow(everest.state.gain_IMU, 2) + pow(everest.state.gain_Baro1, 2) + pow(everest.state.gain_Baro2, 2)
+    //                 + pow(everest.state.gain_Baro3, 2) + pow(everest.state.gain_Real_Baro, 2);
 
     if(debug == Dynamite || debug == ALL){
-        printf("Sum STD: %f\n\n", sumSTD1);
+        // printf("Sum STD: %f\n\n", sumSTD1);
     }
 
     // summation of gains
@@ -549,20 +544,9 @@ double Everest::dynamite(){
 
     // normalised altitude
     double normalised_Altitude = (distributed_Sum)/sumGain;
+    // normalised_Altitude = normalised_Altitude / sumSTD1;
 
     // double normalised_Altitude = (distributed_Sum*sumSTD)/(everest.state.gain_IMU);
-    // double normalised_Altitude = distributed_Sum;
-    // double normalised_Altitude = (distributed_Sum* pow(everest.state.std_IMU,2));
-
-    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro1,2);
-    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro2,2);
-    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro3,2);
-    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Real_Baro,2);
-
-    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro1);
-    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro2);
-    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro3);
-    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Real_Baro);
 
     if(debug == Dynamite || debug == ALL){
         printf("Normalised Altitude: %f\n\n", normalised_Altitude);
@@ -659,6 +643,38 @@ void Everest::recalculateGain(double estimate){
         printf("New Gain Baro3: %f\n", this->state.gain_Baro3);
         printf("New Gain Real Baro: %f\n\n", this->state.gain_Real_Baro);
     }
+}
+
+/**
+ * @brief Converts the STDs to coefficients
+ */ 
+void Everest::calculateSTDCoefficients(){
+    // calculate standard deviation coefficients
+    double std_IMU = this->state.gain_IMU;
+    double std_Baro1 = this->state.gain_Baro1;
+    double std_Baro2 = this->state.gain_Baro2;
+    double std_Baro3 = this->state.gain_Baro3;
+    double std_Real_Baro = this->state.gain_Real_Baro;
+
+    double sumSTD1 = pow(everest.state.gain_IMU, 2) + pow(everest.state.gain_Baro1, 2) + pow(everest.state.gain_Baro2, 2)
+                    + pow(everest.state.gain_Baro3, 2) + pow(everest.state.gain_Real_Baro, 2);
+
+    // normalise
+    this->state.std_IMU = pow(std_IMU, 2) / sumSTD1;
+    this->state.std_Baro1 = pow(std_Baro1, 2) / sumSTD1;
+    this->state.std_Baro2 = pow(std_Baro2, 2) / sumSTD1;
+    this->state.std_Baro3 = pow(std_Baro3, 2) / sumSTD1;
+    this->state.std_Real_Baro = pow(std_Real_Baro, 2) / sumSTD1;
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nStandard Deviation Coefficients\n");
+        printf("STD IMU: %f\n", this->state.std_IMU);
+        printf("STD Baro1: %f\n", this->state.std_Baro1);
+        printf("STD Baro2: %f\n", this->state.std_Baro2);
+        printf("STD Baro3: %f\n", this->state.std_Baro3);
+        printf("STD Real Baro: %f\n\n", this->state.std_Real_Baro);
+    }
+
 }
 
 /**
