@@ -28,6 +28,14 @@
 #define RATE_BARO (3)
 #define CALIBRATION_TIME (2)
 
+/* Macros/Enums ------------------------------------------------------------*/
+enum EVEREST_TASK_COMMANDS {
+    EVEREST_NONE = 0,
+	UPDATE,
+	TEST
+};
+
+/*Defines------------------------------------------------------------------*/
 typedef struct{
     float initialVelo;
     float initialAlt;

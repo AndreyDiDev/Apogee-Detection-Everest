@@ -55,6 +55,7 @@ kinematics *Kinematics = everest.getKinematics(); // tare to ground
 
 madAhrsFlags flags;
 madAhrsInternalStates internalStates;
+EverestData everestData;
 
 
 //----------------------------------Task Integration----------------------------------//
@@ -62,6 +63,7 @@ EverestTask::EverestTask() : Task(TASK_EVEREST_QUEUE_DEPTH_OBJS)
 {
     // Initialize the task
     MadgwickSetup();
+    everestData = (EverestData*)soar_malloc(sizeof(EverestData));
 }
 
 /**
@@ -122,7 +124,7 @@ void EverestTask::HandleCommand(Command& cm)
     switch (cm.GetCommand()) {
     case TASK_SPECIFIC_COMMAND: {
     	if(cm.GetTaskCommand()==COPY_DATA){
-			
+    		*everestData = *(EverestData*) cm.GetDataPointer();
     	}else{
 			HandleRequestCommand(cm.GetTaskCommand());
     	}
@@ -145,8 +147,8 @@ void EverestTask::HandleRequestCommand(uint16_t taskCommand)
 {
     //Switch for task specific command within DATA_COMMAND
     switch (taskCommand) {
-
-    case READ_NEW_SAMPLE:
+    case UPDATE:
+//    	finalWrapper(/*data*/);
         break;
     case TEST:
     	break;
