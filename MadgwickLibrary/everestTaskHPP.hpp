@@ -15,7 +15,12 @@
 #include <iostream>
 #include <sstream>
 
-#include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
+#include "infusion.hpp"
+
+// task specific
+#include "Task.hpp"
+#include "Data.h"
+#include "SystemDefines.hpp"
 // Definitions
 // CHANGE
 #define SAMPLE_RATE (3) // replace this with actual sample rate
