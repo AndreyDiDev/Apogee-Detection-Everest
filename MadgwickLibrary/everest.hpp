@@ -40,6 +40,13 @@ typedef struct {
     float gain_Baro3;
     float gain_Real_Baro;
 
+    // prev gains
+    float prev_gain_IMU;
+    float prev_gain_Baro1;
+    float prev_gain_Baro2;
+    float prev_gain_Baro3;
+    float prev_gain_Real_Baro;
+
     float std_IMU;
     float std_Baro1;
     float std_Baro2;
