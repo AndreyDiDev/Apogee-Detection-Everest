@@ -461,22 +461,39 @@ double Everest::dynamite(){
     // double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/pow(everest.state.std_Baro3,2);
     // double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/pow(everest.state.std_Real_Baro,2);
     
+    // if pressure is zero, set gain to zero
     if(everest.realBaro.pressure == 0){
         everest.state.gain_Real_Baro = 0;
+    }else{
+        // if not zero, set gain to previous gain
+        everest.state.gain_Real_Baro = everest.state.prev_gain_Real_Baro;
     }
 
+    // if pressure is zero, set gain to zero
     if(everest.baro1.pressure == 0){
         everest.state.gain_Baro1 = 0;
+    }else{
+        // if not zero, set gain to previous gain
+        everest.state.gain_Baro1 = everest.state.prev_gain_Baro1;
     }
 
+    // if not zero, set gain to zero
     if(everest.baro2.pressure == 0){
         everest.state.gain_Baro2 = 0;
+    }else{
+        // if not zero, set gain to previous gain
+        everest.state.gain_Baro2 = everest.state.prev_gain_Baro2;
     }
 
+    // if pressure is zero, set gain to zero
     if(everest.baro3.pressure == 0){
         everest.state.gain_Baro3 = 0;
+    }else{
+        // if not zero, set gain to previous gain
+        everest.state.gain_Baro3 = everest.state.prev_gain_Baro3;
     }
 
+    // distribute measurements based on gain
     double distributed_IMU_Altitude = IMUAltitude * everest.state.gain_IMU;
     double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1);
     double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2);
@@ -506,6 +523,7 @@ double Everest::dynamite(){
         printf("STD Real Baro: %f\n\n", everest.state.std_Real_Baro);
     }
 
+    // summation of distributed measurements
     double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2 
                             + distributed_Baro_Altitude3 + distributed_RealBaro_Altitude;
 
@@ -513,6 +531,7 @@ double Everest::dynamite(){
         printf("Distributed Sum: %f\n\n", distributed_Sum);
     }
 
+    // summation of standard deviations
     double sumSTD1 = pow(everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2
                     + everest.state.std_Baro3 + everest.state.std_Real_Baro, 2);
 
@@ -520,6 +539,7 @@ double Everest::dynamite(){
         printf("Sum STD: %f\n\n", sumSTD1);
     }
 
+    // summation of gains
     double sumGain = everest.state.gain_IMU + everest.state.gain_Baro1 + everest.state.gain_Baro2 
                     + everest.state.gain_Baro3 + everest.state.gain_Real_Baro;
 
@@ -527,6 +547,7 @@ double Everest::dynamite(){
         printf("Sum Gain: %f\n\n", sumGain);
     }
 
+    // normalised altitude
     double normalised_Altitude = (distributed_Sum)/sumGain;
 
     // double normalised_Altitude = (distributed_Sum*sumSTD)/(everest.state.gain_IMU);
@@ -775,14 +796,14 @@ double finalWrapper( float accelX, float accelY, float accelZ, float gyroX, floa
     madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
     madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
 
-    madVector imu1GyroAligned = AxesSwitch(imu1Gyro, alignment);
-    madVector imu1AccelAligned = AxesSwitch(imu1Accel, alignment);
+    madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, alignment);
+    madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, alignment);
 
     madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
     madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
 
-    madVector imu2GyroAligned = AxesSwitch(imu2Gyro, alignment2);
-    madVector imu2AccelAligned = AxesSwitch(imu2Accel, alignment2);
+    madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, alignment2);
+    madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, alignment2);
 
     if(debug == Secondary || debug == ALL){
         printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
@@ -827,7 +848,7 @@ int main()
     everest.MadgwickSetup();
 
     // test purposes
-    file = fopen("everest2.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    file = fopen("everest3.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
         fprintf(stderr, "Error opening file...exiting\n");
         exit(1);
@@ -883,108 +904,109 @@ int main()
 
         i++;
 
-        SensorDataNoMag sensorData = {
-            time,
-            gyroX/1000,
-            gyroY/1000,
-            gyroZ/1000,
-            accelX/1000,
-            accelY/1000,
-            accelZ/1000,
-        };
+        // SensorDataNoMag sensorData = {
+        //     time,
+        //     gyroX/1000,
+        //     gyroY/1000,
+        //     gyroZ/1000,
+        //     accelX/1000,
+        //     accelY/1000,
+        //     accelZ/1000,
+        // };
 
-        SensorDataNoMag sensorData2 = {
-            time,
-            gyroX/1000,
-            gyroY/1000,
-            gyroZ/1000,
-            accelX/1000,
-            accelY/1000,
-            accelZ/1000,
-        };
+        // SensorDataNoMag sensorData2 = {
+        //     time,
+        //     gyroX/1000,
+        //     gyroY/1000,
+        //     gyroZ/1000,
+        //     accelX/1000,
+        //     accelY/1000,
+        //     accelZ/1000,
+        // };
 
-        start = std::clock();
+        // start = std::clock();
 
-        BarosData baro1 = {
-            time,
-            pressure,
-            0,
-            0
-        };
+        // BarosData baro1 = {
+        //     time,
+        //     pressure,
+        //     0,
+        //     0
+        // };
 
-        BarosData baro2 = {
-            time,
-            pressure,
-            0,
-            0
-        };
+        // BarosData baro2 = {
+        //     time,
+        //     pressure,
+        //     0,
+        //     0
+        // };
 
-        BarosData baro3 = {
-            time,
-            pressure,
-            0,
-            0
-        };
+        // BarosData baro3 = {
+        //     time,
+        //     pressure,
+        //     0,
+        //     0
+        // };
 
-        BarosData realBaro = {
-            time,
-            pressure,
-            0,
-            0
-        };
+        // BarosData realBaro = {
+        //     time,
+        //     pressure,
+        //     0,
+        //     0
+        // };
 
-        // if(howMany <= 10){
+        // // if(howMany <= 10){
 
         printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
-        // Example: Print all sensor readings
-        if(debug == RAW || debug == ALL){
-            printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
-                time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ, 
-                baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
-        }
+        // // Example: Print all sensor readings
+        // if(debug == RAW || debug == ALL){
+        //     printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
+        //         time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ, 
+        //         baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
+        // }
 
-        madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
-        madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
+        // madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
+        // madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
 
-        madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
-        madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
+        // madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+        // madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
 
-        madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
-        madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
+        // madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
+        // madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
 
-        madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
-        madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
+        // madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+        // madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
 
-        if(debug == Secondary || debug == ALL){
-            printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
-                imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
-        }
+        // if(debug == Secondary || debug == ALL){
+        //     printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+        //         imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
+        // }
 
-        // feed vectors into sensorData structs
-        sensorData.gyroX = imu1GyroAligned.axis.x;
-        sensorData.gyroY = imu1GyroAligned.axis.y;
-        sensorData.gyroZ = imu1GyroAligned.axis.z;
+        // // feed vectors into sensorData structs
+        // sensorData.gyroX = imu1GyroAligned.axis.x;
+        // sensorData.gyroY = imu1GyroAligned.axis.y;
+        // sensorData.gyroZ = imu1GyroAligned.axis.z;
 
-        sensorData.accelX = imu1AccelAligned.axis.x;
-        sensorData.accelY = imu1AccelAligned.axis.y;
-        sensorData.accelZ = imu1AccelAligned.axis.z;
+        // sensorData.accelX = imu1AccelAligned.axis.x;
+        // sensorData.accelY = imu1AccelAligned.axis.y;
+        // sensorData.accelZ = imu1AccelAligned.axis.z;
 
-        // second IMU
-        sensorData2.gyroX = imu2GyroAligned.axis.x;
-        sensorData2.gyroY = imu2GyroAligned.axis.y;
-        sensorData2.gyroZ = imu2GyroAligned.axis.z;
+        // // second IMU
+        // sensorData2.gyroX = imu2GyroAligned.axis.x;
+        // sensorData2.gyroY = imu2GyroAligned.axis.y;
+        // sensorData2.gyroZ = imu2GyroAligned.axis.z;
 
-        sensorData2.accelX = imu2AccelAligned.axis.x;
-        sensorData2.accelY = imu2AccelAligned.axis.y;
-        sensorData2.accelZ = imu2AccelAligned.axis.z;
+        // sensorData2.accelX = imu2AccelAligned.axis.x;
+        // sensorData2.accelY = imu2AccelAligned.axis.y;
+        // sensorData2.accelZ = imu2AccelAligned.axis.z;
 
         // everest.IMU_Update(sensorData, sensorData2);
             
             // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
-            double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
+        // double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
+        double eAltitude = finalWrapper(accelX, accelY, accelZ, gyroX, gyroY, gyroZ, pressure, pressure, pressure, pressure, time, time, time, time, time, time, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
 
-            printf("Altitude: %f\n", eAltitude);
+        printf("Altitude: %f\n", eAltitude);
 
 
         // }
