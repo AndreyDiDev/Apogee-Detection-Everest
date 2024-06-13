@@ -464,7 +464,7 @@ double Everest::dynamite(){
     // if pressure is zero, set gain to zero
     if(everest.realBaro.pressure == 0){
         everest.state.gain_Real_Baro = 0;
-    }else{
+    }else if (everest.state.gain_Real_Baro == 0){
         // if not zero, set gain to previous gain
         everest.state.gain_Real_Baro = everest.state.prev_gain_Real_Baro;
     }
@@ -472,7 +472,7 @@ double Everest::dynamite(){
     // if pressure is zero, set gain to zero
     if(everest.baro1.pressure == 0){
         everest.state.gain_Baro1 = 0;
-    }else{
+    }else if (everest.state.gain_Baro1 == 0){
         // if not zero, set gain to previous gain
         everest.state.gain_Baro1 = everest.state.prev_gain_Baro1;
     }
@@ -480,7 +480,7 @@ double Everest::dynamite(){
     // if not zero, set gain to zero
     if(everest.baro2.pressure == 0){
         everest.state.gain_Baro2 = 0;
-    }else{
+    }else if(everest.state.gain_Baro2 == 0){
         // if not zero, set gain to previous gain
         everest.state.gain_Baro2 = everest.state.prev_gain_Baro2;
     }
@@ -488,8 +488,8 @@ double Everest::dynamite(){
     // if pressure is zero, set gain to zero
     if(everest.baro3.pressure == 0){
         everest.state.gain_Baro3 = 0;
-    }else{
-        // if not zero, set gain to previous gain
+    }else if(everest.state.gain_Baro3 == 0){
+        // if measurement not zero, set gain to previous gain
         everest.state.gain_Baro3 = everest.state.prev_gain_Baro3;
     }
 
