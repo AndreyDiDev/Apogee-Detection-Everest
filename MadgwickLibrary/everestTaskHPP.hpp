@@ -94,6 +94,30 @@ typedef struct{
     float previousTime;
 } BarosData;
 
+/**
+ * @brief Just to carry all data between tasks
+*/
+typedef struct{
+    float timeIMU;
+    float timeBaro1;
+    float timeBaro2;
+    float timeBaroReal;
+
+    float accelX;
+    float accelY;
+    float accelZ;
+
+    float gyroX;
+    float gyroY;
+    float gyroZ;
+
+    float pressure1;
+    float pressure2;
+    float pressure3;
+    float pressureReal;
+
+}EverestData
+
 class EverestTask : public Task
 {
     public:

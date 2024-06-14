@@ -148,7 +148,7 @@ void EverestTask::HandleRequestCommand(uint16_t taskCommand)
     //Switch for task specific command within DATA_COMMAND
     switch (taskCommand) {
     case UPDATE:
-//    	finalWrapper(/*data*/);
+            TaskWrapper(everestData);
         break;
     case TEST:
     	break;
@@ -156,6 +156,19 @@ void EverestTask::HandleRequestCommand(uint16_t taskCommand)
         SOAR_PRINT("EverestTask - Received Unsupported REQUEST_COMMAND {%d}\n", taskCommand);
         break;
     }
+}
+
+/**
+ * @brief Calls finalWrapper with data and alignment
+*/
+double TaskWrapper(Everest everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2){
+
+    finalWrapper(everestData.accelX, everestData.accelY, everestData.accelZ,
+    everestData.gyroX, everestData.gyroY, everestData.gyroZ, everestData.pressure1,
+    everestData.pressure2, everestData.pressure3, everestData.pressureReal,
+    everestData.timeIMU, everestData.timeIMU, everestData.timeBaro1, everestData.Baro2,
+    everestData.timeBaro3, everestData.timeBaroReal, alignment, alignment2);
+
 }
 
 
