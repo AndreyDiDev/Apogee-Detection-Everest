@@ -149,10 +149,12 @@ void EverestTask::HandleRequestCommand(uint16_t taskCommand)
     //Switch for task specific command within DATA_COMMAND
     switch (taskCommand) {
     case UPDATE:
-            TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
+        TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
         break;
     case TEST:
     	break;
+    case RETARE:
+        setIsTared(false);
     default:
         SOAR_PRINT("EverestTask - Received Unsupported REQUEST_COMMAND {%d}\n", taskCommand);
         break;
@@ -976,7 +978,14 @@ double finalWrapper( float accelX, float accelY, float accelZ, float gyroX, floa
 
 }
 
-#define MAX_LINE_LENGTH 1024
+/**
+ * @brief Resets isTared flag to re-initialize the tare
+ */
+void setIsTare(bool isTare){
+    isTared = isTare;
+}
+
+// #define MAX_LINE_LENGTH 1024
 
 /**
  * Serves to just initialize structs 

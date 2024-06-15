@@ -32,7 +32,8 @@
 enum EVEREST_TASK_COMMANDS {
     EVEREST_NONE = 0,
 	UPDATE,
-	TEST
+	TEST,
+    RETARE
 };
 
 /*Defines------------------------------------------------------------------*/
