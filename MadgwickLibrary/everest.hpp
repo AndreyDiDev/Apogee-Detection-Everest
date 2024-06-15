@@ -83,8 +83,6 @@ typedef struct{
 
 class Everest{
     public:
-        Everest();
-        // ~Everest();
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
@@ -92,7 +90,6 @@ class Everest{
 
         static Everest getEverest();
 
-        // Initialize system state
         systemState state = {};
 
         void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
@@ -104,8 +101,6 @@ class Everest{
         kinematics* getKinematics();
 
         Infusion madgwick;
-
-        // Infusion madgwick2;
 
         altitudeList AltitudeList;
 
@@ -170,10 +165,6 @@ Infusion* Everest::ExternalInitialize(){
     initialize1(state);
     return &madgwick;
 }
-
-// Infusion* Everest::Initialize2(){
-//     return &madgwick2;
-// }
 
 Everest Everest::getEverest(){
     Everest everest = Everest();

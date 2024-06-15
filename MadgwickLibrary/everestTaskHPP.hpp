@@ -117,7 +117,7 @@ typedef struct{
     float pressure3;
     float pressureReal;
 
-}EverestData
+}EverestData;
 
 class EverestTask : public Task
 {
