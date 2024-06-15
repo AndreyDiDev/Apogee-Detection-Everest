@@ -126,6 +126,7 @@ void EverestTask::HandleCommand(Command& cm)
     	if(cm.GetTaskCommand()==COPY_DATA){
     		*everestData = *(EverestData*) cm.GetDataPointer();
     	}else{
+            *everestData = *(EverestData*) cm.GetDataPointer();
 			HandleRequestCommand(cm.GetTaskCommand());
     	}
         break;
@@ -148,7 +149,7 @@ void EverestTask::HandleRequestCommand(uint16_t taskCommand)
     //Switch for task specific command within DATA_COMMAND
     switch (taskCommand) {
     case UPDATE:
-            TaskWrapper(everestData);
+            TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
         break;
     case TEST:
     	break;
