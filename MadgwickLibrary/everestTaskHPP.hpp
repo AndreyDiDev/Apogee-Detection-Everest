@@ -21,9 +21,11 @@
 #include "Task.hpp"
 #include "Data.h"
 #include "SystemDefines.hpp"
+
+
 // Definitions
 // CHANGE
-#define SAMPLE_RATE (3) // replace this with actual sample rate
+#define SAMPLE_RATE (3) // replace this with actual sample rate of baros 
 #define DELTA_TIME (1.0f / 3.0f)
 #define RATE_BARO (3)
 #define CALIBRATION_TIME (2)

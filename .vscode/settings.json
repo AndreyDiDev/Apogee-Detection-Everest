@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
-        "Madgwick"
+        "Madgwick",
+        "normalised"
     ],
     "files.associations": {
         "cmath": "cpp"
