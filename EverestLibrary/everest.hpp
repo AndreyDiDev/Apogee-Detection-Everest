@@ -15,7 +15,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "infusion.hpp"
+#include "C:\Users\Andrey\Documents\EverestRepo\Apogee-Detection-Everest\EverestLibrary\infusion.hpp"
 // Definitions
 // CHANGE
 #define SAMPLE_RATE (3) // replace this with actual sample rate

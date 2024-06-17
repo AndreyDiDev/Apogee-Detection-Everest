@@ -867,7 +867,7 @@ int main()
         exit(1);
     }
 
-    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/IMU_BARO.csv", "r");
+    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/EverestLibrary/IMU_BARO.csv", "r");
     if (!file1) {
         perror("Error opening file");
         return 1;
