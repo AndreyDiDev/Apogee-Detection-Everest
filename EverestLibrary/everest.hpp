@@ -150,9 +150,9 @@ void Everest::initialize1(systemState& state, kinematics& kinematics){
     state.std_Baro3 = 0.1;
     state.std_Real_Baro = 0.05;
 
-    Kinematics.initialVelo = 0;
+    this->Kinematics.initialVelo = 0;
     this->Kinematics.initialAlt = 1111; // average of new mexico
-    Kinematics.finalAltitude = 0;
+    this->Kinematics.finalAltitude = 0;
 
     printf("Initialized\n");
 }

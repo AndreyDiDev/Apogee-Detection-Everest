@@ -37,7 +37,7 @@ ahrs = imufusion.Ahrs()
 
 ahrs.settings = imufusion.Settings(imufusion.CONVENTION_NED,
                                     0.5,  # gain
-                                    245,  # gyroscope range
+                                    2000,  # gyroscope range
                                     10,  # acceleration rejection
                                     10,  # magnetic rejection
                                     5 * sample_rate)  # recovery trigger period = 5 seconds
@@ -182,7 +182,7 @@ pyplot.show()
 
 ######################################################################### ACCELERATION
 # import altimeter data
-data1 = numpy.genfromtxt("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/EverestLibrary/Altimeter.csv", delimiter=",", skip_header=1)
+data1 = numpy.genfromtxt("C:/Users/Andrey/Downloads/Altimeter.csv", delimiter=",", skip_header=1)
 
 dataC = numpy.genfromtxt("C:/Users/Andrey/Documents/Fusion-main_new/Fusion-main/Fusion/file12.txt", delimiter=",", skip_header=1)
 
@@ -195,6 +195,7 @@ acceleration = data1[:, 1]
 accelerationC = dataC[:, 14]
 
 myAccel = myData[:, 14]
+myTime = myData[:, 0]
 # myAccel = myAccel * -1
 
 velo = numpy.empty((len(acceleration), 1))
@@ -256,9 +257,9 @@ ax1.legend()
 
 # Plot accelerometer data
 ax2.plot(timestamp, (accelerometer[:, 0]/1000) * (-9.81), label = "Raw", color='orange')
-ax2.plot(timestamp, filteredEarthAcceleration * (-9.81), label = "Filtered-Python", color='purple')
-ax2.plot(timestamp, accelerationC * (-9.81), label = "Filtered-C", color='blue')
-ax2.plot(timestamp, myAccel * -9.81, label = "Filtered-My version", color='black')
+# ax2.plot(timestamp, filteredEarthAcceleration * (-9.81), label = "Filtered-Python", color='purple')
+# ax2.plot(myTime, accelerationC * (-9.81), label = "Filtered-C", color='blue')
+ax2.plot(myTime, myAccel * -9.81, label = "Filtered-My version", color='black')
 # ax2.plot(timestamp, filteredLinearAcceleration, label = "Linear", color='green')
 ax2.set_title('Accel IMU')
 ax2.set_xlabel('Time (s)')
@@ -270,7 +271,7 @@ pyplot.tight_layout()
 pyplot.show()
 
 ######################################################################### ALTITUDE
-dataBaro = numpy.genfromtxt("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/EverestLibrary/baro 3.csv", delimiter=",", skip_header=1)
+dataBaro = numpy.genfromtxt("C:/Users/Andrey/Downloads/baro 3.csv", delimiter=",", skip_header=1)
 # graph altitude 
 height = data1[:, 3]
 timeAltimeter = data1[:, 0]
