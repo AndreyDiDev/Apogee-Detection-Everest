@@ -890,26 +890,40 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
     int numberOfSamples = 0;
 
     if(baro1.pressure != 0){
-        average = convertToAltitude(baro1.pressure);
+        average = average + convertToAltitude(baro1.pressure);
         numberOfSamples++;
+	if(debug == Secondary || debug == ALL){
+        	SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
     if(baro2.pressure != 0){
         average = average + convertToAltitude(baro2.pressure);
         numberOfSamples++;
+	if(debug == Secondary || debug == ALL){
+        	SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
     if(baro3.pressure != 0){
         average = average + convertToAltitude(baro3.pressure);
         numberOfSamples++;
+	if(debug == Secondary || debug == ALL){
+        	SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
     if(realBaro.altitude != 0){
         average = average + realBaro.altitude;
         numberOfSamples++;
+	if(debug == Secondary || debug == ALL){
+        	SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
-    sum += average/numberOfSamples;
+    if(numberOfSamples != 0){
+        sum += average/numberOfSamples;
+    }
 
     if(debug == Secondary || debug == ALL){
         SOAR_PRINT("Tare Sum: %f\n", sum);
