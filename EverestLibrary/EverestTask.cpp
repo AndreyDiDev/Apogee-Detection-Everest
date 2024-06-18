@@ -307,6 +307,7 @@ void EverestTask::MadgwickWrapper(SensorDataNoMag data){
 */
 void EverestTask::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2)
 {
+    int numberOfSamples = 2;
     // Update IMU1
     this->internalIMU_1.time = imu1.time;
     this->internalIMU_1.gyroX = imu1.gyroX;
@@ -328,21 +329,48 @@ void EverestTask::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag&
     this->internalIMU_2.accelY = imu2.accelY;
     this->internalIMU_2.accelZ = imu2.accelZ;
 
+    if (isinf(internalIMU_1.accelX)){
+        numberOfSamples -= 1;
+        // printf("%d",numberOfSamples);
+        this->internalIMU_1.gyroX = 0;
+        this->internalIMU_1.gyroY = 0;
+        this->internalIMU_1.gyroZ = 0;
+
+        this->internalIMU_1.accelX = 0;
+        this->internalIMU_1.accelY = 0;
+        this->internalIMU_1.accelZ = 0;
+    }
+
+    if (isinf(internalIMU_2.accelX)){
+        numberOfSamples -= 1;
+        // printf("%d",numberOfSamples);
+        this->internalIMU_2.gyroX = 0;
+        this->internalIMU_2.gyroY = 0;
+        this->internalIMU_2.gyroZ = 0;
+
+        this->internalIMU_2.accelX = 0;
+        this->internalIMU_2.accelY = 0;
+        this->internalIMU_2.accelZ = 0;
+    }
+
     // Calculate average of IMU parameters
     #define averageIMU this->state.avgIMU
 
-    averageIMU.gyroX = (this->internalIMU_1.gyroX + this->internalIMU_2.gyroX) / 2.0;
-    averageIMU.gyroY = (this->internalIMU_1.gyroY + this->internalIMU_2.gyroY) / 2.0;
-    averageIMU.gyroZ = (this->internalIMU_1.gyroZ + this->internalIMU_2.gyroZ) / 2.0;
+    averageIMU.gyroX = (this->internalIMU_1.gyroX + this->internalIMU_2.gyroX) / numberOfSamples;
+    averageIMU.gyroY = (this->internalIMU_1.gyroY + this->internalIMU_2.gyroY) / numberOfSamples;
+    averageIMU.gyroZ = (this->internalIMU_1.gyroZ + this->internalIMU_2.gyroZ) / numberOfSamples;
 
-    averageIMU.accelX = (this->internalIMU_1.accelX + this->internalIMU_2.accelX) / 2.0;
-    averageIMU.accelY = (this->internalIMU_1.accelY + this->internalIMU_2.accelY) / 2.0;
-    averageIMU.accelZ = (this->internalIMU_1.accelZ + this->internalIMU_2.accelZ) / 2.0;
+    averageIMU.accelX = (this->internalIMU_1.accelX + this->internalIMU_2.accelX) / numberOfSamples;
+    averageIMU.accelY = (this->internalIMU_1.accelY + this->internalIMU_2.accelY) / numberOfSamples;
+    averageIMU.accelZ = (this->internalIMU_1.accelZ + this->internalIMU_2.accelZ) / numberOfSamples;
 
-    averageIMU.time = (this->internalIMU_1.time + this->internalIMU_2.time) / 2.0;
+    averageIMU.time = (this->internalIMU_1.time + this->internalIMU_2.time) / numberOfSamples;
 
     #undef averageIMU
 
+    if(numberOfSamples == 0){
+        this->state.avgIMU = {imu1.time,0,0,0,0,0,0};
+    }
     // feed to Madgwick
     // MadgwickWrapper(state.avgIMU);
     this->MadgwickWrapper(state.avgIMU);
