@@ -18,9 +18,9 @@
 #include "infusion.hpp"
 
 // task specific
-#include "Task.hpp"
-#include "Data.h"
-#include "SystemDefines.hpp"
+// #include "Task.hpp"
+// #include "Data.h"
+// #include "SystemDefines.hpp"
 
 
 // Definitions
@@ -121,14 +121,14 @@ typedef struct{
 
 }EverestData;
 
-class EverestTask : public Task
+class EverestTask
 {
     public:
 
-        static EverestTask& Inst() {
-			static EverestTask inst;
-			return inst;
-		}
+        // static EverestTask& Inst() {
+		// 	static EverestTask inst;
+		// 	return inst;
+		// }
 
 		void InitTask();
 
@@ -182,17 +182,17 @@ class EverestTask : public Task
 
         BarosData baro1, baro2, baro3, realBaro;
 
-        static void RunTask(void* pvParams) { EverestTask::Inst().Run(pvParams); } // Static Task Interface, passes control to the instance Run();
+        // static void RunTask(void* pvParams) { EverestTask::Inst().Run(pvParams); } // Static Task Interface, passes control to the instance Run();
 
-	    void Run(void* pvParams);    // Main run code
+	    // void Run(void* pvParams);    // Main run code
 
-	    void HandleCommand(Command& cm);
-	    void HandleRequestCommand(uint16_t taskCommand);
+	    // void HandleCommand(Command& cm);
+	    // void HandleRequestCommand(uint16_t taskCommand);
 
     private:
-        EverestTask();                                        // Private constructor
-	    EverestTask(const EverestTask&);                    // Prevent copy-construction
-	    EverestTask& operator=(const EverestTask&);            // Prevent assignment
+        // EverestTask();                                        // Private constructor
+	    // EverestTask(const EverestTask&);                    // Prevent copy-construction
+	    // EverestTask& operator=(const EverestTask&);            // Prevent assignment
 };
 
 void EverestTask::initialize1(systemState& state){
