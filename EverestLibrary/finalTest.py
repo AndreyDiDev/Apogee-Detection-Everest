@@ -14,7 +14,7 @@ import numpy
 print("running this 2")
 
 original = "C:/Users/Andrey/Documents/Fusion-main_new/Fusion-main/Fusion/file11.txt"
-everest = "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/everest3.txt"
+everest = "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/EverestLibrary/everest3.txt"
 
 # Import sensor data
 data = numpy.genfromtxt(everest, delimiter=",", skip_header=1)
