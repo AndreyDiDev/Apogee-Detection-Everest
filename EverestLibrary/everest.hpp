@@ -124,7 +124,7 @@ class Everest{
 
         void MadgwickSetup();
 
-        void initialize1(systemState& state);
+        void initialize1(systemState& state, kinematics& Kinematics);
 
         void calculateSTDCoefficients();
 
@@ -136,13 +136,13 @@ class Everest{
         
 };
 
-void Everest::initialize1(systemState& state){
+void Everest::initialize1(systemState& state, kinematics& kinematics){
     // Initially we trust systems equally
     this->state.gain_IMU = 4/10.0; // change to actual initial trusts 
     this->state.gain_Baro1 = 1/10.0;
-    state.gain_Baro2 = 1/10.0;
-    state.gain_Baro3 = 1/10.0;
-    state.gain_Real_Baro = 3/10.0;
+    this->state.gain_Baro2 = 1/10.0;
+    this->state.gain_Baro3 = 1/10.0;
+    this->state.gain_Real_Baro = 3/10.0;
 
     state.std_IMU = 0.05;
     state.std_Baro1 = 0.1;
@@ -151,14 +151,14 @@ void Everest::initialize1(systemState& state){
     state.std_Real_Baro = 0.05;
 
     Kinematics.initialVelo = 0;
-    Kinematics.initialAlt = 0;
+    this->Kinematics.initialAlt = 1111; // average of new mexico
     Kinematics.finalAltitude = 0;
 
     printf("Initialized\n");
 }
 
 Infusion* Everest::ExternalInitialize(){
-    initialize1(state);
+    initialize1(state, this->Kinematics);
     return &madgwick;
 }
 
@@ -168,7 +168,7 @@ Everest Everest::getEverest(){
 }
 
 kinematics* Everest::getKinematics(){
-    return &Kinematics;
+    return &this->Kinematics;
 }
 
 #endif

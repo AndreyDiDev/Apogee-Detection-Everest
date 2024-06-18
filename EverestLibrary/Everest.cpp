@@ -742,8 +742,15 @@ void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1
         isTared = true;
 
         // call to update time for these structs
-        ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
+        // ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
+        // everest.IMU_Update(imu1, imu2);
+
+        // everest.Baro_Update(baro1, baro2, baro3, realBaro);
+
+        // double finalAlt = everest.dynamite();
     }
+
+    everest.IMU_Update(imu1, imu2);
 
     theTime -= 1;
 }
@@ -1024,7 +1031,6 @@ int main()
 
         // }
 
-        howMany++;
 
         clock_t endTime = std::clock();
 
