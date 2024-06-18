@@ -425,7 +425,7 @@ double EverestTask::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, B
 }
 
 /**
- * @brief Wraps External Update with alignment, returns External Update with aligned data
+ * @brief (Currently does not work, use final wrapper) Wraps External Update with alignment, returns External Update with aligned data
 */
 double EverestTask::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
             BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment){
@@ -894,9 +894,12 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
         SOAR_PRINT("Tare Initial Altitude: %f\n", this->Kinematics.initialAlt);
         isTared = true;
 
-        // call to update time for these structs
-        ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
+        
+        // ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
     }
+
+    // call to update time for these structs
+    IMU_Update(imu1, imu2);
 
     theTime -= 1;
 }
