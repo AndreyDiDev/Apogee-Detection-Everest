@@ -22,15 +22,17 @@
 
 using namespace std;
 
-bool firstSampleAfterCalibration = true;
-
+// SETTINGS (mostly for debugging, keep default for run)
 bool isTared = false;
+debug_level debug = ALL;
+bool firstSampleAfterCalibration = true;
+bool useSTD = false;
 
+// INTERNAL VARIABLES
 // double timeInSeconds = 2;
 double theTime = CALIBRATION_TIME * RATE_BARO;
 double sum = 0;
 double pressureSum = 0;
-
 static float previousTimestamp = 0;
 
 FILE *file;
@@ -43,8 +45,6 @@ enum debug_level{
     ALL = 4,        // all
     NONE = 5        // none
 };
-
-debug_level debug = ALL;
 
 // Instantiate Everest
 madAhrs *ahrs;
