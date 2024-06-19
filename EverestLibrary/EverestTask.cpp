@@ -211,7 +211,7 @@ void EverestTask::MadgwickSetup()
 
     // Set AHRS algorithm settings
     madAhrsSettings settings = {
-            EarthConventionNed,
+            EarthConventionEnu,
             0.5f,
             2000.0f, /* replace this with actual gyroscope range in degrees/s */
             10.0f,
