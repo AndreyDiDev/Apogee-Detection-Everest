@@ -23,6 +23,14 @@
 using namespace std;
 
 // SETTINGS (mostly for debugging, keep default for run)
+enum debug_level{
+    RAW = 0,        // raw data
+    Secondary = 1,  // all operations before dynamite
+    Dynamite = 2,   //everything during dynamite
+    Third = 3,      // after dynamite
+    ALL = 4,        // all
+    NONE = 5        // none
+};
 bool isTared = false;
 debug_level debug = ALL;
 bool firstSampleAfterCalibration = true;
@@ -36,15 +44,6 @@ double pressureSum = 0;
 static float previousTimestamp = 0;
 
 FILE *file;
-
-enum debug_level{
-    RAW = 0,        // raw data
-    Secondary = 1,  // all operations before dynamite
-    Dynamite = 2,   //everything during dynamite
-    Third = 3,      // after dynamite
-    ALL = 4,        // all
-    NONE = 5        // none
-};
 
 // Instantiate Everest
 madAhrs *ahrs;
