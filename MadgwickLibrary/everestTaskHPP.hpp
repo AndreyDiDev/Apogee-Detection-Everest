@@ -3,8 +3,8 @@
  * @file everest.hpp
  * @brief 
 */
-#ifndef EVEREST_HPP
-#define EVEREST_HPP
+#ifndef EVEREST_TASK_HPP
+#define EVEREST_TASK_HPP
 
 #include <stdio.h>
 #include <ctime>
@@ -15,16 +15,30 @@
 #include <iostream>
 #include <sstream>
 
-#include "runner.hpp"
+#include "infusion.hpp"
 
-#include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
+// task specific
+#include "Task.hpp"
+#include "Data.h"
+#include "SystemDefines.hpp"
+
+
 // Definitions
 // CHANGE
-#define SAMPLE_RATE (3) // replace this with actual sample rate
+#define SAMPLE_RATE (3) // replace this with actual sample rate of baros 
 #define DELTA_TIME (1.0f / 3.0f)
 #define RATE_BARO (3)
 #define CALIBRATION_TIME (2)
 
+/* Macros/Enums ------------------------------------------------------------*/
+enum EVEREST_TASK_COMMANDS {
+    EVEREST_NONE = 0,
+	UPDATE,
+	TEST,
+    RETARE
+};
+
+/*Defines------------------------------------------------------------------*/
 typedef struct{
     float initialVelo;
     float initialAlt;
@@ -83,21 +97,48 @@ typedef struct{
     float previousTime;
 } BarosData;
 
-class Everest{
+/**
+ * @brief Just to carry all data between tasks
+*/
+typedef struct{
+    float timeIMU;
+    float timeBaro1;
+    float timeBaro2;
+    float timeBaroReal;
+
+    float accelX;
+    float accelY;
+    float accelZ;
+
+    float gyroX;
+    float gyroY;
+    float gyroZ;
+
+    float pressure1;
+    float pressure2;
+    float pressure3;
+    float pressureReal;
+
+}EverestData;
+
+class EverestTask : public Task
+{
     public:
 
-        // Everest everestPtr;
+        static EverestTask& Inst() {
+			static EverestTask inst;
+			return inst;
+		}
+
+		void InitTask();
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
         Infusion* ExternalInitialize();
 
-        // Everest* getEverest();
+        static EverestTask getEverest();
 
-        // static Everest* getPointer();
-
-        void setPointer(Everest* everest);
-
+        // Initialize system state
         systemState state = {};
 
         void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
@@ -109,8 +150,6 @@ class Everest{
         kinematics* getKinematics();
 
         Infusion madgwick;
-
-        void MadgwickSetup();
 
         altitudeList AltitudeList;
 
@@ -132,34 +171,31 @@ class Everest{
 
         void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
 
-
         void MadgwickSetup();
 
         void initialize1(systemState& state);
 
         void calculateSTDCoefficients();
-    
-        // static Everest* everest;
-
-        // static Everest* getPointer() {
-        //     if (everest == nullptr) {
-        //         everest = new Everest();
-        //     }
-        //     return everest;
-        // }
-
-        // Everest() {};
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
-        
-        void initialize(systemState& state);
 
+        static void RunTask(void* pvParams) { EverestTask::Inst().Run(pvParams); } // Static Task Interface, passes control to the instance Run();
+
+	    void Run(void* pvParams);    // Main run code
+
+	    void HandleCommand(Command& cm);
+	    void HandleRequestCommand(uint16_t taskCommand);
+
+    private:
+        EverestTask();                                        // Private constructor
+	    EverestTask(const EverestTask&);                    // Prevent copy-construction
+	    EverestTask& operator=(const EverestTask&);            // Prevent assignment
 };
 
-void Everest::initialize1(systemState& state){
+void EverestTask::initialize1(systemState& state){
     // Initially we trust systems equally
     this->state.gain_IMU = 4/10.0; // change to actual initial trusts 
     this->state.gain_Baro1 = 1/10.0;
@@ -180,36 +216,19 @@ void Everest::initialize1(systemState& state){
     printf("Initialized\n");
 }
 
-Infusion* Everest::ExternalInitialize(){
+Infusion* EverestTask::ExternalInitialize(){
     initialize1(state);
     return &madgwick;
 }
 
-Everest Everest::getEverest(){
-    Everest everest = Everest();
+EverestTask EverestTask::getEverest(){
+    EverestTask everest = EverestTask();
     return everest;
 }
 
-// void Everest::createEverest(){
-//     everest = Everest();
-// }
-
-// Everest* Everest::getEverest(){
-//     return &everest;
-// }
-
-kinematics* Everest::getKinematics(){
+kinematics* EverestTask::getKinematics(){
     return &Kinematics;
 }
-
-// Everest everest;
-
-// Everest* Everest::getPointer(){
-//     if (everest == nullptr) {
-//         everest = Everest();
-//     }
-//     return &everest;
-// }
 
 #endif
 
