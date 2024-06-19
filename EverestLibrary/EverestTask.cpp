@@ -23,6 +23,14 @@
 using namespace std;
 
 // SETTINGS
+enum debug_level{
+    RAW = 0,        // raw data
+    Secondary = 1,  // all operations before dynamite
+    Dynamite = 2,   //everything during dynamite
+    Third = 3,      // after dynamite
+    ALL = 4,        // all
+    NONE = 5        // none
+};
 debug_level debug = ALL;
 bool isTared = false;
 bool useSTD = false;
@@ -35,15 +43,6 @@ static float previousTimestamp = 0;
 bool firstSampleAfterCalibration = true;
 
 FILE *file;
-
-enum debug_level{
-    RAW = 0,        // raw data
-    Secondary = 1,  // all operations before dynamite
-    Dynamite = 2,   //everything during dynamite
-    Third = 3,      // after dynamite
-    ALL = 4,        // all
-    NONE = 5        // none
-};
 
 
 // Instantiate Everest
@@ -211,7 +210,7 @@ void EverestTask::MadgwickSetup()
 
     // Set AHRS algorithm settings
     madAhrsSettings settings = {
-            EarthConventionNed,
+            EarthConventionEnu,
             0.5f,
             2000.0f, /* replace this with actual gyroscope range in degrees/s */
             10.0f,
@@ -277,14 +276,14 @@ void EverestTask::MadgwickWrapper(SensorDataNoMag data){
     flags = infusion->madAhrsGetFlags(infusion->getMadAhrs());
 
     // write to file
-//    fprintf(file, "%f,", timestamp);
-//
-//    fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
-//
-//    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d,%f", internalStates.accelerationError,
-//    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError,
-//    internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising,
-//    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, earth.axis.z);
+    fprintf(file, "%f,", timestamp);
+
+    fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
+
+    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d,%f", internalStates.accelerationError,
+    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError,
+    internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising,
+    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, accelerometer.axis.z);
 
     everest.state.earthAcceleration = earth.axis.z;
 
@@ -447,7 +446,7 @@ double EverestTask::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, B
     this->AltitudeList.secondLastAltitude = this->AltitudeList.lastAltitude;
     this->AltitudeList.lastAltitude = finalAlt;
 
-//    fprintf(file, ",%f\n", finalAlt); // write to file
+    fprintf(file, ",%f\n", finalAlt); // write to file
 
     return finalAlt;
 }
@@ -596,13 +595,15 @@ double EverestTask::dynamite(){
         printf("IMU Altitude: %f\n", IMUAltitude);
     }
 
-    // // distributing measurement
-    // double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/pow(everest.state.std_IMU, 2);
-    // double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/pow(everest.state.std_Baro1, 2);
-    // double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/pow(everest.state.std_Baro2, 2);
-    // double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/pow(everest.state.std_Baro3,2);
-    // double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/pow(everest.state.std_Real_Baro,2);
-    
+    // distributing measurement
+    if(useSTD == true){
+        IMUAltitude = IMUAltitude * this->state.std_IMU;
+        BaroAltitude1 = BaroAltitude1 * this->state.std_Baro1;
+        BaroAltitude2 = BaroAltitude2 * this->state.std_Baro2;
+        BaroAltitude3 = BaroAltitude1 * this->state.std_Baro3;
+        RealBaroAltitude = RealBaroAltitude * this->state.std_Real_Baro;
+    }
+
     // if pressure is zero, set gain to zero
     if(everest.realBaro.altitude == 0){
         everest.state.gain_Real_Baro = 0;
@@ -806,30 +807,40 @@ void EverestTask::recalculateGain(double estimate){
  */ 
 void EverestTask::calculateSTDCoefficients(){
     // calculate standard deviation coefficients
-    double std_IMU = this->state.gain_IMU;
-    double std_Baro1 = this->state.gain_Baro1;
-    double std_Baro2 = this->state.gain_Baro2;
-    double std_Baro3 = this->state.gain_Baro3;
-    double std_Real_Baro = this->state.gain_Real_Baro;
+    double std_IMU = this->state.std_IMU;
+    double std_Baro1 = this->state.std_Baro1;
+    double std_Baro2 = this->state.std_Baro2;
+    double std_Baro3 = this->state.std_Baro3;
+    double std_Real_Baro = this->state.std_Real_Baro;
 
-    double sumSTD1 = pow(everest.state.gain_IMU, 2) + pow(everest.state.gain_Baro1, 2) + pow(everest.state.gain_Baro2, 2)
-                    + pow(everest.state.gain_Baro3, 2) + pow(everest.state.gain_Real_Baro, 2);
+       if(debug == Dynamite || debug == ALL){
+       printf("\nStandard Deviation Coefficients\n");
+       printf("STD IMU: %f\n", this->state.std_IMU);
+       printf("STD Baro1: %f\n", this->state.std_Baro1);
+       printf("STD Baro2: %f\n", this->state.std_Baro2);
+       printf("STD Baro3: %f\n", this->state.std_Baro3);
+       printf("STD Real Baro: %f\n\n", this->state.std_Real_Baro);
+   }
+
+    double sumSTD1 = 1/pow(std_IMU, 2) + 1/pow(std_Baro1, 2) + 1/pow(std_Baro2, 2)
+                    + 1/pow(std_Baro3, 2) + 1/pow(std_Real_Baro, 2);
 
     // normalise
-    this->state.std_IMU = pow(std_IMU, 2) / sumSTD1;
-    this->state.std_Baro1 = pow(std_Baro1, 2) / sumSTD1;
-    this->state.std_Baro2 = pow(std_Baro2, 2) / sumSTD1;
-    this->state.std_Baro3 = pow(std_Baro3, 2) / sumSTD1;
-    this->state.std_Real_Baro = pow(std_Real_Baro, 2) / sumSTD1;
+    this->state.std_IMU = (1/pow(std_IMU, 2)) / sumSTD1;
+    this->state.std_Baro1 = (1/pow(std_Baro1, 2)) / sumSTD1;
+    this->state.std_Baro2 = (1/pow(std_Baro2, 2)) / sumSTD1;
+    this->state.std_Baro3 = (1/pow(std_Baro3, 2)) / sumSTD1;
+    this->state.std_Real_Baro = (1/pow(std_Real_Baro, 2)) / sumSTD1;
 
-//    if(debug == Dynamite || debug == ALL){
-//        printf("\nStandard Deviation Coefficients\n");
-//        printf("STD IMU: %f\n", this->state.std_IMU);
-//        printf("STD Baro1: %f\n", this->state.std_Baro1);
-//        printf("STD Baro2: %f\n", this->state.std_Baro2);
-//        printf("STD Baro3: %f\n", this->state.std_Baro3);
-//        printf("STD Real Baro: %f\n\n", this->state.std_Real_Baro);
-//    }
+   if(debug == Dynamite || debug == ALL){
+       printf("\nStandard Deviation Coefficients\n");
+       printf("STD IMU: %f\n", this->state.std_IMU);
+       printf("STD Baro1: %f\n", this->state.std_Baro1);
+       printf("STD Baro2: %f\n", this->state.std_Baro2);
+       printf("STD Baro3: %f\n", this->state.std_Baro3);
+       printf("STD Real Baro: %f\n\n", this->state.std_Real_Baro);
+       printf("Sum STD: %f\n", sumSTD1);
+   }
 
 }
 
@@ -1239,7 +1250,7 @@ int main()
        printf("Altitude: %f\n", eAltitude);
 
 
-       // }
+       }
 
        howMany++;
 
