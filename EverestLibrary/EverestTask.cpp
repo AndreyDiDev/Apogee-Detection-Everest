@@ -960,9 +960,9 @@ double finalWrapper( float accelX, float accelY, float accelZ, float gyroX, floa
         gyroX,
         gyroY,
         gyroZ,
-        accelX/9.81,
-        accelY/9.81,
-        accelZ/9.81,
+        (float) (accelX/9.81),
+        (float) (accelY/9.81),
+        (float) (accelZ/9.81),
     };
 
     SensorDataNoMag sensorData2 = {
@@ -970,9 +970,9 @@ double finalWrapper( float accelX, float accelY, float accelZ, float gyroX, floa
         gyroX,
         gyroY,
         gyroZ,
-        accelX/9.81,
-        accelY/9.81,
-        accelZ/9.81,
+        (float) (accelX/9.81),
+        (float) (accelY/9.81),
+        (float) (accelZ/9.81),
     };
 
     BarosData baro1 = {
