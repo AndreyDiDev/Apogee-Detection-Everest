@@ -840,28 +840,17 @@ class Infusion {
 
         madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
 
+        void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float heading, const float deltaTime);
+
+        void madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime);
+
         void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
 
     private:
-        madAhrsSettings settings;
-        madVector accelerometer;
-        bool initialising;
-        float rampedGain;
-        float rampedGainStep;
-        bool angularRateRecovery;
-        madVector halfAccelerometerFeedback;
-        madVector halfMagnetometerFeedback;
-        bool accelerometerIgnored;
-        int accelerationRecoveryTrigger;
-        int accelerationRecoveryTimeout;
-        bool magnetometerIgnored;
-        int magneticRecoveryTrigger;
-        int magneticRecoveryTimeout;
-
-        madVector halfGravity() const;
-        madVector halfMagnetic() const;
-        madVector feedback(const madVector& sensor, const madVector& reference) const;
-        int clamp(int value, int min, int max) const; // uint32_t
+        // madVector halfGravity() const;
+        // madVector halfMagnetic() const;
+        // madVector feedback(const madVector& sensor, const madVector& reference) const;
+        // int clamp(int value, int min, int max) const; // uint32_t
 
     protected:
 };
