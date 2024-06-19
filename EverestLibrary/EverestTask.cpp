@@ -186,7 +186,9 @@ void EverestTask::MadgwickSetup()
     infusion = everest.ExternalInitialize();
     ahrs = infusion->getMadAhrs();
 
-    calculateSTDCoefficients();
+    // if(useSTD){
+    //     calculateSTDCoefficients();
+    // }
 
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
@@ -595,13 +597,18 @@ double EverestTask::dynamite(){
         printf("IMU Altitude: %f\n", IMUAltitude);
     }
 
-    // distributing measurement
+    double stdSum = 1;
+    // apply STD
     if(useSTD == true){
-        IMUAltitude = IMUAltitude * this->state.std_IMU;
-        BaroAltitude1 = BaroAltitude1 * this->state.std_Baro1;
-        BaroAltitude2 = BaroAltitude2 * this->state.std_Baro2;
-        BaroAltitude3 = BaroAltitude1 * this->state.std_Baro3;
-        RealBaroAltitude = RealBaroAltitude * this->state.std_Real_Baro;
+        IMUAltitude = IMUAltitude * 1/pow(this->state.std_IMU,2);
+        BaroAltitude1 = BaroAltitude1 * 1/(this->state.std_Baro1,2);
+        BaroAltitude2 = BaroAltitude2 * 1/pow(this->state.std_Baro2, 2);
+        BaroAltitude3 = BaroAltitude1 * 1/pow(this->state.std_Baro3, 2);
+        RealBaroAltitude = RealBaroAltitude * 1/pow(this->state.std_Real_Baro,2);
+
+        stdSum = 1/pow(this->state.std_IMU,2) + 1/(this->state.std_Baro1,2) +
+                1/pow(this->state.std_Baro2, 2) + 1/pow(this->state.std_Baro3, 2) + 
+                1/pow(this->state.std_Real_Baro,2);
     }
 
     // if pressure is zero, set gain to zero
@@ -674,6 +681,7 @@ double EverestTask::dynamite(){
     // distributed_RealBaro_Altitude = distributed_RealBaro_Altitude / everest.state.std_Real_Baro;
 
     // summation of distributed measurements
+    // double distributed_Sum = distributed_Sum / ()
     double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2 
                             + distributed_Baro_Altitude3 + distributed_RealBaro_Altitude;
 
