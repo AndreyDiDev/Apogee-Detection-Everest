@@ -186,7 +186,7 @@ void EverestTask::MadgwickSetup()
     infusion = everest.ExternalInitialize();
     ahrs = infusion->getMadAhrs();
 
-    calculateSTDCoefficients();
+    // calculateSTDCoefficients();
 
     // Define calibration (replace with actual calibration data if available)
     const madMatrix gyroscopeMisalignment = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f};
