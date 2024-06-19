@@ -43,7 +43,7 @@ double sum = 0;
 double pressureSum = 0;
 static float previousTimestamp = 0;
 
-FILE *file;
+// FILE *file;
 
 // Instantiate Everest
 madAhrs *ahrs;
