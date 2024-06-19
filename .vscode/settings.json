@@ -1,8 +1,5 @@
 {
-    "cSpell.words": [
-        "Madgwick"
-    ],
     "files.associations": {
-        "cmath": "cpp"
+        "limits": "cpp"
     }
 }
