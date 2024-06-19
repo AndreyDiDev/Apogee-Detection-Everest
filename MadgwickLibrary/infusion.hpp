@@ -135,7 +135,14 @@ typedef enum {
     MadAxesAlignmentNZNXPY, /* -Z-X+Y */
     MadAxesAlignmentNZNYNX, /* -Z-Y-X */
     MadAxesAlignmentNZPXNY, /* -Z+X-Y */
+    MadAxesAlignmentPXPYNZ, /* +X+Y-NZ */
 } MadAxesAlignment;
+
+// imu1 = AxesSwitch(imu1, MadAxesAlignmentPXPYPZ);
+//     both PX, PY, NZ
+
+// imu 
+//     NY, PX, NZ
 
 /**
  * @brief Gyroscope offset algorithm structure.  Structure members are used
@@ -604,13 +611,147 @@ static inline int Clamp(const int value, const int min, const int max);
 //------------------------------------------------------------------------------
 
 //Functions---------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+
+/**
+ * @brief Gyroscope, accelerometer, and magnetometer calibration models.
+ */
+
+//Functions---------------------------------------------------------------------
+/**
+ * @brief Gyroscope and accelerometer calibration model.
+ * @param uncalibrated Uncalibrated measurement.
+ * @param misalignment Misalignment matrix.
+ * @param sensitivity Sensitivity.
+ * @param offset Offset.
+ * @return Calibrated measurement.
+ */
+static inline madVector madCalibrationInertial(const madVector uncalibrated, const madMatrix misalignment, const madVector sensitivity, const madVector offset) {
+    return madMatrixMultiplyVector(misalignment, madVectorHadamardProduct(madVectorSubtract(uncalibrated, offset), sensitivity));
+}
+
+/**
+ * @brief Magnetometer calibration model.
+ * @param uncalibrated Uncalibrated measurement.
+ * @param softIronMatrix Soft-iron matrix.
+ * @param hardIronOffset Hard-iron offset.
+ * @return Calibrated measurement.
+ */
+static inline madVector madCalibrationMagnetic(const madVector uncalibrated, const madMatrix softIronMatrix, const madVector hardIronOffset) {
+    return madMatrixMultiplyVector(softIronMatrix, madVectorSubtract(uncalibrated, hardIronOffset));
+}
+
+//------------------------------------------------------------------------------
+
+/**
+ * @brief Tilt-compensated compass to calculate the magnetic heading using
+ * accelerometer and magnetometer measurements.
+ */
+
+// Function declarations--------------------------------------------------------
+
+float compassCalculateHeading(const EarthConvention convention, const madVector accelerometer, const madVector magnetometer);
+
+//------------------------------------------------------------------------------
+/**
+ * @brief Gyroscope offset correction algorithm for run-time calibration of the
+ * gyroscope offset.
+ */
+
+//------------------------------------------------------------------------------
+
+//Function declarations---------------------------------------------------------
+
+void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate);
+
+madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
+
+// madAhrs* getMadAhrs(const Infusion *const infusion) {return this->madAHRS;};
+
+// madOffset* getOffset(const Infusion *const infusion) {return &infusion.offset;};
+
+// madQuaternion* getQuaternion(const Infusion *const infusion) {return &infusion.quaternion;};
+
+// The End
+// Class
+class Infusion {
+    public:
+        // Infusion();
+        // ~Infusion();
+        void initialise();
+        void reset();
+        void setSettings(const madAhrsSettings& settings);
+        void update(const madVector& gyroscope, const madVector& accelerometer, const madVector& magnetometer, float deltaTime);
+        // void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
+        void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
+        void setQuaternion(const madQuaternion& quaternion);
+        // madAhrsInternalStates getInternalStates() const;
+        madAhrsInternalStates madAhrsGetInternalStates(const madAhrs *const ahrs);
+        // madAhrsFlags getFlags() const;
+        void setHeading(float heading);
+
+        madAhrs madAHRS;
+
+        madOffset offset;
+        madQuaternion quaternion;
+
+        madAhrs* getMadAhrs() {return &madAHRS;};
+
+        madOffset getOffset() {return offset;};
+
+        madVector AxesSwitch(const madVector sensor, const MadAxesAlignment alignment);
+
+        void madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settings);
+
+        void madAhrsInitialise(madAhrs *const ahrs);
+
+        void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate);
+
+        // madEuler getEuler(const madAhrs *const ahrs);
+
+        madVector madAhrsGetEarthAcceleration(const madAhrs *ahrs);
+
+        madQuaternion madAhrsGetQuaternion(const madAhrs *ahrs);
+
+        madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
+
+        madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
+
+        madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
+
+        void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float heading, const float deltaTime);
+
+        void madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime);
+
+        void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
+
+        madVector magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer, madVector halfGravity, madVector halfMagnetometerFeedback);
+
+        madVector accelerometerFeedback(madAhrs *const ahrs, const madVector accelerometer, madVector halfGravity, madVector halfAccelerometerFeedback);
+
+        void rampDownGain(madAhrs *const ahrs, const float deltaTime);
+
+        void reinitialiseGyro(madAhrs *const ahrs, const madVector gyroscope);
+
+    private:
+        // madVector halfGravity() const;
+        // madVector halfMagnetic() const;
+        // madVector feedback(const madVector& sensor, const madVector& reference) const;
+        // int clamp(int value, int min, int max) const; // uint32_t
+
+    protected:
+};
+
 /**
  * @brief Swaps sensor axes for alignment with the body axes.
  * @param sensor Sensor axes.
  * @param alignment Axes alignment.
  * @return Sensor axes aligned with the body axes.
+ * @todo have absolutes then put sign to prevent bad inputs from user
  */
-static inline madVector AxesSwitch(const madVector sensor, const MadAxesAlignment alignment) {
+inline madVector Infusion::AxesSwitch(const madVector sensor, const MadAxesAlignment alignment) {
     madVector result;
     switch (alignment) {
         case MadAxesAlignmentPXPYPZ:
@@ -620,6 +761,12 @@ static inline madVector AxesSwitch(const madVector sensor, const MadAxesAlignmen
             result.axis.y = -sensor.axis.z;
             result.axis.z = +sensor.axis.y;
             return result;
+        case MadAxesAlignmentPXPYNZ:
+            result.axis.x = +sensor.axis.x;
+            result.axis.y = +sensor.axis.y;
+            result.axis.z = -sensor.axis.z;
+            return result;
+
         case MadAxesAlignmentPXNYNZ:
             result.axis.x = +sensor.axis.x;
             result.axis.y = -sensor.axis.y;
@@ -733,127 +880,6 @@ static inline madVector AxesSwitch(const madVector sensor, const MadAxesAlignmen
     }
     return sensor; // avoid compiler warning
 }
-
-//------------------------------------------------------------------------------
-
-/**
- * @brief Gyroscope, accelerometer, and magnetometer calibration models.
- */
-
-//Functions---------------------------------------------------------------------
-/**
- * @brief Gyroscope and accelerometer calibration model.
- * @param uncalibrated Uncalibrated measurement.
- * @param misalignment Misalignment matrix.
- * @param sensitivity Sensitivity.
- * @param offset Offset.
- * @return Calibrated measurement.
- */
-static inline madVector madCalibrationInertial(const madVector uncalibrated, const madMatrix misalignment, const madVector sensitivity, const madVector offset) {
-    return madMatrixMultiplyVector(misalignment, madVectorHadamardProduct(madVectorSubtract(uncalibrated, offset), sensitivity));
-}
-
-/**
- * @brief Magnetometer calibration model.
- * @param uncalibrated Uncalibrated measurement.
- * @param softIronMatrix Soft-iron matrix.
- * @param hardIronOffset Hard-iron offset.
- * @return Calibrated measurement.
- */
-static inline madVector madCalibrationMagnetic(const madVector uncalibrated, const madMatrix softIronMatrix, const madVector hardIronOffset) {
-    return madMatrixMultiplyVector(softIronMatrix, madVectorSubtract(uncalibrated, hardIronOffset));
-}
-
-//------------------------------------------------------------------------------
-
-/**
- * @brief Tilt-compensated compass to calculate the magnetic heading using
- * accelerometer and magnetometer measurements.
- */
-
-// Function declarations--------------------------------------------------------
-
-float compassCalculateHeading(const EarthConvention convention, const madVector accelerometer, const madVector magnetometer);
-
-//------------------------------------------------------------------------------
-/**
- * @brief Gyroscope offset correction algorithm for run-time calibration of the
- * gyroscope offset.
- */
-
-//------------------------------------------------------------------------------
-
-//Function declarations---------------------------------------------------------
-
-void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate);
-
-madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
-
-// madAhrs* getMadAhrs(const Infusion *const infusion) {return this->madAHRS;};
-
-// madOffset* getOffset(const Infusion *const infusion) {return &infusion.offset;};
-
-// madQuaternion* getQuaternion(const Infusion *const infusion) {return &infusion.quaternion;};
-
-// The End
-// Class
-class Infusion {
-    public:
-        // Infusion();
-        // ~Infusion();
-        void initialise();
-        void reset();
-        void setSettings(const madAhrsSettings& settings);
-        void update(const madVector& gyroscope, const madVector& accelerometer, const madVector& magnetometer, float deltaTime);
-        // void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
-        void updateExternalHeading(const madVector& gyroscope, const madVector& accelerometer, float heading, float deltaTime);
-        void setQuaternion(const madQuaternion& quaternion);
-        // madAhrsInternalStates getInternalStates() const;
-        madAhrsInternalStates madAhrsGetInternalStates(const madAhrs *const ahrs);
-        // madAhrsFlags getFlags() const;
-        void setHeading(float heading);
-
-        madAhrs madAHRS;
-
-        madOffset offset;
-        madQuaternion quaternion;
-
-        madAhrs* getMadAhrs() {return &madAHRS;};
-
-        madOffset getOffset() {return offset;};
-
-        void madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *const settings);
-
-        void madAhrsInitialise(madAhrs *const ahrs);
-
-        void madOffsetInitialise(madOffset *const offset, const unsigned int sampleRate);
-
-        // madEuler getEuler(const madAhrs *const ahrs);
-
-        madVector madAhrsGetEarthAcceleration(const madAhrs *ahrs);
-
-        madQuaternion madAhrsGetQuaternion(const madAhrs *ahrs);
-
-        madVector madOffsetUpdate(madOffset *const offset, madVector gyroscope);
-
-        madEuler getEuler(const madAhrs *ahrs) {return madQuaternionToEuler((madAhrsGetQuaternion(ahrs)));};
-
-        madAhrsFlags madAhrsGetFlags(const madAhrs *const ahrs);
-
-        void madAhrsUpdateExternalHeading(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float heading, const float deltaTime);
-
-        void madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime);
-
-        void madAhrsUpdateNoMagnetometer(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const float deltaTime);
-
-    private:
-        // madVector halfGravity() const;
-        // madVector halfMagnetic() const;
-        // madVector feedback(const madVector& sensor, const madVector& reference) const;
-        // int clamp(int value, int min, int max) const; // uint32_t
-
-    protected:
-};
 
 #endif // INFUSION_HPP
 

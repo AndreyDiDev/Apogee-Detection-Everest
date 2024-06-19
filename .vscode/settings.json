@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
         "Madgwick"
-    ]
+    ],
+    "files.associations": {
+        "cmath": "cpp"
+    }
 }

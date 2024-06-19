@@ -62,7 +62,7 @@ using namespace std;
  */
 void Infusion::madAhrsInitialise(madAhrs *const ahrs) {
     const madAhrsSettings settings = {
-            .convention = EarthConventionNwu,
+            .convention = EarthConventionNed,
             .gain = 0.5f,
             .gyroscopeRange = 0.0f,
             .accelerationRejection = 90.0f,
@@ -118,7 +118,7 @@ void Infusion::madAhrsSetSettings(madAhrs *const ahrs, const madAhrsSettings *co
     ahrs->rampedGainStep = (INITIAL_GAIN - ahrs->settings.gain) / INITIALISATION_PERIOD;
 }
 
-void reinitialiseGyro(madAhrs *const ahrs, const madVector gyroscope){
+void Infusion::reinitialiseGyro(madAhrs *const ahrs, const madVector gyroscope){
 
     if ((fabsf(gyroscope.axis.x) > ahrs->settings.gyroscopeRange) || (fabsf(gyroscope.axis.y) > ahrs->settings.gyroscopeRange) || (fabsf(gyroscope.axis.z) > ahrs->settings.gyroscopeRange)) {
         const madQuaternion quaternion = ahrs->quaternion;
@@ -128,7 +128,7 @@ void reinitialiseGyro(madAhrs *const ahrs, const madVector gyroscope){
     }
 }
 
-void rampDownGain(madAhrs *const ahrs, const float deltaTime){
+void Infusion::rampDownGain(madAhrs *const ahrs, const float deltaTime){
     if (ahrs->initialising) {
         ahrs->rampedGain -= ahrs->rampedGainStep * deltaTime;
         if ((ahrs->rampedGain < ahrs->settings.gain) || (ahrs->settings.gain == 0.0f)) {
@@ -139,7 +139,7 @@ void rampDownGain(madAhrs *const ahrs, const float deltaTime){
     }
 }
 
-madVector accelerometerFeedback(madAhrs *const ahrs, const madVector accelerometer, madVector halfGravity, madVector halfAccelerometerFeedback){
+madVector Infusion::accelerometerFeedback(madAhrs *const ahrs, const madVector accelerometer, madVector halfGravity, madVector halfAccelerometerFeedback){
 
     if (madVectorIsZero(accelerometer) == false) {
 
@@ -172,9 +172,11 @@ madVector accelerometerFeedback(madAhrs *const ahrs, const madVector acceleromet
     return halfAccelerometerFeedback;
 }
 
-madVector magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer, madVector halfGravity, madVector halfMagnetometerFeedback){
+madVector Infusion::magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer, madVector halfGravity, madVector halfMagnetometerFeedback){
     // Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
     if (madVectorIsZero(magnetometer) == false) {
+
+        // printf("Mag: (%.6f, %.6f, %.6f) uT\n", magnetometer.axis.x, magnetometer.axis.y, magnetometer.axis.z);
 
         // Calculate direction of magnetic field indicated by algorithm
         const madVector halfMagnetic = HalfMagnetic(ahrs);
@@ -237,15 +239,29 @@ madVector magnetometerFeedback(madAhrs *const ahrs, const madVector magnetometer
  */
 void Infusion::madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, const madVector accelerometer, const madVector magnetometer, const float deltaTime) {
 #define Q ahrs->quaternion.element
-
-    // Store accelerometer
+// Store accelerometer
     ahrs->accelerometer = accelerometer;
 
     // Reinitialise if gyroscope range exceeded
-    reinitialiseGyro(ahrs, gyroscope);
+    if ((fabsf(gyroscope.axis.x) > ahrs->settings.gyroscopeRange) || (fabsf(gyroscope.axis.y) > ahrs->settings.gyroscopeRange) || (fabsf(gyroscope.axis.z) > ahrs->settings.gyroscopeRange)) {
+        const madQuaternion quaternion = ahrs->quaternion;
+        madAhrsReset(ahrs);
+        ahrs->quaternion = quaternion;
+        ahrs->angularRateRecovery = true;
+    }
 
     // Ramp down gain during initialisation
-    rampDownGain(ahrs, deltaTime);
+    if (ahrs->initialising) {
+        ahrs->rampedGain -= ahrs->rampedGainStep * deltaTime;
+        // printf("%f\n", ahrs->rampedGain);
+        if ((ahrs->rampedGain < ahrs->settings.gain) || (ahrs->settings.gain == 0.0f)) {
+            // printf("adte");
+            // printf("%d", ahrs->rampedGain);
+            ahrs->rampedGain = ahrs->settings.gain;
+            ahrs->initialising = false;
+            ahrs->angularRateRecovery = false;
+        }
+    }
 
     // Calculate direction of gravity indicated by algorithm
     const madVector halfGravity = HalfGravity(ahrs);
@@ -253,15 +269,67 @@ void Infusion::madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, con
     // Calculate accelerometer feedback
     madVector halfAccelerometerFeedback = VECTOR_ZERO;
     ahrs->accelerometerIgnored = true;
+    if (madVectorIsZero(accelerometer) == false) {
 
-    // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
-    halfAccelerometerFeedback = accelerometerFeedback(ahrs, accelerometer, halfGravity, halfAccelerometerFeedback);
+        // Calculate accelerometer feedback scaled by 0.5
+        ahrs->halfAccelerometerFeedback = Feedback(madVectorNormalise(accelerometer), halfGravity);
+
+        // Don't ignore accelerometer if acceleration error below threshold
+        if (ahrs->initialising || ((madVectorMagnitudeSquared(ahrs->halfAccelerometerFeedback) <= ahrs->settings.accelerationRejection))) {
+            ahrs->accelerometerIgnored = false;
+            ahrs->accelerationRecoveryTrigger -= 9;
+        } else {
+            ahrs->accelerationRecoveryTrigger += 1;
+        }
+
+        // Don't ignore accelerometer during acceleration recovery
+        if (ahrs->accelerationRecoveryTrigger > ahrs->accelerationRecoveryTimeout) {
+            ahrs->accelerationRecoveryTimeout = 0;
+            ahrs->accelerometerIgnored = false;
+        } else {
+            ahrs->accelerationRecoveryTimeout = ahrs->settings.recoveryTriggerPeriod;
+        }
+        ahrs->accelerationRecoveryTrigger = Clamp(ahrs->accelerationRecoveryTrigger, 0, ahrs->settings.recoveryTriggerPeriod);
+
+        // Apply accelerometer feedback
+        if (ahrs->accelerometerIgnored == false) {
+            halfAccelerometerFeedback = ahrs->halfAccelerometerFeedback;
+        }
+    }
 
     // Calculate magnetometer feedback
     madVector halfMagnetometerFeedback = VECTOR_ZERO;
     ahrs->magnetometerIgnored = true;
+    if (madVectorIsZero(magnetometer) == false) {
 
-    halfMagnetometerFeedback = magnetometerFeedback(ahrs, magnetometer, halfGravity, halfMagnetometerFeedback);
+        // Calculate direction of magnetic field indicated by algorithm
+        const madVector halfMagnetic = HalfMagnetic(ahrs);
+
+        // Calculate magnetometer feedback scaled by 0.5
+        ahrs->halfMagnetometerFeedback = Feedback(madVectorNormalise(madVectorCrossProduct(halfGravity, magnetometer)), halfMagnetic);
+
+        // Don't ignore magnetometer if magnetic error below threshold
+        if (ahrs->initialising || ((madVectorMagnitudeSquared(ahrs->halfMagnetometerFeedback) <= ahrs->settings.magneticRejection))) {
+            ahrs->magnetometerIgnored = false;
+            ahrs->magneticRecoveryTrigger -= 9;
+        } else {
+            ahrs->magneticRecoveryTrigger += 1;
+        }
+
+        // Don't ignore magnetometer during magnetic recovery
+        if (ahrs->magneticRecoveryTrigger > ahrs->magneticRecoveryTimeout) {
+            ahrs->magneticRecoveryTimeout = 0;
+            ahrs->magnetometerIgnored = false;
+        } else {
+            ahrs->magneticRecoveryTimeout = ahrs->settings.recoveryTriggerPeriod;
+        }
+        ahrs->magneticRecoveryTrigger = Clamp(ahrs->magneticRecoveryTrigger, 0, ahrs->settings.recoveryTriggerPeriod);
+
+        // Apply magnetometer feedback
+        if (ahrs->magnetometerIgnored == false) {
+            halfMagnetometerFeedback = ahrs->halfMagnetometerFeedback;
+        }
+    }
 
     // Convert gyroscope to radians per second scaled by 0.5
     const madVector halfGyroscope = madVectorMultiplyScalar(gyroscope, DegreesToRadians(0.5f));
@@ -274,6 +342,44 @@ void Infusion::madAhrsUpdate(madAhrs *const ahrs, const madVector gyroscope, con
 
     // Normalise quaternion
     ahrs->quaternion = madQuaternionNormalise(ahrs->quaternion);
+
+//---------------------------------------------------------------------------------------------------------------------
+    // // Store accelerometer
+    // ahrs->accelerometer = accelerometer;
+
+    // // Reinitialise if gyroscope range exceeded
+    // this->reinitialiseGyro(ahrs, gyroscope);
+
+    // // Ramp down gain during initialisation
+    // this->rampDownGain(ahrs, deltaTime);
+
+    // // Calculate direction of gravity indicated by algorithm
+    // const madVector halfGravity = HalfGravity(ahrs);
+
+    // // Calculate accelerometer feedback
+    // madVector halfAccelerometerFeedback = VECTOR_ZERO;
+    // ahrs->accelerometerIgnored = true;
+
+    // // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
+    // halfAccelerometerFeedback = this->accelerometerFeedback(ahrs, accelerometer, halfGravity, halfAccelerometerFeedback);
+
+    // // Calculate magnetometer feedback
+    // madVector halfMagnetometerFeedback = VECTOR_ZERO;
+    // ahrs->magnetometerIgnored = true;
+
+    // halfMagnetometerFeedback = this->magnetometerFeedback(ahrs, magnetometer, halfGravity, halfMagnetometerFeedback);
+
+    // // Convert gyroscope to radians per second scaled by 0.5
+    // const madVector halfGyroscope = madVectorMultiplyScalar(gyroscope, DegreesToRadians(0.5f));
+
+    // // Apply feedback to gyroscope
+    // const madVector adjustedHalfGyroscope = madVectorAdd(halfGyroscope, madVectorMultiplyScalar(madVectorAdd(halfAccelerometerFeedback, halfMagnetometerFeedback), ahrs->rampedGain));
+
+    // // Integrate rate of change of quaternion
+    // ahrs->quaternion = madQuaternionAdd(ahrs->quaternion, madQuaternionMultiplyVector(ahrs->quaternion, madVectorMultiplyScalar(adjustedHalfGyroscope, deltaTime)));
+
+    // // Normalise quaternion
+    // ahrs->quaternion = madQuaternionNormalise(ahrs->quaternion);
 #undef Q
 }
 

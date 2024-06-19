@@ -11,15 +11,39 @@
 
 using namespace std;
 
-#define SAMPLE_RATE (100) // replace this with actual sample rate
+// CHANGE
+#define SAMPLE_RATE (3) // replace this with actual sample rate
+#define DELTA_TIME (1.0f / 3.0f)
+#define RATE_BARO (3)
+#define CALIBRATION_TIME (2)
+
+bool firstSampleAfterCalibration = true;
+
+bool isTared = false;
+
+// double timeInSeconds = 2;
+double theTime = CALIBRATION_TIME * RATE_BARO;
+double sum = 0;
+double pressureSum = 0;
+
+static float previousTimestamp = 0;
+
 FILE *file;
+
+enum debug_level{
+    RAW = 0,        // raw data
+    Secondary = 1,  // all operations before dynamite
+    Dynamite = 2,   //everything during dynamite
+    Third = 3,      // after dynamite
+    ALL = 4,        // all
+    NONE = 5        // none
+};
+
+debug_level debug = ALL;
 
 // Instantiate Everest
 madAhrs *ahrs;
 Infusion *infusion;
-
-// madAhrs *ahrs2;
-// Infusion *infusion2;
 
 Everest everest = Everest::getEverest();
 kinematics *Kinematics = everest.getKinematics(); // tare to ground
@@ -34,7 +58,7 @@ madAhrsInternalStates internalStates;
 void MadgwickSetup()
 {
     // Attaches Madgwick to Everest
-    infusion = everest.Initialize();
+    infusion = everest.ExternalInitialize();
     ahrs = infusion->getMadAhrs();
 
     // infusion2 = everest.Initialize2();
@@ -76,6 +100,7 @@ void MadgwickSetup()
             0.5f,
             2000.0f, /* replace this with actual gyroscope range in degrees/s */
             10.0f,
+            10.0f,
             5 * SAMPLE_RATE, /* 5 seconds */
     };
 
@@ -92,36 +117,41 @@ void MadgwickSetup()
  * @param data SensorDataNoMag struct
  * 
 */
-void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
-// #define ahrs infusion->getMadAhrs(infusion)
+void Everest::MadgwickWrapper(SensorDataNoMag data){
     // Infusion infusion = infusion;
     const float timestamp = data.time;
     madVector gyroscope = {data.gyroX, data.gyroY, data.gyroZ}; // replace this with actual gyroscope data in degrees/s
     madVector accelerometer = {data.accelX, data.accelY, data.accelZ}; // replace this with actual accelerometer data in g
 
-    
-
     // Update gyroscope offset correction algorithm
     madOffset offset = infusion->getOffset();
     gyroscope = infusion->madOffsetUpdate(&offset, gyroscope);
-
-    // printf("Offset update Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.4f, %.6f) uT\n",
-    //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, data.magX, data.magY, data.magZ);
 
     // printf("Roll %0.3f, Pitch %0.3f, Yaw %0.3f, X %0.3f, Y %0.3f, Z %0.3f\n",
     //        euler.angle.roll, euler.angle.pitch, euler.angle.yaw,
     //        earth.axis.x, earth.axis.y, earth.axis.z);
 
     // Calculate delta time (in seconds) to account for gyroscope sample clock error
-    static float previousTimestamp;
+    // static float previousTimestamp;
     float deltaTime = (float) (timestamp - previousTimestamp);
     previousTimestamp = timestamp;
 
-    madVector mag = {x, y, z};
+    this->state.deltaTimeIMU = deltaTime;
+
+    if(debug == Secondary || debug == ALL){
+        printf("Averaged: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Time: %f\n",
+            data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, deltaTime);
+    }
+
+    // madVector mag = {.axis = {x, y, z,}};
+
+    // printf("Mag: (%.6f, %.6f, %.6f) uT\n", mag.axis.x, mag.axis.y, mag.axis.z);
+
+    // madVector mag = axis.{x, y, z};
 
     // Update gyroscope AHRS algorithm
-    // infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
-    infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, mag, deltaTime);
+    infusion->madAhrsUpdateNoMagnetometer(ahrs, gyroscope, accelerometer, deltaTime);
+    // infusion->madAhrsUpdate(ahrs, gyroscope, accelerometer, mag, deltaTime);
 
     // madAhrsInternalStates internal;
     // madAhrsFlags flags;
@@ -139,19 +169,20 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
 
     fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
-    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internalStates.accelerationError,  
+    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d,%f", internalStates.accelerationError,  
     internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError, 
     internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising, 
-    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery);
+    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, earth.axis.z);
 
-    fprintf(file, "\n");
+    // fprintf(file, "\n");
 
-    printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d", internalStates.accelerationError, 
-    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, 
-    internalStates.magneticError, internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, 
-    flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery); 
+    if(debug == Secondary || debug == ALL){
+        printf("%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d\n", internalStates.accelerationError, 
+        internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, 
+        internalStates.magneticError, internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, 
+        flags.initialising, flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery); 
+    }
 
-// #undef ahrs
 }
 
 /**
@@ -160,7 +191,7 @@ void Everest::MadgwickWrapper(SensorDataNoMag data, float x, float y, float z){
  * 
  *    Internal
 */
-void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ)
+void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2)
 {
     // Update IMU1
     this->internalIMU_1.time = imu1.time;
@@ -200,28 +231,42 @@ void Everest::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu
 
     // feed to Madgwick
     // MadgwickWrapper(state.avgIMU);
-    this->MadgwickWrapper(state.avgIMU, magX, magY, magZ);
+    this->MadgwickWrapper(state.avgIMU);
+
 }
 
 /**
- * @brief takes external data and updates internal baro data
+ * @brief updates baro and delta time
  *     Should be called every time baro data is updated
  *      Internal
 */
-void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro)
+void Everest::Baro_Update(const BarosData& Baro1, const BarosData& Baro2, const BarosData& Baro3, const BarosData& RealBaro)
 {
     // Update Baros
-    this->baro1.time = baro1.time;
-    this->baro1.pressure = baro1.pressure;
+    this->baro1.time = Baro1.time;
+    this->baro1.pressure = Baro1.pressure;
+    this->baro1.deltaTime = Baro1.time - this->baro1.previousTime;
+    this->baro1.previousTime = Baro1.time;
 
-    this->baro2.time = baro2.time;
-    this->baro2.pressure = baro2.pressure;
+    this->baro2.time = Baro2.time;
+    this->baro2.pressure = Baro2.pressure;
+    this->baro2.deltaTime = Baro2.time - this->baro2.previousTime;
+    this->baro2.previousTime = Baro2.time;
 
-    this->baro3.time = baro3.time;
-    this->baro3.pressure = baro3.pressure;
+    this->baro3.time = Baro3.time;
+    this->baro3.pressure = Baro3.pressure;
+    this->baro3.deltaTime = Baro3.time - this->baro3.previousTime;
+    this->baro3.previousTime = Baro3.time;
 
-    this->realBaro.time = realBaro.time;
-    this->realBaro.pressure = realBaro.pressure;
+    this->realBaro.time = RealBaro.time;
+    this->realBaro.pressure = RealBaro.pressure;
+    this->realBaro.deltaTime = RealBaro.time - this->realBaro.previousTime;
+    this->realBaro.previousTime = RealBaro.time;
+
+    if(debug == RAW || debug == ALL){
+        printf("Baro1: %.f Pa, Baro2: %.f Pa, Baro3: %.f Pa, RealBaro: %.f Pa\n",
+            baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
+    }
 
 }
 
@@ -235,16 +280,96 @@ void Everest::Baro_Update(const BarosData& baro1, const BarosData& baro2, const 
  *  sensor data to Everest for altitude calculation)
 */
 double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
-    // everest.IMU_Update(imu1, imu2);
+    if(!isTared){
+        everest.tare(imu1, imu2, baro1, baro2, baro3, realBaro);
+        printf("Taring in progress\n)");
+        return 0;
+    }
+
+    // if(firstSampleAfterCalibration){
+    //     imu1.time = CALIBRATION_TIME - DELTA_TIME;
+    //     imu2.time = CALIBRATION_TIME - DELTA_TIME;
+    //     baro1.time = CALIBRATION_TIME- DELTA_TIME;
+    //     baro2.time = CALIBRATION_TIME - DELTA_TIME;
+    //     baro3.time = CALIBRATION_TIME - DELTA_TIME;
+    //     realBaro.time = CALIBRATION_TIME - DELTA_TIME;
+    //     firstSampleAfterCalibration = false;
+    // }
+
+    everest.IMU_Update(imu1, imu2);
+
+    if(debug == Third || debug == ALL){
+        printf("After IMU Update IMU Altitude: %f\n", everest.state.avgIMU.altitude);
+    }
+
     everest.Baro_Update(baro1, baro2, baro3, realBaro);
+
     double finalAlt = everest.dynamite();
+
+    if(debug == Dynamite || debug == ALL){
+        printf("After Dynamite: %f\n", finalAlt);
+    }
 
     // Update altitude list
     this->AltitudeList.secondLastAltitude = this->AltitudeList.lastAltitude;
     this->AltitudeList.lastAltitude = finalAlt;
 
+    fprintf(file, ",%f\n", finalAlt); // write to file
+
     return finalAlt;
 }
+
+/**
+ * @brief Wraps External Update with alignment, returns External Update with aligned data
+*/
+double Everest::AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
+            BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment){
+    // align
+    madVector alignedIMU1 = infusion->AxesSwitch({imu1.accelX, imu1.accelY, imu1.accelZ}, alignment);
+    madVector alignedIMUGyro1 = infusion->AxesSwitch({imu1.gyroX, imu1.gyroY, imu1.gyroZ}, alignment);
+
+    madVector alignedIMU2 = infusion->AxesSwitch({imu2.accelX, imu2.accelY, imu2.accelZ}, alignment);
+    madVector alignedIMUGyro2 = infusion->AxesSwitch({imu2.gyroX, imu2.gyroY, imu2.gyroZ}, alignment);
+
+    if(debug == Secondary || debug == ALL){
+        printf("Unaligned IMU1: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n",
+            imu1.accelX, imu1.accelY, imu1.accelZ, imu1.gyroX, imu1.gyroY, imu1.gyroZ);
+
+        printf("Unaligned IMU2: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n", 
+            imu2.accelX, imu2.accelY, imu2.accelZ, imu2.gyroX, imu2.gyroY, imu2.gyroZ);
+
+        printf("Alignment: %d\n", alignment);
+    }
+
+    // put aligned data into SensorDataNoMag struct
+    imu1.accelX = alignedIMU1.axis.x;
+    imu1.accelY = alignedIMU1.axis.y;
+    imu1.accelZ = alignedIMU1.axis.z;
+
+    imu1.gyroX = alignedIMUGyro1.axis.x;
+    imu1.gyroY = alignedIMUGyro1.axis.y;
+    imu1.gyroZ = alignedIMUGyro1.axis.z;
+
+    // IMU 2
+    imu2.accelX = alignedIMU2.axis.x;
+    imu2.accelY = alignedIMU2.axis.y;
+    imu2.accelZ = alignedIMU2.axis.z;
+
+    imu2.gyroX = alignedIMUGyro2.axis.x;
+    imu2.gyroY = alignedIMUGyro2.axis.y;
+    imu2.gyroZ = alignedIMUGyro2.axis.z;
+
+    if(debug == Secondary || debug == ALL){
+        printf("Aligned IMU1: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n",
+            imu1.accelX, imu1.accelY, imu1.accelZ, imu1.gyroX, imu1.gyroY, imu1.gyroZ);
+
+        printf("Aligned IMU2: (%.6f, %.6f, %.6f) g, (%.6f, %.6f, %.6f) deg/s\n",   
+            imu2.accelX, imu2.accelY, imu2.accelZ, imu2.gyroX, imu2.gyroY, imu2.gyroZ);
+    }
+
+    return ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
+}
+
 
 /**
  * Calculates altitude using IMU sensor data and kinematic equations.
@@ -255,13 +380,29 @@ double Everest::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, Baros
  * 
  * @return calculated altitude
  */
-double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
-    double accelerationZ = avgIMU.accelZ;
-    double initialVelocity = Kinematics->initialVelo;
-    double initialAltitude = Kinematics->initialAlt;
+
+// TO DO - fix the negative and accelX to accelZ
+double Everest::deriveForAltitudeIMU(SensorDataNoMag avgIMU){
+    double accelerationZ = avgIMU.accelX * -9.81;
+    double initialVelocity = this->getKinematics()->initialVelo;
+    double initialAltitude = this->Kinematics.initialAlt;
+    double deltaTime = this->state.deltaTimeIMU;
 
     // Derive altitude from IMU
-    double altitude = (double) (initialAltitude + initialVelocity * (1.0/SAMPLE_RATE) + 0.5 * accelerationZ * pow((1.0/SAMPLE_RATE), 2));
+    // measures change in acceleration 
+    // double altitude = (double) (initialAltitude + initialVelocity * (deltaTime) + 0.5 * accelerationZ * pow((deltaTime), 2));
+
+    double finalVelocity = initialVelocity + accelerationZ * deltaTime;
+    double altitude = initialAltitude + (initialVelocity + finalVelocity) * deltaTime / 2.0;
+
+    if(debug == Secondary || debug == ALL){
+        printf("\nKinematics\n");
+        printf("IMU Initial Altitude: %f\n", initialAltitude);
+        printf("IMU Velocity: %f\n", initialVelocity);
+        printf("IMU Acceleration: %f\n", accelerationZ);
+        printf("IMU Delta Time: %f\n", deltaTime);
+        printf("Derived Altitude: %f\n", altitude);
+    }
 
     // return altitude
     return altitude;
@@ -270,15 +411,26 @@ double deriveForAltitudeIMU(SensorDataNoMag avgIMU){
 /**
  * Calculates the altitude based on the given pressure using the barometric formula
  * 
- * @param pressure pressure from baros
+ * @param pressure pressure from baros in Pa
  * 
- * @return altitude
+ * @return altitude in meters
  */
 double convertToAltitude(double pressure){
-    // Convert pressure to altitude
-    // Convert from 100*millibars to m
-    double seaLevelPressure = 1013.25; // sea level pressure in hPa
-    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.190284));
+
+    double seaLevelPressure = 1013.25 ; // sea level pressure in hPa
+    pressure = pressure / 100.0; // convert to hPa
+    double altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 1/5.2558)); // barometric formula
+
+    // If pressure is less than 100, altitude is 0
+    if(pressure < 100){
+        altitude = 0;
+    }
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nConversion \n");
+        printf("Pressure: %.f hPa, Altitude: %.f m\n", pressure, altitude);
+    }
+
     return altitude;
 }
 
@@ -292,7 +444,7 @@ double Everest::dynamite(){
     double IMUAltitude = deriveForAltitudeIMU(everest.state.avgIMU);
     this->state.avgIMU.altitude = IMUAltitude;
 
-    double BaroAltitude1 = convertToAltitude(everest.baro1.pressure);
+    double BaroAltitude1 = convertToAltitude(this->baro1.pressure);
     this->baro1.altitude = BaroAltitude1;
 
     double BaroAltitude2 = convertToAltitude(everest.baro2.pressure);
@@ -304,29 +456,108 @@ double Everest::dynamite(){
     double RealBaroAltitude = convertToAltitude(everest.realBaro.pressure);
     this->realBaro.altitude = RealBaroAltitude;
 
-    // distributing measurement
-    double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/everest.state.std_IMU;
-    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/everest.state.std_Baro1;
-    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/everest.state.std_Baro2;
-    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/everest.state.std_Baro3;
-    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/everest.state.std_Real_Baro;
+    if(debug == Dynamite || debug == ALL){
+        printf("\nDynamite\n");
+        printf("Baro1 Altitude: %f\n", BaroAltitude1);
+        printf("Baro2 Altitude: %f\n", BaroAltitude2);
+        printf("Baro3 Altitude: %f\n", BaroAltitude3);
+        printf("Real Baro Altitude: %f\n", RealBaroAltitude);
+        printf("IMU Altitude: %f\n", IMUAltitude);
+    }
+
+    // // distributing measurement
+    // double distributed_IMU_Altitude = (IMUAltitude * everest.state.gain_IMU)/pow(everest.state.std_IMU, 2);
+    // double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1)/pow(everest.state.std_Baro1, 2);
+    // double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2)/pow(everest.state.std_Baro2, 2);
+    // double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3)/pow(everest.state.std_Baro3,2);
+    // double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro)/pow(everest.state.std_Real_Baro,2);
+
+    double distributed_IMU_Altitude = IMUAltitude * everest.state.gain_IMU;
+    double distributed_Baro_Altitude1 = (BaroAltitude1 * everest.state.gain_Baro1);
+    double distributed_Baro_Altitude2 = (BaroAltitude2 * everest.state.gain_Baro2);
+    double distributed_Baro_Altitude3 = (BaroAltitude3 * everest.state.gain_Baro3);
+    double distributed_RealBaro_Altitude = (RealBaroAltitude * everest.state.gain_Real_Baro);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nDistributed\n");
+        printf("Distributed IMU Altitude: %f\n", distributed_IMU_Altitude);
+        printf("Gain IMU: %f\n", everest.state.gain_IMU);
+        printf("STD IMU: %f\n\n", everest.state.std_IMU);
+
+        printf("Distributed Baro1 Altitude: %f\n", distributed_Baro_Altitude1);
+        printf("Gain Baro1: %f\n", everest.state.gain_Baro1);
+        printf("STD Baro1: %f\n\n", everest.state.std_Baro1);
+
+        printf("Distributed Baro2 Altitude: %f\n", distributed_Baro_Altitude2);
+        printf("Gain Baro2: %f\n", everest.state.gain_Baro2);
+        printf("STD Baro2: %f\n\n", everest.state.std_Baro2);
+
+        printf("Distributed Baro3 Altitude: %f\n", distributed_Baro_Altitude3);
+        printf("Gain Baro3: %f\n", everest.state.gain_Baro3);
+        printf("STD Baro3: %f\n\n", everest.state.std_Baro3);
+
+        printf("Distributed Real Baro Altitude: %f\n", distributed_RealBaro_Altitude);
+        printf("Gain Real Baro: %f\n", everest.state.gain_Real_Baro);
+        printf("STD Real Baro: %f\n\n", everest.state.std_Real_Baro);
+    }
 
     double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2 
                             + distributed_Baro_Altitude3 + distributed_RealBaro_Altitude;
 
-    double sumSTD = everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2 
-                    + everest.state.std_Baro3 + everest.state.std_Real_Baro;
+    if(debug == Dynamite || debug == ALL){
+        printf("Distributed Sum: %f\n\n", distributed_Sum);
+    }
+
+    double sumSTD = pow(everest.state.std_IMU,2) + pow(everest.state.std_Baro1,2) + pow(everest.state.std_Baro2,2)
+                    + pow(everest.state.std_Baro3,2) + pow(everest.state.std_Real_Baro,2);
+
+    double sumSTD1 = pow(everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2
+                    + everest.state.std_Baro3 + everest.state.std_Real_Baro, 2);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("Sum STD: %f\n\n", sumSTD);
+    }
 
     double sumGain = everest.state.gain_IMU + everest.state.gain_Baro1 + everest.state.gain_Baro2 
                     + everest.state.gain_Baro3 + everest.state.gain_Real_Baro;
 
-    double normalised_Altitude = (distributed_Sum/sumSTD)/sumGain;
+    if(debug == Dynamite || debug == ALL){
+        printf("Sum Gain: %f\n\n", sumGain);
+    }
+
+    double normalised_Altitude = (distributed_Sum)/sumGain;
+
+    // double normalised_Altitude = (distributed_Sum*sumSTD)/(everest.state.gain_IMU);
+    // double normalised_Altitude = distributed_Sum;
+    // double normalised_Altitude = (distributed_Sum* pow(everest.state.std_IMU,2));
+
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro1,2);
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro2,2);
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Baro3,2);
+    // normalised_Altitude = normalised_Altitude * pow(everest.state.std_Real_Baro,2);
+
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro1);
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro2);
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Baro3);
+    // normalised_Altitude = normalised_Altitude * (everest.state.gain_Real_Baro);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("Normalised Altitude: %f\n\n", normalised_Altitude);
+    }
 
     // Update Kinematics
     Kinematics.finalAltitude = normalised_Altitude;
 
+    if(debug == Dynamite || debug == ALL){
+        printf("Final Altitude: %f\n\n", Kinematics.finalAltitude);
+    }
+
     // update velocity
-    Kinematics.initialVelo = (Kinematics.finalAltitude - Kinematics.initialAlt)/(1.0/SAMPLE_RATE);
+    Kinematics.initialVelo = (Kinematics.finalAltitude - Kinematics.initialAlt)/(this->state.deltaTimeIMU);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("Initial Velocity: %f\n", Kinematics.initialVelo);
+    }
 
     // update altitude
     Kinematics.initialAlt = Kinematics.finalAltitude;
@@ -341,14 +572,49 @@ double Everest::dynamite(){
 // TO DO : put the derivative of the altitude in the recalculateGain function
 // do first derivative estimated altitude and times it by time then 1/(new - old)
 void Everest::recalculateGain(double estimate){
-    double gainedEstimate = deriveForVelocity(estimate);
-    gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
+    double gainedEstimate = deriveChangeInVelocityToGetAltitude(estimate); // pre integrated for altitude
+    // gainedEstimate = gainedEstimate * (1.0/SAMPLE_RATE); // integrate to get altitude
 
-    this->state.gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
-    this->state.gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
-    this->state.gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
-    this->state.gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
-    this->state.gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
+    // cannot have the big estimate be feed into the derive velocity because its not divided by the 
+    // sources 
+
+    double gain_IMU = 1/fabsf(gainedEstimate-this->state.avgIMU.altitude); // change to previous trusts
+    double gain_Baro1 = 1/fabsf(gainedEstimate-this->baro1.altitude);
+    double gain_Baro2 = 1/fabsf(gainedEstimate-this->baro2.altitude);
+    double gain_Baro3 = 1/fabsf(gainedEstimate-this->baro3.altitude);
+    double gain_Real_Baro = 1/fabsf(gainedEstimate-this->realBaro.altitude);
+
+    if(debug == Third || debug == ALL){
+        printf("\nRecalculate Gain - Before normalization\n");
+        printf("Gain IMU: %f\n", gain_IMU);
+        printf("Gain Baro1: %f\n", gain_Baro1);
+        printf("Gain Baro2: %f\n", gain_Baro2);
+        printf("Gain Baro3: %f\n", gain_Baro3);
+        printf("Gain Real Baro: %f\n", gain_Real_Baro);
+        printf("Gained Estimate: %f\n", gainedEstimate);
+
+        printf("Altitude: %f\n", estimate);
+        printf("Baro1: %f\n", this->baro1.altitude);
+        printf("Baro2: %f\n", this->baro2.altitude);
+        printf("Baro3: %f\n", this->baro3.altitude);
+        printf("Real Baro: %f\n\n", this->realBaro.altitude);
+    }
+
+    // normalise
+    this->state.gain_IMU = gain_IMU / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Baro1 = gain_Baro1 / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Baro2 = gain_Baro2 / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Baro3 = gain_Baro3 / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+    this->state.gain_Real_Baro = gain_Real_Baro / (gain_IMU + gain_Baro1 + gain_Baro2 + gain_Baro3 + gain_Real_Baro);
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nRecalculate Gain\n");
+        printf("New Gain IMU: %f\n", this->state.gain_IMU);
+        printf("New Gain Baro1: %f\n", this->state.gain_Baro1);
+        printf("New Gain Baro2: %f\n", this->state.gain_Baro2);
+        printf("New Gain Baro3: %f\n", this->state.gain_Baro3);
+        printf("New Gain Real Baro: %f\n\n", this->state.gain_Real_Baro);
+    }
 }
 
 /**
@@ -360,9 +626,22 @@ void Everest::recalculateGain(double estimate){
  * 
  *   Internal
  */
-double Everest::deriveForVelocity(double estimate){
-    double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * 1/SAMPLE_RATE);
-    return velocityZ;
+double Everest::deriveChangeInVelocityToGetAltitude(double estimate){
+    double deltaTimeAverage = (this->baro1.deltaTime + this->baro2.deltaTime 
+                                + this->baro3.deltaTime + this->realBaro.deltaTime + this->state.deltaTimeIMU)/5.0;
+
+    double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * deltaTimeAverage);
+
+    double newAltitude = this->AltitudeList.lastAltitude + velocityZ * deltaTimeAverage;
+
+    if(debug == Dynamite || debug == ALL){
+        printf("\nDerivative for new gain\n");
+        printf("Velocity: %f\n", velocityZ);
+        printf("New Altitude: %f\n", newAltitude);
+        printf("Delta Time Average: %f\n\n", deltaTimeAverage);
+    }
+
+    return newAltitude;
 }
 
 /**
@@ -373,6 +652,43 @@ double Everest::deriveForVelocity(double estimate){
  */
 double getFinalAltitude(){
     return Kinematics->finalAltitude;
+}
+
+/**
+ * @brief Tares the altitude to the ground
+ * 
+ * Call function 10*RefreshRate times to get the initial altitude
+ * 
+ * Once finished will print the tared altitude and set it as the initial altitude
+*/
+void Everest::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro){
+    // for 10 seconds collect baro
+    // decrement the time
+
+    // average pressures   
+    // have to do since function is weird
+    double average = convertToAltitude(baro1.pressure);
+    average = average + convertToAltitude(baro2.pressure);
+    average = average + convertToAltitude(baro3.pressure);
+    average = average + convertToAltitude(realBaro.pressure);
+
+    sum += average/4;
+
+    if(debug == Secondary || debug == ALL){
+        printf("Sum: %f\n", sum);
+    }
+
+    if(theTime == 0){
+        sum = sum/(CALIBRATION_TIME*RATE_BARO);
+        this->Kinematics.initialAlt = sum;
+        printf("Tare: %f\n", this->Kinematics.initialAlt);
+        isTared = true;
+
+        // call to update time for these structs
+        ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
+    }
+
+    theTime -= 1;
 }
 
 #define MAX_LINE_LENGTH 1024
@@ -387,25 +703,13 @@ int main()
     MadgwickSetup();
 
     // test purposes
-    // SensorDataNoMag imu1 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    // SensorDataNoMag imu2 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-    // BarosData baro1 = {0, 0.0, 0};
-    // BarosData baro2 = {0, 0.0, 0};
-    // BarosData baro3 = {0, 0.0, 0};
-    // BarosData realBaro = {0, 0.0, 0};
-
-    // everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
-
-    // printf("Altitude: %d\n", everest.ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro));
-
-    file = fopen("everest.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    file = fopen("everest2.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
         fprintf(stderr, "Error opening file...exiting\n");
         exit(1);
     }
 
-    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/sensor_data.csv", "r");
+    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/IMU_BARO.csv", "r");
     if (!file1) {
         perror("Error opening file");
         return 1;
@@ -414,11 +718,20 @@ int main()
     char line[MAX_LINE_LENGTH];
     std::clock_t start;
     double duration;
+
+    int howMany = 1;
+
+    int i = 0;
     
     while (fgets(line, sizeof(line), file1)) {
         // Tokenize the line using strtok
+        // Parse accelerometer readings (X, Y, Z)
         char *token = strtok(line, ",");
-        float time = atof(token); // Convert the time value to float
+        float accelX = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float accelY = atof(token);
+        token = strtok(NULL, ",");
+        float accelZ = atof(token);
 
         // Parse gyroscope readings (X, Y, Z)
         token = strtok(NULL, ",");
@@ -428,14 +741,6 @@ int main()
         token = strtok(NULL, ",");
         float gyroZ = atof(token);
 
-        // Parse accelerometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float accelX = atof(token);
-        token = strtok(NULL, ",");
-        float accelY = atof(token);
-        token = strtok(NULL, ",");
-        float accelZ = atof(token);
-
         // Parse magnetometer readings (X, Y, Z)
         token = strtok(NULL, ",");
         float magX = atof(token);
@@ -444,44 +749,139 @@ int main()
         token = strtok(NULL, ",");
         float magZ = atof(token);
 
+        token = strtok(NULL, ",");
+        float time = atof(token); // Convert the time value to float
+
+        token = strtok(NULL, ",");
+        float pressure = atof(token);
+
+        time = i * DELTA_TIME;
+
+        i++;
+
         SensorDataNoMag sensorData = {
             time,
-            gyroX,
-            gyroY,
-            gyroZ,
-            accelX,
-            accelY,
-            accelZ,
+            gyroX/1000,
+            gyroY/1000,
+            gyroZ/1000,
+            accelX/1000,
+            accelY/1000,
+            accelZ/1000,
         };
 
-        // Example: Print all sensor readings
-        // printf("Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g, Mag: (%.6f, %.6f, %.6f) uT\n",
-        //        time, gyroX, gyroY, gyroZ, accelX, accelY, accelZ, magX, magY, magZ);
         SensorDataNoMag sensorData2 = {
             time,
-            gyroX,
-            gyroY,
-            gyroZ,
-            accelX,
-            accelY,
-            accelZ,
+            gyroX/1000,
+            gyroY/1000,
+            gyroZ/1000,
+            accelX/1000,
+            accelY/1000,
+            accelZ/1000,
         };
 
         start = std::clock();
 
-        everest.IMU_Update(sensorData, sensorData2, magX, magY, magZ);
+        BarosData baro1 = {
+            time,
+            pressure,
+            0,
+            0
+        };
+
+        BarosData baro2 = {
+            time,
+            pressure,
+            0,
+            0
+        };
+
+        BarosData baro3 = {
+            time,
+            pressure,
+            0,
+            0
+        };
+
+        BarosData realBaro = {
+            time,
+            pressure,
+            0,
+            0
+        };
+
+        // if(howMany <= 10){
+
+        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+
+        // Example: Print all sensor readings
+        if(debug == RAW || debug == ALL){
+            printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
+                time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ, 
+                baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
+        }
+
+        madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
+        madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
+
+        madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
+
+        madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
+        madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
+
+        madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+        madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
+
+        if(debug == Secondary || debug == ALL){
+            printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+                imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
+        }
+
+        // feed vectors into sensorData structs
+        sensorData.gyroX = imu1GyroAligned.axis.x;
+        sensorData.gyroY = imu1GyroAligned.axis.y;
+        sensorData.gyroZ = imu1GyroAligned.axis.z;
+
+        sensorData.accelX = imu1AccelAligned.axis.x;
+        sensorData.accelY = imu1AccelAligned.axis.y;
+        sensorData.accelZ = imu1AccelAligned.axis.z;
+
+        // second IMU
+        sensorData2.gyroX = imu2GyroAligned.axis.x;
+        sensorData2.gyroY = imu2GyroAligned.axis.y;
+        sensorData2.gyroZ = imu2GyroAligned.axis.z;
+
+        sensorData2.accelX = imu2AccelAligned.axis.x;
+        sensorData2.accelY = imu2AccelAligned.axis.y;
+        sensorData2.accelZ = imu2AccelAligned.axis.z;
+
+        // everest.IMU_Update(sensorData, sensorData2);
+            
+            // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
+            double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
+
+            printf("Altitude: %f\n", eAltitude);
+
+
+        // }
+
+        howMany++;
 
         clock_t endTime = std::clock();
 
         duration += endTime - start;
 
-        printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
+        // printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
     }
 
-    printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
+    // printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
 
     fclose(file1);
     fclose(file);
 
     return 0;
 }
+
+
+
+

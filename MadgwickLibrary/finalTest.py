@@ -14,7 +14,7 @@ import numpy
 print("running this 2")
 
 original = "C:/Users/Andrey/Documents/Fusion-main_new/Fusion-main/Fusion/file11.txt"
-everest = "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/everest.txt"
+everest = "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/everest1.txt"
 
 # Import sensor data
 data = numpy.genfromtxt(everest, delimiter=",", skip_header=1)
@@ -25,7 +25,7 @@ data = numpy.genfromtxt(everest, delimiter=",", skip_header=1)
 
 # data1 = numpy.genfromtxt("C:/Users/Andrey/Documents/AHRSRepo/MadgwickAHRS/newFile.txt", delimiter=",", skip_header=1)
 
-sample_rate = 100  # 100 Hz
+sample_rate = 3  # 100 Hz
 
 # print(data1)
 # print(data[0])

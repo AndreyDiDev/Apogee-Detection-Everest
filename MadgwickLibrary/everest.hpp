@@ -6,6 +6,15 @@
 #ifndef EVEREST_HPP
 #define EVEREST_HPP
 
+#include <stdio.h>
+#include <ctime>
+#include <string.h>
+
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/infusion.hpp"
 // Definitions
 
@@ -19,7 +28,7 @@ typedef struct{
  * @brief Keeps whole system's states, including apogee detection results and confidence values 
  * for each system
 */
-typedef union {
+typedef struct {
     float gain_IMU;
     float gain_Baro1;
     float gain_Baro2;
@@ -33,6 +42,7 @@ typedef union {
     float std_Real_Baro;
 
     SensorDataNoMag avgIMU;
+    float deltaTimeIMU;
 } systemState;
 
 typedef struct{
@@ -53,6 +63,9 @@ typedef struct{
     float time;
     float pressure;
     float altitude;
+
+    float deltaTime;
+    float previousTime;
 } BarosData;
 
 class Everest{
@@ -62,14 +75,12 @@ class Everest{
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
-        Infusion* Initialize();
-
-        // Infusion* Initialize2();
+        Infusion* ExternalInitialize();
 
         static Everest getEverest();
 
         // Initialize system state
-        systemState state;
+        systemState state = {};
 
         void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
 
@@ -87,47 +98,52 @@ class Everest{
 
         void recalculateGain(double estimate);
 
-        double deriveForVelocity(double estimate);
+        double deriveChangeInVelocityToGetAltitude(double estimate);
 
-        void MadgwickWrapper(SensorDataNoMag data, float x, float y, float z);
+        void MadgwickWrapper(SensorDataNoMag data);
 
-        void IMU_Update1(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
+        // void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
 
-        void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
+        double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, 
+                                BarosData baro2, BarosData baro3, BarosData realBaro);
 
-        double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+        double deriveForAltitudeIMU(SensorDataNoMag avgIMU);
 
+        double AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
+                    BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment);
+
+        void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+    
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2, baro3, realBaro;
-
-        // Initialize Madgwick Library
-        // Infusion madgwick = Infusion();
         
         void initialize(systemState& state);
 };
 
 void Everest::initialize(systemState& state){
     // Initially we trust systems equally
-    state.gain_IMU = 4/10.0; // change to actual initial trusts 
-    state.gain_Baro1 = 1/10.0;
+    this->state.gain_IMU = 4/10.0; // change to actual initial trusts 
+    this->state.gain_Baro1 = 1/10.0;
     state.gain_Baro2 = 1/10.0;
     state.gain_Baro3 = 1/10.0;
     state.gain_Real_Baro = 3/10.0;
 
-    state.std_IMU = 0.1;
+    state.std_IMU = 0.05;
     state.std_Baro1 = 0.1;
     state.std_Baro2 = 0.1;
     state.std_Baro3 = 0.1;
-    state.std_Real_Baro = 0.1;
+    state.std_Real_Baro = 0.05;
 
     Kinematics.initialVelo = 0;
     Kinematics.initialAlt = 0;
     Kinematics.finalAltitude = 0;
+
+    printf("Initialized\n");
 }
 
-Infusion* Everest::Initialize(){
+Infusion* Everest::ExternalInitialize(){
     initialize(state);
     return &madgwick;
 }
