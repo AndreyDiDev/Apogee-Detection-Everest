@@ -10,14 +10,14 @@
 #include <sstream>
 
 // task specific defines
-#include "main.h"
-#include "Data.h"
-#include "DebugTask.hpp"
-#include "Task.hpp"
-#include "DMBProtocolTask.hpp"
-#include "TelemetryMessage.hpp"
-#include "FlashTask.hpp"
-#include <string.h>
+// #include "main.h"
+// #include "Data.h"
+// #include "DebugTask.hpp"
+// #include "Task.hpp"
+// #include "DMBProtocolTask.hpp"
+// #include "TelemetryMessage.hpp"
+// #include "FlashTask.hpp"
+// #include <string.h>
 
 
 using namespace std;
