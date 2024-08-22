@@ -18,9 +18,9 @@
 #include "infusion.hpp"
 
 // task specific
-#include "Task.hpp"
-#include "Data.h"
-#include "SystemDefines.hpp"
+// #include "Task.hpp"
+// #include "Data.h"
+// #include "SystemDefines.hpp"
 
 
 // Definitions
@@ -53,21 +53,15 @@ typedef struct {
     float gain_IMU;
     float gain_Baro1;
     float gain_Baro2;
-    float gain_Baro3;
-    float gain_Real_Baro;
 
     // prev gains
     float prev_gain_IMU;
     float prev_gain_Baro1;
     float prev_gain_Baro2;
-    float prev_gain_Baro3;
-    float prev_gain_Real_Baro;
 
     float std_IMU;
     float std_Baro1;
     float std_Baro2;
-    float std_Baro3;
-    float std_Real_Baro;
 
     SensorDataNoMag avgIMU;
     float deltaTimeIMU;
@@ -82,11 +76,11 @@ typedef struct{
 /**
  * @brief Keeps the data from the IMU sensor #1
 */
-// typedef struct{
-//     float time;
-//     float gyroX, gyroY, gyroZ;
-//     float accelX, accelY, accelZ;
-// } IMUData;
+typedef struct{
+    float time;
+    float gyroX, gyroY, gyroZ;
+    float accelX, accelY, accelZ;
+} IMUData;
 
 typedef struct{
     float time;
@@ -101,36 +95,40 @@ typedef struct{
  * @brief Just to carry all data between tasks
 */
 typedef struct{
-    float timeIMU;
+    float timeIMU1;
+    float timeIMU2;
     float timeBaro1;
     float timeBaro2;
-    float timeBaroReal;
-
-    float accelX;
-    float accelY;
-    float accelZ;
-
-    float gyroX;
-    float gyroY;
-    float gyroZ;
-
+    
     float pressure1;
     float pressure2;
-    float pressure3;
-    float pressureReal;
+
+    float accelX1;
+    float accelY1;
+    float accelZ1;
+    float gyroX1;
+    float gyroY1;
+    float gyroZ1;
+
+    float accelX2;
+    float accelY2;
+    float accelZ2;
+    float gyroX2;
+    float gyroY2;
+    float gyroZ2;
 
 }EverestData;
 
-class EverestTask : public Task
+class EverestTask
 {
     public:
 
-        static EverestTask& Inst() {
-			static EverestTask inst;
-			return inst;
-		}
+        // static EverestTask& Inst() {
+		// 	static EverestTask inst;
+		// 	return inst;
+		// }
 
-		void InitTask();
+		// void InitTask();
 
         void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
 
@@ -141,7 +139,7 @@ class EverestTask : public Task
         // Initialize system state
         systemState state = {};
 
-        void Baro_Update(const BarosData& baro1, const BarosData& baro2, const BarosData& baro3, const BarosData& realBaro);
+        void Baro_Update(const BarosData& baro1, const BarosData& baro2);
 
         double dynamite();
 
@@ -162,14 +160,14 @@ class EverestTask : public Task
         // void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
 
         double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, 
-                                BarosData baro2, BarosData baro3, BarosData realBaro);
+                                BarosData baro2);
 
         double deriveForAltitudeIMU(SensorDataNoMag avgIMU);
 
         double AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
-                    BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro, MadAxesAlignment alignment);
+                    BarosData baro1, BarosData baro2, MadAxesAlignment alignment);
 
-        void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2, BarosData baro3, BarosData realBaro);
+        void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2);
 
         void MadgwickSetup();
 
@@ -180,34 +178,26 @@ class EverestTask : public Task
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;
 
-        BarosData baro1, baro2, baro3, realBaro;
+        BarosData baro1, baro2;
 
-        static void RunTask(void* pvParams) { EverestTask::Inst().Run(pvParams); } // Static Task Interface, passes control to the instance Run();
+        // static void RunTask(void* pvParams) { EverestTask::Inst().Run(pvParams); } // Static Task Interface, passes control to the instance Run();
 
-	    void Run(void* pvParams);    // Main run code
+	    // void Run(void* pvParams);    // Main run code
 
-	    void HandleCommand(Command& cm);
-	    void HandleRequestCommand(uint16_t taskCommand);
+	    // void HandleCommand(Command& cm);
+	    // void HandleRequestCommand(uint16_t taskCommand);
 
     private:
-        EverestTask();                                        // Private constructor
-	    EverestTask(const EverestTask&);                    // Prevent copy-construction
-	    EverestTask& operator=(const EverestTask&);            // Prevent assignment
+        // EverestTask();                                        // Private constructor
+	    // EverestTask(const EverestTask&);                    // Prevent copy-construction
+	    // EverestTask& operator=(const EverestTask&);            // Prevent assignment
 };
 
 void EverestTask::initialize1(systemState& state){
     // Initially we trust systems equally
     this->state.gain_IMU = 4/10.0; // change to actual initial trusts 
-    this->state.gain_Baro1 = 1/10.0;
-    state.gain_Baro2 = 1/10.0;
-    state.gain_Baro3 = 1/10.0;
-    state.gain_Real_Baro = 3/10.0;
-
-    state.std_IMU = 0.05;
-    state.std_Baro1 = 0.1;
-    state.std_Baro2 = 0.1;
-    state.std_Baro3 = 0.1;
-    state.std_Real_Baro = 0.05;
+    this->state.gain_Baro1 = 3/10.0;
+    state.gain_Baro2 = 3/10.0;
 
     Kinematics.initialVelo = 0;
     Kinematics.initialAlt = 0;
