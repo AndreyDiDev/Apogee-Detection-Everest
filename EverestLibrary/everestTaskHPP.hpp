@@ -106,13 +106,19 @@ typedef struct{
     float timeBaro2;
     float timeBaroReal;
 
-    float accelX;
-    float accelY;
-    float accelZ;
+    float accelX1;
+    float accelY1;
+    float accelZ1;
+    float gyroX1;
+    float gyroY1;
+    float gyroZ1;
 
-    float gyroX;
-    float gyroY;
-    float gyroZ;
+    float accelX2;
+    float accelY2;
+    float accelZ2;
+    float gyroX2;
+    float gyroY2;
+    float gyroZ2;
 
     float pressure1;
     float pressure2;
