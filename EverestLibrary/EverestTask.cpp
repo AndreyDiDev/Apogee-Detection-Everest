@@ -87,7 +87,7 @@ void EverestTask::InitTask()
 }
 
 /**
- * @brief KalmanFilterTask run loop
+ * @brief EverestTask run loop
  * @param pvParams Currently unused task context
  */
 void EverestTask::Run(void* pvParams)
@@ -125,8 +125,8 @@ void EverestTask::HandleCommand(Command& cm)
     	if(cm.GetTaskCommand()==COPY_DATA){
     		*everestData = *(EverestData*) cm.GetDataPointer();
     	}else{
-            *everestData = *(EverestData*) cm.GetDataPointer();
-			HandleRequestCommand(cm.GetTaskCommand());
+            	*everestData = *(EverestData*) cm.GetDataPointer();
+		HandleRequestCommand(cm.GetTaskCommand());
     	}
         break;
     }
@@ -162,15 +162,18 @@ void EverestTask::HandleRequestCommand(uint16_t taskCommand)
 
 /**
  * @brief Calls finalWrapper with data and alignment
- * IMPORTANT: PASS 0s FOR NOT UPDATED MEASUREMENTS (BAROS)
+ * 		IMPORTANT: PASS 0s FOR NOT UPDATED MEASUREMENTS (BAROS), 
+ * 		PASS INFINITY FOR IMUs (https://en.cppreference.com/w/cpp/numeric/math/isinf) 
+ * 		DEFINE LIKE: const double inf = std::numeric_limits<double>::infinity();
 */
-double TaskWrapper(Everest everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2){
+double TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2){
 
-    finalWrapper(everestData.accelX, everestData.accelY, everestData.accelZ,
-    everestData.gyroX, everestData.gyroY, everestData.gyroZ, everestData.pressure1,
-    everestData.pressure2, everestData.pressure3, everestData.altitudeReal,
-    everestData.timeIMU, everestData.timeIMU, everestData.timeBaro1, everestData.Baro2,
-    everestData.timeBaro3, everestData.timeBaroReal, alignment, alignment2);
+    finalWrapper(everestData.accelX1, everestData.accelY1, everestData.accelZ1,
+    everestData.gyroX1, everestData.gyroY1, everestData.gyroZ1, everestData.accelX2,
+    everestData.accelY2, everestData.accelZ2, everestData.gyroX2, everestData.gyroY2,
+    everestData.gyroZ2, everestData.pressure1, everestData.pressure2, everestData.pressure3, 
+    everestData.altitudeReal, everestData.timeIMU, everestData.timeIMU, everestData.timeBaro1, 
+    everestData.Baro2, everestData.timeBaro3, everestData.timeBaroReal, alignment, alignment2);
 
 }
 
@@ -949,29 +952,32 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
  * @brief accel is in m/s -> gs, gyro is passed in dps, pressure is in Pa, real is for altitude ONLY in m
  *        Aligns before sending to update
 */
-double finalWrapper( float accelX, float accelY, float accelZ, float gyroX, float gyroY, float gyroZ, 
-                    float pressure1, float pressure2, float pressure3, float altitudeReal,
-                    float timeIMU, float timeIMU2, float timeBaro1, float timeBaro2, float timeBaro3, float timeRealBaro,
-                    MadAxesAlignment alignment, MadAxesAlignment alignment2){
+double finalWrapper(float accelX1,  float accelY1,      float accelZ1,
+    		float gyroX1,   float gyroY1,       float gyroZ1,       float accelX2,
+    		float accelY2,  float accelZ2,      float gyroX2,       float gyroY2,
+    		float gyroZ2,   float pressure1,    float pressure2, float pressure3, 
+		float altitudeReal,	float timeIMU, float timeIMU2, float timeBaro1, 
+		float timeBaro2, float timeBaro3, float timeRealBaro,
+                MadAxesAlignment alignment, MadAxesAlignment alignment2){
 
     SensorDataNoMag sensorData = {
-        timeIMU,
-        gyroX,
-        gyroY,
-        gyroZ,
-        (float) (accelX/9.81),
-        (float) (accelY/9.81),
-        (float) (accelZ/9.81),
+        timeIMU1,
+        gyroX1,
+        gyroY1,
+        gyroZ1,
+        (float) (accelX1/9.81),
+        (float) (accelY1/9.81),
+        (float) (accelZ1/9.81),
     };
 
     SensorDataNoMag sensorData2 = {
         timeIMU2,
-        gyroX,
-        gyroY,
-        gyroZ,
-        (float) (accelX/9.81),
-        (float) (accelY/9.81),
-        (float) (accelZ/9.81),
+        gyroX2,
+        gyroY2,
+        gyroZ2,
+        (float) (accelX2/9.81),
+        (float) (accelY2/9.81),
+        (float) (accelZ2/9.81),
     };
 
     BarosData baro1 = {
