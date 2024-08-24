@@ -1,10 +1,11 @@
-
 /**
  * @file everest.hpp
  * @brief 
 */
 #ifndef EVEREST_TASK_HPP
 #define EVEREST_TASK_HPP
+
+#include "infusion.hpp"
 
 #include <stdio.h>
 #include <ctime>
@@ -15,7 +16,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "infusion.hpp"
+
 
 // task specific
 // #include "Task.hpp"
@@ -99,7 +100,7 @@ typedef struct{
     float timeIMU2;
     float timeBaro1;
     float timeBaro2;
-    
+
     float pressure1;
     float pressure2;
 
@@ -174,6 +175,15 @@ class EverestTask
         void initialize1(systemState& state);
 
         void calculateSTDCoefficients();
+
+        double TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2);
+
+        double finalWrapper(float accelX1,      float accelY1,      float accelZ1,
+                float gyroX1,   float gyroY1,       float gyroZ1,       float accelX2,
+                float accelY2,  float accelZ2,      float gyroX2,       float gyroY2,
+                float gyroZ2,   float pressure1,    float pressure2,    float timeIMU1,
+                float timeIMU2, float timeBaro1,    float timeBaro2,    MadAxesAlignment alignment, 
+                MadAxesAlignment alignment2);
 
     protected:
         SensorDataNoMag internalIMU_1, internalIMU_2;

@@ -19,6 +19,11 @@
 // #include "FlashTask.hpp"
 // #include <string.h>
 
+/**
+ * To run:  g++ Infusion.cpp EverestTask.cpp -o Everest
+ *          ./Everest
+ */
+
 
 using namespace std;
 
@@ -164,9 +169,9 @@ EverestData everestData;
  * @brief Calls finalWrapper with data and alignment
  * IMPORTANT: PASS 0s FOR NOT UPDATED MEASUREMENTS (BAROS)
 */
-double TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2){
+double EverestTask::TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2){
 
-    finalWrapper(everestData.accelX1, everestData.accelY1, everestData.accelZ1,
+    return this->finalWrapper(everestData.accelX1, everestData.accelY1, everestData.accelZ1,
     everestData.gyroX1, everestData.gyroY1, everestData.gyroZ1, everestData.accelX2,
     everestData.accelY2, everestData.accelZ2, everestData.gyroX2, everestData.gyroY2,
     everestData.gyroZ2, everestData.pressure1, everestData.pressure2, everestData.timeIMU1,
@@ -877,7 +882,7 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
  * @brief accel is in m/s -> gs, gyro is passed in dps, pressure is in Pa, real is for altitude ONLY in m
  *        Aligns before sending to update
 */
-double finalWrapper(float accelX1,      float accelY1,      float accelZ1,
+double EverestTask::finalWrapper(float accelX1,      float accelY1,      float accelZ1,
     float gyroX1,   float gyroY1,       float gyroZ1,       float accelX2,
     float accelY2,  float accelZ2,      float gyroX2,       float gyroY2,
     float gyroZ2,   float pressure1,    float pressure2,    float timeIMU1,
@@ -990,7 +995,7 @@ int main()
         exit(1);
     }
 
-    FILE *file1 = fopen("C:/Users/Andrey/Documents/EverestRepo/Apogee-Detection-Everest/MadgwickLibrary/IMU_BARO.csv", "r");
+    FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
     if (!file1) {
         perror("Error opening file");
         return 1;
@@ -1151,9 +1156,11 @@ int main()
             sensorData2.gyroZ,
         };
         
-        double eAltitude = TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
+        double eAltitude = everest.TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
 
-       printf("Altitude: %f\n", eAltitude);
+        printf("Altitude: %f\n", eAltitude);
+
+        fprintf(file, "%f,%f\n", time, eAltitude);
 
 
        // }

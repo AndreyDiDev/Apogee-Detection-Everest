@@ -164,7 +164,7 @@ typedef struct {
 }SensorData;
 
 typedef struct {
-    double time;
+    float time;
     float gyroX, gyroY, gyroZ;
     float accelX, accelY, accelZ;
     float altitude;
