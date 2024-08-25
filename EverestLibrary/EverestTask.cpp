@@ -31,7 +31,7 @@ using namespace std;
 enum debug_level{
     RAW = 0,        // raw data
     Secondary = 1,  // all operations before dynamite
-    Dynamite = 2,   //everything during dynamite
+    Dynamite = 2,   // everything during dynamite
     Third = 3,      // after dynamite
     ALL = 4,        // all
     NONE = 5        // none
@@ -761,7 +761,7 @@ void EverestTask::calculateSTDCoefficients(){
     double std_Baro2 = this->state.gain_Baro2;
 
     double sumSTD1 = pow(everest.state.gain_IMU, 2) + pow(everest.state.gain_Baro1, 2)
-                     + pow(everest.state.gain_Baro2, 2);
+                    + pow(everest.state.gain_Baro2, 2);
 
     // normalise
     this->state.std_IMU = pow(std_IMU, 2) / sumSTD1;
@@ -791,7 +791,7 @@ void EverestTask::calculateSTDCoefficients(){
 double EverestTask::deriveChangeInVelocityToGetAltitude(double estimate){
 
     double deltaTimeAverage = (this->baro1.deltaTime + this->baro2.deltaTime 
-                             + this->state.deltaTimeIMU)/3.0;
+                            + this->state.deltaTimeIMU)/3.0;
 
     double velocityZ = (this->AltitudeList.secondLastAltitude - 4 * this->AltitudeList.lastAltitude + 3*estimate)/(2.0 * deltaTimeAverage);
 
@@ -988,6 +988,8 @@ int main()
     // Attach Madgwick to Everest
     everest.MadgwickSetup();
 
+    HALO halo = HALO();
+
     // test purposes
     FILE *file = fopen("everest3.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
@@ -1083,7 +1085,7 @@ int main()
 
        // // if(howMany <= 10){
 
-       printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
        // // Example: Print all sensor readings
        // if(debug == RAW || debug == ALL){
@@ -1157,29 +1159,37 @@ int main()
         };
         
         double eAltitude = everest.TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
+        double eVelocity = everest.getKinematics()->initialVelo;
+        double eAccelerationZ = everest.state.earthAcceleration * -9.81;
 
-        printf("Altitude: %f\n", eAltitude);
+        halo.setStateVector(eAccelerationZ, eVelocity, eAltitude);
 
-        fprintf(file, "%f,%f\n", time, eAltitude);
+        // update Kinematics 
+        std::vector<double> unitedStates = { halo.X0[0], 
+                            halo.X0[1], 
+                            halo.X0[2]};
 
+        printf("Altitude: %f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
-       // }
+        fprintf(file, "%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
-       howMany++;
+        // }
 
-       clock_t endTime = std::clock();
+        howMany++;
 
-       duration += endTime - start;
+        clock_t endTime = std::clock();
 
-       // printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
-   }
+        duration += endTime - start;
+
+        // printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
+    }
 
    // printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
 
-   fclose(file1);
-   fclose(file);
+    fclose(file1);
+    fclose(file);
 
-   return 0;
+    return 0;
 }
 
 
