@@ -990,6 +990,9 @@ int main()
 
     HALO halo = HALO();
 
+    // Initialize with tare / GPS values 
+    halo.init(starterX, P0, Q0, R0);
+
     // test purposes
     FILE *file = fopen("everest3.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
