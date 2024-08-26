@@ -25,23 +25,26 @@ using namespace Eigen;
 
 // Madgwick -(Xi = Filtered Altitude)> z = GPS
 
-void HALO::init(MatrixXf &X0, MatrixXf &P0, MatrixXf Q_input, VectorXf &Z_input, MatrixXf &F){
+void HALO::init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0){
     // Input: Estimate Uncertainty -> system state
     // Initial Guess
     this->X0 = X0;
     this->P = P0;
-    this->Z = Z_input;
     this->Q = Q_input;
-    this->F = F;
+    this->R = R0;
+
+    std::cout << "X0: \n" << X0 << std::endl;
+    std::cout << "P0: \n" << P0 << std::endl;
+    std::cout << "Q: \n" << Q_input << std::endl;
 
     // F is for state to next state transition
     // P0 = initial guess of state covariance matrix
     // Q = process noise covariance matrix -> dynamic model std
     // R = measurement noise covariance matrix -> sensor std
 
-    std::cout << "k: " << k << std::endl;
+    // std::cout << "k: " << k << std::endl;
 
-    std::cout << "N: " << N << std::endl;
+    // std::cout << "N: " << N << std::endl;
 
     // Weights for sigma points
     // float lambda = std::pow(alpha, 2) * (dim + k) - dim;
@@ -71,7 +74,7 @@ void HALO::init(MatrixXf &X0, MatrixXf &P0, MatrixXf Q_input, VectorXf &Z_input,
 
     this->WeightsUKF = Weights;
 
-    // std::cout << "Weights: \n" << Weights << std::endl;
+    std::cout << "Weights: \n" << Weights << std::endl;
 
     // errors can be because you didnt instatiate the matrix
     // or trying to make a vector and declaring as a matrix
@@ -252,9 +255,9 @@ MatrixXf HALO::observe(MatrixXf sigmaPoints){
 /**
  * From state to state transition
  */
-MatrixXf HALO::predict(MatrixXf sigmaPoints){
-    return this->F * sigmaPoints;
-}
+// MatrixXf HALO::predict(MatrixXf sigmaPoints){
+//     return this->F * sigmaPoints;
+// }
 
 void HALO::calculateSigmaPoints() {
 
@@ -262,7 +265,7 @@ void HALO::calculateSigmaPoints() {
 
     // std::cout << "Q: " << Q << std::endl;
 
-    float mutliplier = this->N1 - 3; // N - lambda
+    float mutliplier = 3; // N - lambda
 
     // std::cout << "Multiplier: " << mutliplier << std::endl;
 
@@ -271,10 +274,10 @@ void HALO::calculateSigmaPoints() {
 
     // std::cout << "N " << this->N1 << std::endl;
 
-    // std::cout << "L: \n" << L << std::endl;
+    std::cout << "L: \n" << L << std::endl;
 
     // Initialize sigma points matrix
-    MatrixXf sigmaPoints(6, 13);
+    MatrixXf sigmaPoints(3, 7);
     sigmaPoints.setZero();
 
     // Set the first sigma point
@@ -290,7 +293,7 @@ void HALO::calculateSigmaPoints() {
     }
 
     // before dynamics
-    // std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
+    std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
 
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
@@ -353,9 +356,9 @@ void HALO::calculateSigmaPoints() {
 float HALO::interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenarios) {
 
     // Find the nearest 2 scenarios to the current state for each measure
-    auto predicted_acc = findNearestScenarios(scenarios, X_in(0), X_in(1), 'a');
-    auto predicted_velo = findNearestScenarios(scenarios, X_in(0), X_in(1), 'v');
-    auto predicted_alt = findNearestScenarios(scenarios, X_in(0), X_in(1), 'h');
+    // auto predicted_acc = findNearestScenarios(scenarios, X_in(0), X_in(1), 'a');
+    // auto predicted_velo = findNearestScenarios(scenarios, X_in(0), X_in(1), 'v');
+    // auto predicted_alt = findNearestScenarios(scenarios, X_in(0), X_in(1), 'h');
 
     // Interpolate between the two scenarios
     // float interpolated_acc = interpolate(X_in(1), predicted_acc[0].first, predicted_acc[1].first);
@@ -384,38 +387,56 @@ float HALO::interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenario
 /**
  * @brief Given a list of scenarios, find the nearest 2 scenarios to a target value
  */
-std::vector<std::pair<float, Scenario>> HALO::findNearestScenarios(const std::vector<Scenario>& scenarios, float time, float targetValue, char measure) {
-    std::vector<std::pair<float, Scenario>> distances;
-    float value;
+std::vector<std::pair<std::vector<float>, std::vector<float>>> HALO::findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement) {
+    std::vector<std::pair<float, std::pair<float, Scenario>>> distances;
+    float minDistance = std::numeric_limits<float>::max();
 
-    switch (measure) {
-        case 'a': // Acceleration
-            for (const auto& scenario : scenarios) {
-                // float value = scenario.evaluateAcceleration(time, this.isBeforeApogee);
-                float value = 0;
-                float distance = std::abs(value - targetValue);
-                distances.emplace_back(distance, scenario);
+    // switch (measure) {
+    //     case 'a': // Acceleration
+    for (Scenario scenario : scenarios) {
+        std::vector<std::vector<float>> vectors = scenario.getLists();
+        int lowestDistanceIndex = 0;
+        std::vector<float> lowestVector = vectors[0];
+        minDistance = std::numeric_limits<float>::max();
+
+        for(int i = 0; i < vectors.size(); i++){
+
+            float distance = euclideanDistance(vectors[i], measurement);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                lowestDistanceIndex = i;
+                lowestVector = vectors[i];
             }
-            break;
-        case 'v': // Velocity
-            for (const auto& scenario : scenarios) {
-                // float value = scenario.evaluateVelocity(time, this.isBeforeApogee);
-                float value = 0;
-                float distance = std::abs(value - targetValue);
-                distances.emplace_back(distance, scenario);
-            }
-            break;
-        case 'h': // Altitude
-            for (const auto& scenario : scenarios) {
-                // float value = scenario.evaluateAltitude(time, this.isBeforeApogee);
-                float value  =0;
-                float distance = std::abs(value - targetValue);
-                distances.emplace_back(distance, scenario);
-            }
-            break;
-        default:
-            throw std::invalid_argument("Invalid measure type");
+            
+
+        }
+
+        // minDistance to order the list and get lowest 2
+        // index go evaluate scenario at n+1
+        distances.emplace_back(minDistance, lowestDistanceIndex, scenario);
+        
     }
+    //         break;
+    //     case 'v': // Velocity
+    //         for (const auto& scenario : scenarios) {
+    //             // float value = scenario.evaluateVelocity(time, this.isBeforeApogee);
+    //             float value = 0;
+    //             float distance = std::abs(value - targetValue);
+    //             distances.emplace_back(distance, scenario);
+    //         }
+    //         break;
+    //     case 'h': // Altitude
+    //         for (const auto& scenario : scenarios) {
+    //             // float value = scenario.evaluateAltitude(time, this.isBeforeApogee);
+    //             float value  =0;
+    //             float distance = std::abs(value - targetValue);
+    //             distances.emplace_back(distance, scenario);
+    //         }
+    //         break;
+    //     default:
+    //         throw std::invalid_argument("Invalid measure type");
+    // }
 
     /**
      * @brief Sorts a vector of distances based on the first element of each pair in ascending order.
@@ -424,11 +445,26 @@ std::vector<std::pair<float, Scenario>> HALO::findNearestScenarios(const std::ve
         return a.first < b.first;
     });
 
-    std::vector<std::pair<float, Scenario>> nearestScenarios;
-    nearestScenarios.push_back(distances[0]);
-    nearestScenarios.push_back(distances[1]);
+    std::vector<std::pair<std::vector<float>, std::vector<float>>> nearestVectors;
+    nearestScenarios.push_back(distances[0](1));
+    nearestScenarios.push_back(secondNearestIndex, distances[1][1]);
 
     return nearestScenarios;
+}
+
+// Function to calculate the Euclidean distance between two 3D vectors
+float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
+    float x1, y1, z1, x2, y2, z2;
+
+    x1 = vec1[0];
+    y1 = vec1[1];
+    z1 = vec1[2];
+
+    x2 = vec2(0);
+    y2 = vec2(1);
+    z2 = vec2(2);
+
+    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2) + std::pow(z2 - z1, 2));
 }
 
 /**
@@ -519,6 +555,12 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
 MatrixXf dynamicModel(MatrixXf &X){
     // X = [acceleration, velocity, altitude]
     MatrixXf Xprediction(3, 1);
+
+    // for every scenario get lists and find nearest 2 vectors to the current state
+
+
+    // interpolate between the two scenarios to get predicted values
+
     return Xprediction;
 }
 

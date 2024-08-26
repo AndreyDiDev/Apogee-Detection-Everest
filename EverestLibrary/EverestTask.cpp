@@ -990,8 +990,21 @@ int main()
 
     HALO halo = HALO();
 
-    // Initialize with tare / GPS values 
-    halo.init(starterX, P0, Q0, R0);
+    MatrixXf Q(3,3);
+    Q <<    0.5, 0, 0,
+            0, 0.5, 0,
+            0, 0, 0.5;
+
+    MatrixXf R0(3,3);
+    R0 <<   0.25, 0.5, 0.5,
+            0.5, 1, 1,
+            0.5, 1, 1;
+
+    MatrixXf P0(3,3);
+    P0 <<   50, 0, 0,
+            0, 0, 0,
+            0, 0, 0;
+
 
     // test purposes
     FILE *file = fopen("everest3.txt", "w+"); // Open the file for appending or create it if it doesn't exist
@@ -1163,18 +1176,27 @@ int main()
         
         double eAltitude = everest.TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
         double eVelocity = everest.getKinematics()->initialVelo;
-        double eAccelerationZ = everest.state.earthAcceleration * -9.81;
+        double eAccelerationZ = (everest.state.earthAcceleration-1) * -9.81;
 
-        halo.setStateVector(eAccelerationZ, eVelocity, eAltitude);
+        if(howMany == 7){
+            VectorXf X0(3);
+            X0 << everest.Kinematics.initialAlt, 0, 0;
 
+            // Initialize with tare / GPS values 
+            halo.init(X0, P0, Q, R0);
+        }else if (howMany > 6){
+            halo.setStateVector(eAccelerationZ, eVelocity, eAltitude);
+
+            std::vector<double> unitedStates = { halo.X0[0], 
+                                halo.X0[1], 
+                                halo.X0[2]};
+
+            printf("Altitude: %f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
+
+            fprintf(file, "%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
+        }
+        
         // update Kinematics 
-        std::vector<double> unitedStates = { halo.X0[0], 
-                            halo.X0[1], 
-                            halo.X0[2]};
-
-        printf("Altitude: %f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
-
-        fprintf(file, "%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
         // }
 

@@ -62,6 +62,22 @@ struct Scenario {
         isBeforeApogeeBool = isBeforeApogee;
     }
 
+    /**
+     * Returns list of vectors of scenario {Altitude, Velocity, Acceleration} before or after apogee
+     */
+    std::vector<std::vector<float>> getLists(){
+
+        if(isBeforeApogeeBool){
+            std::vector<std::vector<float>> lists = {beforeApogeeAlt, beforeApogeeVelo, beforeApogeeAccel};
+            return lists;
+        }
+        else{
+            std::vector<std::vector<float>> lists = {afterApogeeAlt, afterApogeeVelo, afterApogeeAccel};
+            return lists;
+        }
+
+    }
+
     // state machine on apogee
     float evaluateAcceleration(float time) {
         float measuredAcceleration = measurement[0];
@@ -107,7 +123,7 @@ struct Scenario {
 
 class HALO{
     public:
-        void init(MatrixXf &X0, MatrixXf &P0, MatrixXf Q_input, VectorXf &Z_input);
+        void init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0);
 
         void update();
 
@@ -139,7 +155,7 @@ class HALO{
 
         float interpolate(float x, float scenario1Distance, float scenario2Distance);
 
-        std::vector<std::pair<float, Scenario>> findNearestScenarios(const std::vector<Scenario>& scenarios, float time, float targetValue, char measure);
+        std::vector<std::pair<std::vector<float>, std::vector<float>>> findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement);
 
         float interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenarios);
 
