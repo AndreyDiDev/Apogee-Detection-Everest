@@ -47,6 +47,10 @@ double theTime = CALIBRATION_TIME * RATE_BARO;
 double sum = 0;
 double pressureSum = 0;
 static float previousTimestamp = 0;
+std::vector<double> sumZeroOffsetAccel;
+std::vector<double> sumZeroOffsetAccel2;
+std::vector<double> sumZeroOffsetGyro;
+std::vector<double> sumZeroOffsetGyro2;
 
 // FILE *file;
 
@@ -343,6 +347,15 @@ void EverestTask::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag&
         this->internalIMU_1.accelX = 0;
         this->internalIMU_1.accelY = 0;
         this->internalIMU_1.accelZ = 0;
+    }else{
+        // Apply calibration
+        this->internalIMU_1.accelX = this->internalIMU_1.accelX - sumZeroOffsetAccel[0];
+        this->internalIMU_1.accelY = this->internalIMU_1.accelY - sumZeroOffsetAccel[1];
+        this->internalIMU_1.accelZ = this->internalIMU_1.accelZ - sumZeroOffsetAccel[2];
+
+        this->internalIMU_1.gyroX = this->internalIMU_1.gyroX - sumZeroOffsetGyro[0];
+        this->internalIMU_1.gyroY = this->internalIMU_1.gyroY - sumZeroOffsetGyro[1];
+        this->internalIMU_1.gyroZ = this->internalIMU_1.gyroZ - sumZeroOffsetGyro[2];
     }
 
     if (isinf(internalIMU_2.accelX)){
@@ -355,20 +368,29 @@ void EverestTask::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag&
         this->internalIMU_2.accelX = 0;
         this->internalIMU_2.accelY = 0;
         this->internalIMU_2.accelZ = 0;
+    }else{
+        // Apply calibration
+        this->internalIMU_2.accelX = this->internalIMU_2.accelX - sumZeroOffsetAccel2[0];
+        this->internalIMU_2.accelY = this->internalIMU_2.accelY - sumZeroOffsetAccel2[1];
+        this->internalIMU_2.accelZ = this->internalIMU_2.accelZ - sumZeroOffsetAccel2[2];
+
+        this->internalIMU_2.gyroX = this->internalIMU_2.gyroX - sumZeroOffsetGyro2[0];
+        this->internalIMU_2.gyroY = this->internalIMU_2.gyroY - sumZeroOffsetGyro2[1];
+        this->internalIMU_2.gyroZ = this->internalIMU_2.gyroZ - sumZeroOffsetGyro2[2];
     }
 
     // Calculate average of IMU parameters
     #define averageIMU this->state.avgIMU
 
-    averageIMU.gyroX = (this->internalIMU_1.gyroX + this->internalIMU_2.gyroX) / numberOfSamples;
-    averageIMU.gyroY = (this->internalIMU_1.gyroY + this->internalIMU_2.gyroY) / numberOfSamples;
-    averageIMU.gyroZ = (this->internalIMU_1.gyroZ + this->internalIMU_2.gyroZ) / numberOfSamples;
+        averageIMU.gyroX = (this->internalIMU_1.gyroX + this->internalIMU_2.gyroX) / numberOfSamples;
+        averageIMU.gyroY = (this->internalIMU_1.gyroY + this->internalIMU_2.gyroY) / numberOfSamples;
+        averageIMU.gyroZ = (this->internalIMU_1.gyroZ + this->internalIMU_2.gyroZ) / numberOfSamples;
 
-    averageIMU.accelX = (this->internalIMU_1.accelX + this->internalIMU_2.accelX) / numberOfSamples;
-    averageIMU.accelY = (this->internalIMU_1.accelY + this->internalIMU_2.accelY) / numberOfSamples;
-    averageIMU.accelZ = (this->internalIMU_1.accelZ + this->internalIMU_2.accelZ) / numberOfSamples;
+        averageIMU.accelX = (this->internalIMU_1.accelX + this->internalIMU_2.accelX) / numberOfSamples;
+        averageIMU.accelY = (this->internalIMU_1.accelY + this->internalIMU_2.accelY) / numberOfSamples;
+        averageIMU.accelZ = (this->internalIMU_1.accelZ + this->internalIMU_2.accelZ) / numberOfSamples;
 
-    averageIMU.time = (this->internalIMU_1.time + this->internalIMU_2.time) / numberOfSamples;
+        averageIMU.time = (this->internalIMU_1.time + this->internalIMU_2.time) / numberOfSamples;
 
     #undef averageIMU
 
@@ -627,25 +649,12 @@ double EverestTask::dynamite(){
 
     }
 
-    // assumes stds are already converted to coefficients -> variances
-    // distributed_IMU_Altitude = distributed_IMU_Altitude / everest.state.std_IMU;
-    // distributed_Baro_Altitude1 = distributed_Baro_Altitude1 / everest.state.std_Baro1;
-    // distributed_Baro_Altitude2 = distributed_Baro_Altitude2 / everest.state.std_Baro2;
-    // distributed_Baro_Altitude3 = distributed_Baro_Altitude3 / everest.state.std_Baro3;
-    // distributed_RealBaro_Altitude = distributed_RealBaro_Altitude / everest.state.std_Real_Baro;
-
     // summation of distributed measurements
     double distributed_Sum = distributed_IMU_Altitude + distributed_Baro_Altitude1 + distributed_Baro_Altitude2;
 
     if(debug == Dynamite || debug == ALL){
         // SOAR_PRINT("Distributed Sum: %f\n\n", distributed_Sum);
     }
-
-    // summation of standard deviations
-    // double sumSTD1 = pow(everest.state.std_IMU + everest.state.std_Baro1 + everest.state.std_Baro2
-    //                 + everest.state.std_Baro3 + everest.state.std_Real_Baro, 2);
-    // double sumSTD1 = pow(everest.state.gain_IMU, 2) + pow(everest.state.gain_Baro1, 2) + pow(everest.state.gain_Baro2, 2)
-    //                 + pow(everest.state.gain_Baro3, 2) + pow(everest.state.gain_Real_Baro, 2);
 
 //    if(debug == Dynamite || debug == ALL){
 //        // printf("Sum STD: %f\n\n", sumSTD1);
@@ -660,9 +669,6 @@ double EverestTask::dynamite(){
 
     // normalised altitude
     double normalised_Altitude = (distributed_Sum)/sumGain;
-    // normalised_Altitude = normalised_Altitude / sumSTD1;
-
-    // double normalised_Altitude = (distributed_Sum*sumSTD)/(everest.state.gain_IMU);
 
     if(debug == Dynamite || debug == ALL){
         // SOAR_PRINT("Normalised Altitude: %f\n\n", normalised_Altitude);
@@ -818,7 +824,7 @@ double getFinalAltitude(){
 }
 
 /**
- * @brief Tares the altitude to the ground
+ * @brief Tares the altitude to the ground and calibrates zero ground offset for IMU
  * 
  * @category Internal | Asynchronous 
  * 
@@ -835,13 +841,19 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
     double average = 0;
     int numberOfSamples = 0;
 
+    std::vector<double> averageAccel = {0, 0, 0}; // for this iteration
+    std::vector<double> averageGyro = {0, 0, 0}; // for this iteration
+
+    std::vector<double> averageAccel2 = {0, 0, 0}; // for this iteration
+    std::vector<double> averageGyro2 = {0, 0, 0}; // for this iteration
+
     if(baro1.pressure != 0){
         average = average + convertToAltitude(baro1.pressure);
         numberOfSamples++;
 
         if(debug == Secondary || debug == ALL){
-                // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
-            }
+            // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
     if(baro2.pressure != 0){
@@ -849,12 +861,30 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
         numberOfSamples++;
 
         if(debug == Secondary || debug == ALL){
-                // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
-            }
+            // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
     if(numberOfSamples != 0){
         sum += average/numberOfSamples;
+    }
+
+    if(!isinf(imu1.accelX)){
+        sumZeroOffsetAccel = {sumZeroOffsetAccel[0] + imu1.accelX, sumZeroOffsetAccel[1] + imu1.accelY, sumZeroOffsetAccel[2] + imu1.accelZ};
+        sumZeroOffsetGyro = {sumZeroOffsetGyro[0] + imu1.gyroX, sumZeroOffsetGyro[1] + imu1.gyroY, sumZeroOffsetGyro[2] + imu1.gyroZ};
+
+        if(debug == Secondary || debug == ALL){
+            // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
+    }
+
+    if(!isinf(imu2.accelX)){
+        sumZeroOffsetAccel2 = {sumZeroOffsetAccel2[0] + imu2.accelX, sumZeroOffsetAccel2[1] + imu2.accelY, sumZeroOffsetAccel2[2] + imu2.accelZ};
+        sumZeroOffsetGyro2 = {sumZeroOffsetGyro2[0] + imu2.gyroX, sumZeroOffsetGyro2[1] + imu2.gyroY, sumZeroOffsetGyro2[2] + imu2.gyroZ};
+
+        if(debug == Secondary || debug == ALL){
+            // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
+        }
     }
 
     if(debug == Secondary || debug == ALL){
@@ -865,14 +895,26 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
     if(theTime == 0){
         sum = sum/(CALIBRATION_TIME*RATE_BARO);
         this->Kinematics.initialAlt = sum;
+
+        this->zeroOffsetAccel = {sumZeroOffsetAccel[0]/(CALIBRATION_TIME*RATE_BARO), 
+        sumZeroOffsetAccel[1]/(CALIBRATION_TIME*RATE_BARO), sumZeroOffsetAccel[2]/(CALIBRATION_TIME*RATE_BARO)};
+
+        this->zeroOffsetGyro = {averageGyro[0]/(CALIBRATION_TIME*RATE_BARO), 
+        averageGyro[1]/(CALIBRATION_TIME*RATE_BARO), averageGyro[2]/(CALIBRATION_TIME*RATE_BARO)};
+
+        this->zeroOffsetAccel2 = {sumZeroOffsetAccel2[0]/(CALIBRATION_TIME*RATE_BARO),
+        sumZeroOffsetAccel2[1]/(CALIBRATION_TIME*RATE_BARO), sumZeroOffsetAccel2[2]/(CALIBRATION_TIME*RATE_BARO)};
+
+        this->zeroOffsetGyro2 = {averageGyro2[0]/(CALIBRATION_TIME*RATE_BARO),
+        averageGyro2[1]/(CALIBRATION_TIME*RATE_BARO), averageGyro2[2]/(CALIBRATION_TIME*RATE_BARO)};
+
         // SOAR_PRINT("Tare Initial Altitude: %f\n", this->Kinematics.initialAlt);
         isTared = true;
-
         
         // ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
     }
 
-    // call to update time for these structs
+    // call to update time and offsets for these structs
     IMU_Update(imu1, imu2);
 
     theTime -= 1;

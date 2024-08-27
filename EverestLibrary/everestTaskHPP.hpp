@@ -190,6 +190,11 @@ class EverestTask
 
         BarosData baro1, baro2;
 
+        std::vector<double> zeroOffsetAccel;
+        std::vector<double> zeroOffsetAccel2;
+        std::vector<double> zeroOffsetGyro;
+        std::vector<double> zeroOffsetGyro2;
+
         // static void RunTask(void* pvParams) { EverestTask::Inst().Run(pvParams); } // Static Task Interface, passes control to the instance Run();
 
 	    // void Run(void* pvParams);    // Main run code
