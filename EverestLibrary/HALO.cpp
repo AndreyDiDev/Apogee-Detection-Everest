@@ -527,8 +527,8 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     std::vector<float> gainV1;
     std::vector<float> gainV2;
     
-    for(int i =0; i<3; i++){
-        float distance            = std::abs(vector1[i] - vector2[i]);          // get distance between two vectors
+    for(int i = 0; i < 3; i++){
+        float distance= std::abs(vector1[i] - vector2[i]);         // get distance between two vectors
         gainV1[i] = (1 - std::abs(vector1[i] - X_in(i)))/distance; // get distance between vector1 and current state
         gainV2[i] = 1 - gainV1[i];
     }
@@ -549,7 +549,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
  */
 bool isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude){
 
-    if(acceleration < 1 || velocity < 1 || altitude < lastAltitude){
+    if(acceleration < -9.81 || velocity < 0.5 || altitude < lastAltitude){
         return false;
     }
 
@@ -581,12 +581,22 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     VectorXf Xprediction(3, 1);
 
     // for every scenario get lists and find nearest 2 vectors to the current state
+    std::vector<Scenario> scenarios = this->getScenarios();
     std::vector<std::vector<float>> nearestVectors = this->findNearestScenarios(scenarios, X);
     Xprediction = predictNextValues(nearestVectors, X);
 
-    // interpolate between the two scenarios to get predicted values
-
     return Xprediction;
+}
+
+void createScenarios(std::vector<std::vector<float>> &scenarios){
+    std::vector<Scenario> scenarios;
+    std::vector<float> scenario1 = {1, 2, 3};
+    std::vector<float> scenario2 = {4, 5, 6};
+    std::vector<float> scenario3 = {7, 8, 9};
+
+    scenarios.push_back(scenario1);
+    scenarios.push_back(scenario2);
+    scenarios.push_back(scenario3);
 }
 
 // int main(){

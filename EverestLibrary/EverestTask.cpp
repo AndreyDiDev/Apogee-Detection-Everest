@@ -1025,6 +1025,12 @@ int main()
         return 1;
     }
 
+    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/simsFile.csv", "r");
+    if (!simsFile) {
+        perror("Error opening simsAfterFile.csv");
+        return 1;
+    }
+
     // read first line and preset the deltaTime to timestamp
     char line[MAX_LINE_LENGTH];
     std::clock_t start;
@@ -1033,11 +1039,11 @@ int main()
     int howMany = 1;
     int i = 0;
 
-    std::vector<std::vector<float>> scenario1ListofVectors;
-    std::vector<std::vector<float>> scenario2ListofVectors;
-    std::vector<std::vector<float>> scenario3ListofVectors;
-    std::vector<std::vector<float>> scenario4ListofVectors;
-    std::vector<std::vector<float>> scenario5ListofVectors;
+    std::vector<std::vector<float>> scenario1ListofVectorsBefore;
+    std::vector<std::vector<float>> scenario2ListofVectorsBefore;
+    std::vector<std::vector<float>> scenario3ListofVectorsBefore;
+    std::vector<std::vector<float>> scenario4ListofVectorsBefore;
+    std::vector<std::vector<float>> scenario5ListofVectorsBefore;
 
     while (fgets(line, sizeof(line), simsFile)) {
         char *token = strtok(line, ",");
@@ -1049,7 +1055,7 @@ int main()
         token = strtok(NULL, ",");
 
         std::vector<float> temp = {alt, velo, acc};
-        scenario1ListofVectors.push_back(temp);
+        scenario1ListofVectorsBefore.push_back(temp);
 
         float alt1 = atof(token); // Convert the time value to float
         token = strtok(NULL, ",");
@@ -1059,7 +1065,7 @@ int main()
         token = strtok(NULL, ",");
 
         std::vector<float> temp1 = {alt1, velo1, acc1};
-        scenario2ListofVectors.push_back(temp1);
+        scenario2ListofVectorsBefore.push_back(temp1);
 
         float alt2 = atof(token); // Convert the time value to float
         token = strtok(NULL, ",");
@@ -1069,7 +1075,7 @@ int main()
         token = strtok(NULL, ",");
 
         std::vector<float> temp2 = {alt2, velo2, acc2};
-        scenario3ListofVectors.push_back(temp2);
+        scenario3ListofVectorsBefore.push_back(temp2);
 
         float alt3 = atof(token); // Convert the time value to float
         token = strtok(NULL, ",");
@@ -1079,7 +1085,7 @@ int main()
         token = strtok(NULL, ",");
 
         std::vector<float> temp3 = {alt3, velo3, acc3};
-        scenario4ListofVectors.push_back(temp3);
+        scenario4ListofVectorsBefore.push_back(temp3);
 
         float alt4 = atof(token); // Convert the time value to float
         token = strtok(NULL, ",");
@@ -1089,8 +1095,80 @@ int main()
         token = strtok(NULL, ",");
 
         std::vector<float> temp4 = {alt4, velo4, acc4};
-        scenario5ListofVectors.push_back(temp4);
+        scenario5ListofVectorsBefore.push_back(temp4);
     }
+
+    // after list
+    std::vector<std::vector<float>> scenario1ListofVectorsAfter;
+    std::vector<std::vector<float>> scenario2ListofVectorsAfter;
+    std::vector<std::vector<float>> scenario3ListofVectorsAfter;
+    std::vector<std::vector<float>> scenario4ListofVectorsAfter;
+    std::vector<std::vector<float>> scenario5ListofVectorsAfter;
+
+    while (fgets(line, sizeof(line), simsAfterFile)) {
+        char *token = strtok(line, ",");
+        float alt = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo = atof(token);
+        token = strtok(NULL, ",");
+        float acc = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp = {alt, velo, acc};
+        scenario1ListofVectorsAfter.push_back(temp);
+
+        float alt1 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo1 = atof(token);
+        token = strtok(NULL, ",");
+        float acc1 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp1 = {alt1, velo1, acc1};
+        scenario2ListofVectorsAfter.push_back(temp1);
+
+        float alt2 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo2 = atof(token);
+        token = strtok(NULL, ",");
+        float acc2 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp2 = {alt2, velo2, acc2};
+        scenario3ListofVectorsAfter.push_back(temp2);
+
+        float alt3 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo3 = atof(token);
+        token = strtok(NULL, ",");
+        float acc3 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp3 = {alt3, velo3, acc3};
+        scenario4ListofVectorsAfter.push_back(temp3);
+
+        float alt4 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo4 = atof(token);
+        token = strtok(NULL, ",");
+        float acc4 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp4 = {alt4, velo4, acc4};
+        scenario5ListofVectorsAfter.push_back(temp4);
+    }
+
+    // create scenarios with before and after lists
+    Scenario scenario1 = Scenario{scenario1ListofVectorsBefore, scenario1ListofVectorsAfter, "Scenario 1"};
+    Scenario scenario2 = Scenario{scenario2ListofVectorsBefore, scenario2ListofVectorsAfter, "Scenario 2"};
+    Scenario scenario3 = Scenario{scenario3ListofVectorsBefore, scenario3ListofVectorsAfter, "Scenario 3"};
+    Scenario scenario4 = Scenario{scenario4ListofVectorsBefore, scenario4ListofVectorsAfter, "Scenario 4"};
+    Scenario scenario5 = Scenario{scenario5ListofVectorsBefore, scenario5ListofVectorsAfter, "Scenario 5"};
+
+    // add to a list of scenarios 
+    std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5};
+    halo.setScenarios(scenarios);
+    
 
     while (fgets(line, sizeof(line), file1)) {
         // Tokenize the line using strtok

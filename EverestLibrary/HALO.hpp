@@ -37,18 +37,81 @@ struct Scenario {
     std::vector<float> beforeApogeeAlt;
     std::vector<float> afterApogeeAlt;
 
+    std::vector<std::vector<float>> BeforeList;
+    std::vector<std::vector<float>> AfterList;
+
     std::string name;
 
     std::vector<float> measurement;
     bool isBeforeApogeeBool = false;
 
-    Scenario(std::vector<float> beforeApogeeCoefficientsAccel, std::vector<float> afterApogeeCoefficientsAccel,
-        std::vector<float> beforeApogeeCoefficientsVelo, std::vector<float> afterApogeeCoefficientsVelo,
-        std::vector<float> beforeApogeeCoefficientsAlt, std::vector<float> afterApogeeCoefficientsAlt, std::string Name)
+    // Scenario(std::vector<float> beforeApogeeCoefficientsAccel, std::vector<float> afterApogeeCoefficientsAccel,
+    //     std::vector<float> beforeApogeeCoefficientsVelo, std::vector<float> afterApogeeCoefficientsVelo,
+    //     std::vector<float> beforeApogeeCoefficientsAlt, std::vector<float> afterApogeeCoefficientsAlt, std::string Name)
 
-        :beforeApogeeAccel(beforeApogeeCoefficientsAccel), afterApogeeAccel(afterApogeeCoefficientsAccel), 
-        beforeApogeeVelo(beforeApogeeCoefficientsVelo), afterApogeeVelo(afterApogeeCoefficientsVelo), 
-        beforeApogeeAlt(beforeApogeeCoefficientsAlt), afterApogeeAlt(afterApogeeCoefficientsAlt), name(Name) {};
+    //     :beforeApogeeAccel(beforeApogeeCoefficientsAccel), afterApogeeAccel(afterApogeeCoefficientsAccel), 
+    //     beforeApogeeVelo(beforeApogeeCoefficientsVelo), afterApogeeVelo(afterApogeeCoefficientsVelo), 
+    //     beforeApogeeAlt(beforeApogeeCoefficientsAlt), afterApogeeAlt(afterApogeeCoefficientsAlt), name(Name) {};
+
+    Scenario(std::vector<std::vector<float>> beforelList, std::vector<std::vector<float>> afterList, std::string Name)
+        :BeforeList(beforelList), AfterList(afterList){
+
+        // auto [firstPart, secondPart] = findAndSplitVector(list);
+
+        // FILE *file = fopen("Sims.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+        // if (!file) {
+        //     fprintf(stderr, "Error opening Sims.txt...exiting\n");
+        //     exit(1);
+        // }
+
+        // fprintf(file, "%s\n", Name);
+
+        // // Print the first part
+        // // std::cout << "First Part:" << std::endl;
+        // fprintf(file, "%s\n", "First Part:");
+        // for (const auto& vec : firstPart) {
+        //     for (float value : vec) {
+        //         // std::cout << value << " ";
+        //         fprintf(file, "%f,%f,%f,%f\n", value);
+        //     }
+        //     // std::cout << std::endl;
+        // }
+
+        // // Print the second part
+        // // std::cout << "Second Part:" << std::endl;
+        // fprintf(file, "%s\n", "Second Part:");
+        // for (const auto& vec : secondPart) {
+        //     for (float value : vec) {
+        //         // std::cout << value << " ";
+        //         fprintf(file, "%f,%f,%f,%f\n", value);
+        //     }
+        //     // std::cout << std::endl;
+        // }
+
+    }
+
+    // Function to find the vector and split the list
+    std::pair<std::vector<std::vector<float>>, std::vector<std::vector<float>>> findAndSplitVector(
+        const std::vector<std::vector<float>>& inputList) {
+        
+        std::vector<std::vector<float>> firstPart;
+        std::vector<std::vector<float>> secondPart;
+        bool splitPointFound = false;
+
+        for (const auto& vec : inputList) {
+            if (!splitPointFound && vec.size() >= 3 && vec[1] < 1.0f && vec[2] < 1.0f) {
+                splitPointFound = true;
+            }
+
+            if (splitPointFound) {
+                secondPart.push_back(vec);
+            } else {
+                firstPart.push_back(vec);
+            }
+        }
+
+        return {firstPart, secondPart};
+    }
 
 
     /**
@@ -68,12 +131,11 @@ struct Scenario {
     std::vector<std::vector<float>> getLists(){
 
         if(isBeforeApogeeBool){
-            std::vector<std::vector<float>> lists = {beforeApogeeAlt, beforeApogeeVelo, beforeApogeeAccel};
-            return lists;
+            return BeforeList;
         }
         else{
-            std::vector<std::vector<float>> lists = {afterApogeeAlt, afterApogeeVelo, afterApogeeAccel};
-            return lists;
+            // std::vector<std::vector<float>> lists = {afterApogeeAlt, afterApogeeVelo, afterApogeeAccel};
+            return AfterList;
         }
 
     }
@@ -123,6 +185,8 @@ struct Scenario {
     }
     
 };
+
+
 
 
 class HALO{
@@ -182,6 +246,16 @@ class HALO{
         VectorXf Z; // measurement vector
 
         VectorXf dynamicModel(VectorXf &X);
+
+        void setScenarios(std::vector<Scenario> &scenarios){
+            this->scenarios = scenarios;
+        };
+
+        std::vector<Scenario> getScenarios(){
+            return this->scenarios;
+        };
+
+        std::vector<Scenario> scenarios;
 
     private:
 
