@@ -385,9 +385,9 @@ float HALO::interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenario
 
 
 /**
- * @brief Given a list of scenarios, find the nearest 2 scenarios to a target value
+ * @brief Given a list of scenarios, find the nearest 2 scenarios and returns the vectors of the nearest scenarios
  */
-std::vector<std::pair<std::vector<float>, std::vector<float>>> HALO::findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement) {
+std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement) {
     std::vector<std::pair<float, std::pair<float, Scenario>>> distances;
     float minDistance = std::numeric_limits<float>::max();
 
@@ -441,15 +441,29 @@ std::vector<std::pair<std::vector<float>, std::vector<float>>> HALO::findNearest
     /**
      * @brief Sorts a vector of distances based on the first element of each pair in ascending order.
      */
-    std::sort(distances.begin(), distances.end(), [](const auto& a, const auto& b) {
+    std::sort(distances.begin(), distances.end(), [](
+        const std::pair<float, std::pair<float, Scenario>>& a, 
+        const std::pair<float, std::pair<float, Scenario>>& b) {
+
         return a.first < b.first;
+
     });
 
-    std::vector<std::pair<std::vector<float>, std::vector<float>>> nearestVectors;
-    nearestScenarios.push_back(distances[0](1));
-    nearestScenarios.push_back(secondNearestIndex, distances[1][1]);
+    int indexFirst = distances[0].second.first;
+    std::vector<float> currentVector1 = distances[0].second.second.evaluateVectorAt(indexFirst);
+    std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAt(indexFirst + 1);
 
-    return nearestScenarios;
+    int indexSecond = distances[1].second.first;
+    std::vector<float> currentVector2 = distances[1].second.second.evaluateVectorAt(indexSecond);
+    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAt(indexSecond + 1);
+
+    std::vector<std::vector<float>> nearestVectors;
+    nearestVectors.push_back(currentVector1);
+    nearestVectors.push_back(futureVector1);
+    nearestVectors.push_back(currentVector2);
+    nearestVectors.push_back(futureVector2);
+
+    return nearestVectors;
 }
 
 // Function to calculate the Euclidean distance between two 3D vectors
@@ -483,41 +497,51 @@ float HALO::interpolate(float x, float scenario1Distance, float scenario2Distanc
 /**
  * @brief Get gains for scenarios
  */
-std::vector<float> HALO::getGains(float x, float scenario1Distance, float scenario2Distance) {
-    float gain1 = 1.0 / std::abs(x - scenario1Distance);
-    float gain2 = 1.0 - gain1;
+// std::vector<float> HALO::getGains(float x, float scenario1Distance, float scenario2Distance) {
+//     float gain1 = 1.0 / std::abs(x - scenario1Distance);
+//     float gain2 = 1.0 - gain1;
 
-    this->scenarioWeights = {gain1, gain2};
+//     this->scenarioWeights = {gain1, gain2};
 
-    return {gain1, gain2};
-}
+//     return {gain1, gain2};
+// }
 
 /**
  * @brief Interpolates between two scenarios based on the gains
  */
-float interpolateWithgains(float gain1, float gain2, float scenario1Distance, float scenario2Distance) {
-    return gain1 * scenario1Distance + gain2 * scenario2Distance;
-}
+// float interpolateWithgains(float gain1, float gain2, float scenario1Distance, float scenario2Distance) {
+//     return gain1 * scenario1Distance + gain2 * scenario2Distance;
+// }
 
 /**
  * @brief Predicts the next values based on the interpolated scenarios
  */
-void HALO::predictNextValues(float time, std::vector<Scenario> &scenarios, VectorXf &X_in){
-    // evaluate scenarios at time t+1
-    float firstAccDist  =  std::abs(X_in(1) - scenarios[0].evaluateAcceleration(time + this->timeStep));
-    float firstVeloDist = std::abs(X_in(2) - scenarios[0].evaluateVelocity(time + this->timeStep));
-    float firstAltDist  =  std::abs(X_in(3) - scenarios[0].evaluateAltitude(time + this->timeStep));
+VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, VectorXf &X_in){
+    // vectors = vector1, vector1Future, vector2, vector2Future
+    std::vector<float> vector1 = vectors[0];
+    std::vector<float> vector1Future = vectors[1];
 
-    float secondAccDist = std::abs(X_in(1) - scenarios[1].evaluateAcceleration(time + this->timeStep));
-    float secondVeloDist= std::abs(X_in(2) - scenarios[1].evaluateVelocity(time + this->timeStep));
-    float secondAltDist = std::abs(X_in(3) - scenarios[1].evaluateAltitude(time + this->timeStep));
+    std::vector<float> vector2 = vectors[2];
+    std::vector<float> vector2Future = vectors[3];
 
-    // interpolate between the two scenarios to get predicted values
-    float predicted_interpolated_acc = interpolate(X_in(1), firstAccDist, secondAccDist);
-    float predicted_interpolated_velo = interpolate(X_in(2), firstVeloDist, secondVeloDist);
-    float predicted_interpolated_alt = interpolate(X_in(3), firstAltDist, secondAltDist);
+    std::vector<float> gainV1;
+    std::vector<float> gainV2;
+    
+    for(int i =0; i<3; i++){
+        float distance            = std::abs(vector1[i] - vector2[i]);          // get distance between two vectors
+        gainV1[i] = (1 - std::abs(vector1[i] - X_in(i)))/distance; // get distance between vector1 and current state
+        gainV2[i] = 1 - gainV1[i];
+    }
 
-    // this->X_pred << predicted_interpolated_acc, predicted_interpolated_velo, predicted_interpolated_alt;
+    // interpolate between the two scenarios to get predicted values0
+    float predicted_interpolated_alt  = prevGain1[0] * vector1Future[0] + prevGain2[0] * vector1Future[0];
+    float predicted_interpolated_velo = prevGain1[1] * vector1Future[1] + prevGain2[1] * vector2Future[1];
+    float predicted_interpolated_acc  = prevGain1[2] * vector1Future[2] + prevGain2[2] * vector2Future[2];
+
+    VectorXf X_pred(3,1);
+    X_pred << predicted_interpolated_acc, predicted_interpolated_velo, predicted_interpolated_alt;
+
+    return X_pred;
 }
 
 /**
@@ -552,12 +576,13 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
 }
 
 // prediction step based on the dynamic model
-MatrixXf dynamicModel(MatrixXf &X){
+VectorXf HALO::dynamicModel(VectorXf &X){
     // X = [acceleration, velocity, altitude]
-    MatrixXf Xprediction(3, 1);
+    VectorXf Xprediction(3, 1);
 
     // for every scenario get lists and find nearest 2 vectors to the current state
-
+    std::vector<std::vector<float>> nearestVectors = this->findNearestScenarios(scenarios, X);
+    Xprediction = predictNextValues(nearestVectors, X);
 
     // interpolate between the two scenarios to get predicted values
 

@@ -78,6 +78,10 @@ struct Scenario {
 
     }
 
+    std::vector<float> evaluateVectorAt(int index){
+        return getLists()[index];
+    }
+
     // state machine on apogee
     float evaluateAcceleration(float time) {
         float measuredAcceleration = measurement[0];
@@ -149,13 +153,13 @@ class HALO{
 
         std::vector<float> getGains(float x, float scenario1Distance, float scenario2Distance);
 
-        void predictNextValues(float time, std::vector<Scenario> &scenarios, VectorXf &X_in);
+        VectorXf predictNextValues(std::vector<std::vector<float>> &vectors, VectorXf &X_in);
 
         void setStateVector(float filteredAcc, float filteredVelo, float filteredAlt);
 
         float interpolate(float x, float scenario1Distance, float scenario2Distance);
 
-        std::vector<std::pair<std::vector<float>, std::vector<float>>> findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement);
+        std::vector<std::vector<float>> findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement);
 
         float interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenarios);
 
@@ -177,6 +181,8 @@ class HALO{
 
         VectorXf Z; // measurement vector
 
+        VectorXf dynamicModel(VectorXf &X);
+
     private:
 
         float Uaccel;
@@ -190,7 +196,8 @@ class HALO{
 
         std::vector<Scenario> scenarios;
 
-        std::vector<float> scenarioWeights = {0.5, 0.5};
+        std::vector<float> prevGain1 = {0.5, 0.5, 0.5};
+        std::vector<float> prevGain2 = {0.5, 0.5, 0.5};
 
     protected:
 

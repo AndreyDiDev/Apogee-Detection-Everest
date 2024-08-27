@@ -1007,25 +1007,90 @@ int main()
 
 
     // test purposes
-    FILE *file = fopen("everest3.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    FILE *file = fopen("HALO.txt", "w+"); // Open the file for appending or create it if it doesn't exist
     if (!file) {
-        fprintf(stderr, "Error opening file...exiting\n");
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
         exit(1);
     }
 
     FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
     if (!file1) {
-        perror("Error opening file");
+        perror("Error opening Imu_Baro.csv");
         return 1;
     }
+
+    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/simsFile.csv", "r");
+    if (!simsFile) {
+        perror("Error opening simsFile.csv");
+        return 1;
+    }
+
     // read first line and preset the deltaTime to timestamp
     char line[MAX_LINE_LENGTH];
     std::clock_t start;
     double duration;
 
     int howMany = 1;
-
     int i = 0;
+
+    std::vector<std::vector<float>> scenario1ListofVectors;
+    std::vector<std::vector<float>> scenario2ListofVectors;
+    std::vector<std::vector<float>> scenario3ListofVectors;
+    std::vector<std::vector<float>> scenario4ListofVectors;
+    std::vector<std::vector<float>> scenario5ListofVectors;
+
+    while (fgets(line, sizeof(line), simsFile)) {
+        char *token = strtok(line, ",");
+        float alt = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo = atof(token);
+        token = strtok(NULL, ",");
+        float acc = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp = {alt, velo, acc};
+        scenario1ListofVectors.push_back(temp);
+
+        float alt1 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo1 = atof(token);
+        token = strtok(NULL, ",");
+        float acc1 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp1 = {alt1, velo1, acc1};
+        scenario2ListofVectors.push_back(temp1);
+
+        float alt2 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo2 = atof(token);
+        token = strtok(NULL, ",");
+        float acc2 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp2 = {alt2, velo2, acc2};
+        scenario3ListofVectors.push_back(temp2);
+
+        float alt3 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo3 = atof(token);
+        token = strtok(NULL, ",");
+        float acc3 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp3 = {alt3, velo3, acc3};
+        scenario4ListofVectors.push_back(temp3);
+
+        float alt4 = atof(token); // Convert the time value to float
+        token = strtok(NULL, ",");
+        float velo4 = atof(token);
+        token = strtok(NULL, ",");
+        float acc4 = atof(token);
+        token = strtok(NULL, ",");
+
+        std::vector<float> temp4 = {alt4, velo4, acc4};
+        scenario5ListofVectors.push_back(temp4);
+    }
 
     while (fgets(line, sizeof(line), file1)) {
         // Tokenize the line using strtok
@@ -1179,12 +1244,15 @@ int main()
         double eAccelerationZ = (everest.state.earthAcceleration-1) * -9.81;
 
         if(howMany == 7){
+
             VectorXf X0(3);
             X0 << everest.Kinematics.initialAlt, 0, 0;
 
             // Initialize with tare / GPS values 
             halo.init(X0, P0, Q, R0);
+
         }else if (howMany > 6){
+
             halo.setStateVector(eAccelerationZ, eVelocity, eAltitude);
 
             std::vector<double> unitedStates = { halo.X0[0], 
