@@ -215,7 +215,7 @@ class HALO{
 
         void setAlt(float gps_alt);
 
-        std::vector<float> getGains(float x, float scenario1Distance, float scenario2Distance);
+        // std::vector<float> getGains(float x, float scenario1Distance, float scenario2Distance);
 
         VectorXf predictNextValues(std::vector<std::vector<float>> &vectors, VectorXf &X_in);
 
@@ -239,7 +239,7 @@ class HALO{
 
         float N1;
 
-        MatrixXf predict(MatrixXf sigmaPoints);
+        // MatrixXf predict(MatrixXf sigmaPoints);
 
         void init(MatrixXf &X0, MatrixXf &P0, MatrixXf Q_input, VectorXf &Z_input, MatrixXf &F);
 
@@ -267,8 +267,6 @@ class HALO{
         VectorXf X_pred;
 
         float timeStep = 0.1;
-
-        std::vector<Scenario> scenarios;
 
         std::vector<float> prevGain1 = {0.5, 0.5, 0.5};
         std::vector<float> prevGain2 = {0.5, 0.5, 0.5};

@@ -52,8 +52,6 @@ std::vector<double> sumZeroOffsetAccel2;
 std::vector<double> sumZeroOffsetGyro;
 std::vector<double> sumZeroOffsetGyro2;
 
-// FILE *file;
-
 // Instantiate Everest
 madAhrs *ahrs;
 Infusion *infusion;
@@ -439,8 +437,8 @@ void EverestTask::Baro_Update(const BarosData& Baro1, const BarosData& Baro2)
 */
 double EverestTask::ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, BarosData baro2){
     if(!isTared){
+        printf("Taring in progress\n");
         everest.tare(imu1, imu2, baro1, baro2);
-        // SOAR_PRINT("Taring in progress\n)");
         return 0;
     }
 
@@ -869,23 +867,39 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
         sum += average/numberOfSamples;
     }
 
-    if(!isinf(imu1.accelX)){
-        sumZeroOffsetAccel = {sumZeroOffsetAccel[0] + imu1.accelX, sumZeroOffsetAccel[1] + imu1.accelY, sumZeroOffsetAccel[2] + imu1.accelZ};
-        sumZeroOffsetGyro = {sumZeroOffsetGyro[0] + imu1.gyroX, sumZeroOffsetGyro[1] + imu1.gyroY, sumZeroOffsetGyro[2] + imu1.gyroZ};
+    
+    // if(imu1.accelX > 99999){
+    //     printf("imu1.accelX: %f", imu1.accelX);
+    // }else{
+    this->zeroOffsetAccel = {this->zeroOffsetAccel[0] + imu1.accelX, this->zeroOffsetAccel[1] + imu1.accelY, this->zeroOffsetAccel[2] + imu1.accelZ};
+    this->zeroOffsetGyro = {this->zeroOffsetGyro[0] + imu1.gyroX, this->zeroOffsetGyro[1] + imu1.gyroY, this->zeroOffsetGyro[2] + imu1.gyroZ};
+    
+    printf("zeroOffsetAccel[0]: %f, zeroOffsetAccel[1]: %f, zeroOffsetAccel[2]: %f \n", 
+    this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2]);
 
-        if(debug == Secondary || debug == ALL){
-            // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
-        }
+    printf("zeroOffsetGyro[0]: %f, zeroOffsetGyro[1]: %f, zeroOffsetGyro[2]: %f \n", 
+    this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2]);
+
+    if(debug == Secondary || debug == ALL){
+        // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
     }
 
-    if(!isinf(imu2.accelX)){
-        sumZeroOffsetAccel2 = {sumZeroOffsetAccel2[0] + imu2.accelX, sumZeroOffsetAccel2[1] + imu2.accelY, sumZeroOffsetAccel2[2] + imu2.accelZ};
-        sumZeroOffsetGyro2 = {sumZeroOffsetGyro2[0] + imu2.gyroX, sumZeroOffsetGyro2[1] + imu2.gyroY, sumZeroOffsetGyro2[2] + imu2.gyroZ};
+    // }
 
-        if(debug == Secondary || debug == ALL){
-            // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
-        }
+    // if(!isinf(imu2.accelX)){
+    this->zeroOffsetAccel2 = {this->zeroOffsetAccel2[0] + imu2.accelX, this->zeroOffsetAccel2[1] + imu2.accelY, this->zeroOffsetAccel2[2] + imu2.accelZ};
+    this->zeroOffsetGyro2 = {this->zeroOffsetGyro2[0] + imu2.gyroX, this->zeroOffsetGyro2[1] + imu2.gyroY, this->zeroOffsetGyro2[2] + imu2.gyroZ};
+
+    printf("zeroOffsetAccel2[0]: %f, zeroOffsetAccel2[1]: %f, zeroOffsetAccel2[2]: %f \n", 
+    this->zeroOffsetAccel2[0], this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2]);
+
+    printf("zeroOffsetGyro2[0]: %f, zeroOffsetGyro2[1]: %f, zeroOffsetGyro2[2]: %f \n", 
+    this->zeroOffsetGyro2[0], this->zeroOffsetGyro2[1], this->zeroOffsetGyro2[2]);
+
+    if(debug == Secondary || debug == ALL){
+        // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
     }
+    // }
 
     if(debug == Secondary || debug == ALL){
         // SOAR_PRINT("Tare Sum: %f\n", sum);
@@ -896,8 +910,8 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
         sum = sum/(CALIBRATION_TIME*RATE_BARO);
         this->Kinematics.initialAlt = sum;
 
-        this->zeroOffsetAccel = {sumZeroOffsetAccel[0]/(CALIBRATION_TIME*RATE_BARO), 
-        sumZeroOffsetAccel[1]/(CALIBRATION_TIME*RATE_BARO), sumZeroOffsetAccel[2]/(CALIBRATION_TIME*RATE_BARO)};
+        this->zeroOffsetAccel = {this->zeroOffsetAccel[0]/(CALIBRATION_TIME*RATE_BARO), 
+        this->zeroOffsetAccel[1]/(CALIBRATION_TIME*RATE_BARO), this->zeroOffsetAccel[2]/(CALIBRATION_TIME*RATE_BARO)};
 
         this->zeroOffsetGyro = {averageGyro[0]/(CALIBRATION_TIME*RATE_BARO), 
         averageGyro[1]/(CALIBRATION_TIME*RATE_BARO), averageGyro[2]/(CALIBRATION_TIME*RATE_BARO)};
@@ -910,6 +924,9 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
 
         // SOAR_PRINT("Tare Initial Altitude: %f\n", this->Kinematics.initialAlt);
         isTared = true;
+
+        printf("Calibration offsets:\n %f,%f,%f,%f\n", this->zeroOffsetAccel, this->zeroOffsetGyro,
+        this->zeroOffsetAccel2, this->zeroOffsetGyro2);
         
         // ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
     }
@@ -1059,15 +1076,15 @@ int main()
     if (!file1) {
         perror("Error opening Imu_Baro.csv");
         return 1;
-    }
+    } 
 
-    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/simsFile.csv", "r");
+    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF.csv", "r");
     if (!simsFile) {
         perror("Error opening simsFile.csv");
         return 1;
     }
 
-    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/simsFile.csv", "r");
+    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF.csv", "r");
     if (!simsFile) {
         perror("Error opening simsAfterFile.csv");
         return 1;
@@ -1095,6 +1112,8 @@ int main()
         token = strtok(NULL, ",");
         float acc = atof(token);
         token = strtok(NULL, ",");
+        float time = atof(token);
+        token = strtok(NULL, ",");
 
         std::vector<float> temp = {alt, velo, acc};
         scenario1ListofVectorsBefore.push_back(temp);
@@ -1104,6 +1123,8 @@ int main()
         float velo1 = atof(token);
         token = strtok(NULL, ",");
         float acc1 = atof(token);
+        token = strtok(NULL, ",");
+        float time1 = atof(token);
         token = strtok(NULL, ",");
 
         std::vector<float> temp1 = {alt1, velo1, acc1};
@@ -1115,6 +1136,8 @@ int main()
         token = strtok(NULL, ",");
         float acc2 = atof(token);
         token = strtok(NULL, ",");
+        float time2 = atof(token);
+        token = strtok(NULL, ",");
 
         std::vector<float> temp2 = {alt2, velo2, acc2};
         scenario3ListofVectorsBefore.push_back(temp2);
@@ -1125,6 +1148,8 @@ int main()
         token = strtok(NULL, ",");
         float acc3 = atof(token);
         token = strtok(NULL, ",");
+        float time3 = atof(token);
+        token = strtok(NULL, ",");
 
         std::vector<float> temp3 = {alt3, velo3, acc3};
         scenario4ListofVectorsBefore.push_back(temp3);
@@ -1134,6 +1159,8 @@ int main()
         float velo4 = atof(token);
         token = strtok(NULL, ",");
         float acc4 = atof(token);
+        token = strtok(NULL, ",");
+        float time4 = atof(token);
         token = strtok(NULL, ",");
 
         std::vector<float> temp4 = {alt4, velo4, acc4};
@@ -1155,6 +1182,8 @@ int main()
         token = strtok(NULL, ",");
         float acc = atof(token);
         token = strtok(NULL, ",");
+        float time1 = atof(token);
+        token = strtok(NULL, ",");
 
         std::vector<float> temp = {alt, velo, acc};
         scenario1ListofVectorsAfter.push_back(temp);
@@ -1164,6 +1193,8 @@ int main()
         float velo1 = atof(token);
         token = strtok(NULL, ",");
         float acc1 = atof(token);
+        token = strtok(NULL, ",");
+        float time2 = atof(token);
         token = strtok(NULL, ",");
 
         std::vector<float> temp1 = {alt1, velo1, acc1};
@@ -1175,6 +1206,8 @@ int main()
         token = strtok(NULL, ",");
         float acc2 = atof(token);
         token = strtok(NULL, ",");
+        float time3 = atof(token);
+        token = strtok(NULL, ",");
 
         std::vector<float> temp2 = {alt2, velo2, acc2};
         scenario3ListofVectorsAfter.push_back(temp2);
@@ -1185,6 +1218,8 @@ int main()
         token = strtok(NULL, ",");
         float acc3 = atof(token);
         token = strtok(NULL, ",");
+        float time4 = atof(token);
+        token = strtok(NULL, ",");
 
         std::vector<float> temp3 = {alt3, velo3, acc3};
         scenario4ListofVectorsAfter.push_back(temp3);
@@ -1194,6 +1229,8 @@ int main()
         float velo4 = atof(token);
         token = strtok(NULL, ",");
         float acc4 = atof(token);
+        token = strtok(NULL, ",");
+        float time5 = atof(token);
         token = strtok(NULL, ",");
 
         std::vector<float> temp4 = {alt4, velo4, acc4};

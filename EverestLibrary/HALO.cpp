@@ -297,10 +297,11 @@ void HALO::calculateSigmaPoints() {
 
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
-        sigmaPoints.col(i) = predict(sigmaPoints.col(i));
+        VectorXf column = sigmaPoints.col(i);
+        sigmaPoints.col(i) = dynamicModel(column);
     }
 
-    // std::cout << "after predict sPoints: \n" << sigmaPoints << std::endl;
+    std::cout << "after predict sPoints: \n" << sigmaPoints << std::endl;
 
     // std::cout << "Sigma Points row: " << sigmaPoints.rows() << " col: " << sigmaPoints.cols() << std::endl;
     // std::cout << "Sigma Points row 0 \n" << sigmaPoints.row(0) << std::endl;
@@ -383,6 +384,20 @@ float HALO::interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenario
 
 }
 
+// Function to calculate the Euclidean distance between two 3D vectors
+float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
+    float x1, y1, z1, x2, y2, z2;
+
+    x1 = vec1[0];
+    y1 = vec1[1];
+    z1 = vec1[2];
+
+    x2 = vec2(0);
+    y2 = vec2(1);
+    z2 = vec2(2);
+
+    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2) + std::pow(z2 - z1, 2));
+}
 
 /**
  * @brief Given a list of scenarios, find the nearest 2 scenarios and returns the vectors of the nearest scenarios
@@ -414,7 +429,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
 
         // minDistance to order the list and get lowest 2
         // index go evaluate scenario at n+1
-        distances.emplace_back(minDistance, lowestDistanceIndex, scenario);
+        std::pair<float, std::pair<float, Scenario>> vector = {minDistance, {lowestDistanceIndex, scenario}};
+        distances.emplace_back(vector);
         
     }
     //         break;
@@ -451,11 +467,11 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
 
     int indexFirst = distances[0].second.first;
     std::vector<float> currentVector1 = distances[0].second.second.evaluateVectorAt(indexFirst);
-    std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAt(indexFirst + 1);
+    std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAt(indexFirst + 100);
 
     int indexSecond = distances[1].second.first;
     std::vector<float> currentVector2 = distances[1].second.second.evaluateVectorAt(indexSecond);
-    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAt(indexSecond + 1);
+    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAt(indexSecond + 100);
 
     std::vector<std::vector<float>> nearestVectors;
     nearestVectors.push_back(currentVector1);
@@ -466,33 +482,18 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
     return nearestVectors;
 }
 
-// Function to calculate the Euclidean distance between two 3D vectors
-float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
-    float x1, y1, z1, x2, y2, z2;
-
-    x1 = vec1[0];
-    y1 = vec1[1];
-    z1 = vec1[2];
-
-    x2 = vec2(0);
-    y2 = vec2(1);
-    z2 = vec2(2);
-
-    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2) + std::pow(z2 - z1, 2));
-}
-
 /**
  * @brief Interpolates between two values based on a given x value
  */
-float HALO::interpolate(float x, float scenario1Distance, float scenario2Distance) {
-    // Get gains for scenarios
-    std::vector<float> gains = getGains(x, scenario1Distance, scenario2Distance);
+// float HALO::interpolate(float x, float scenario1Distance, float scenario2Distance) {
+//     // Get gains for scenarios
+//     std::vector<float> gains = getGains(x, scenario1Distance, scenario2Distance);
 
-    double gain1 = gains[0];
-    double gain2 = 1.0 - gain1;
+//     double gain1 = gains[0];
+//     double gain2 = 1.0 - gain1;
 
-    return gain1 * scenario1Distance + gain2 * scenario2Distance;
-}
+//     return gain1 * scenario1Distance + gain2 * scenario2Distance;
+// }
 
 /**
  * @brief Get gains for scenarios
@@ -588,16 +589,16 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     return Xprediction;
 }
 
-void createScenarios(std::vector<std::vector<float>> &scenarios){
-    std::vector<Scenario> scenarios;
-    std::vector<float> scenario1 = {1, 2, 3};
-    std::vector<float> scenario2 = {4, 5, 6};
-    std::vector<float> scenario3 = {7, 8, 9};
+// void createScenarios(std::vector<std::vector<float>> &scenarios){
+//     std::vector<Scenario> scenarios;
+//     std::vector<float> scenario1 = {1, 2, 3};
+//     std::vector<float> scenario2 = {4, 5, 6};
+//     std::vector<float> scenario3 = {7, 8, 9};
 
-    scenarios.push_back(scenario1);
-    scenarios.push_back(scenario2);
-    scenarios.push_back(scenario3);
-}
+//     scenarios.push_back(scenario1);
+//     scenarios.push_back(scenario2);
+//     scenarios.push_back(scenario3);
+// }
 
 // int main(){
 //     // only able to measure angle and extrapolate for velocity
