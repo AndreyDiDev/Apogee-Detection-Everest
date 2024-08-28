@@ -133,22 +133,22 @@ void HALO::unscentedTransform(){
 
 void HALO::stateUpdate(){
     // Xn = Xn-1 + K (Zn - EstZn)
-    // std::cout << "sigmaPoints state update: \n" << sigPoints << std::endl;
+    std::cout << "sigmaPoints state update: \n" << sigPoints << std::endl;
 
-    MatrixXf observedValues(2, 6);
-    observedValues.setZero(2, 6);
+    MatrixXf observedValues(3, 7);
+    observedValues.setZero(3, 7);
 
     for (int i = 0; i < (2 * this->N1) + 1; i++){
-        observedValues.col(i) = observe(sigPoints.col(i));
+        observedValues.col(i) = sigPoints.col(i);
     }
 
     std::cout << "Observed Values: \n" << observedValues << std::endl;
 
     // calculate the mean of the observed values
-    VectorXf zMean(2);
+    VectorXf zMean(3);
     zMean = observedValues * WeightsForSigmaPoints;
 
-    // std::cout << "Z_1: " << zMean << std::endl;
+    std::cout << "Z_1: " << zMean << std::endl;
     this->Z = zMean;
 
     MatrixXf R(2,2);
@@ -312,7 +312,7 @@ void HALO::calculateSigmaPoints() {
     // << " col: " << WeightsForSigmaPoints.cols() << std::endl;
 
     // calculate the mean and covariance of the sigma points
-    VectorXf xPreMean(6,1);
+    VectorXf xPreMean(3,1);
     for(int row = 0; row < this->N1; row++){
         float sum00 = 0;
         for(int col = 0; col < 2*this->N1 + 1; col++){
@@ -327,8 +327,8 @@ void HALO::calculateSigmaPoints() {
     // std::cout << "Xprediction: \n" << Xprediction << std::endl;
     this->Xprediction = xPreMean;
 
-    MatrixXf projError(6, 13);
-    projError.setZero(6, 13);
+    MatrixXf projError(3, 7);
+    projError.setZero(3, 7);
     
     // std::cout << "Sigma Points row: " << sigmaPoints.rows() << " col: " << sigmaPoints.cols() << std::endl;
     // std::cout << "xPreMean row: " << xPreMean.rows() << " col: " << xPreMean.cols() << std::endl;
@@ -343,7 +343,7 @@ void HALO::calculateSigmaPoints() {
 
     this->projectError = projError;
 
-    MatrixXf Pprediction(6,6);
+    MatrixXf Pprediction(3,3);
 
     Pprediction = projError * WeightsForSigmaPoints.asDiagonal() * projError.transpose() + this->Q;
 
@@ -515,21 +515,29 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
  * @brief Predicts the next values based on the interpolated scenarios
  */
 VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, VectorXf &X_in){
+
+    std::vector<float> gainV1 = {0, 0, 0};
+    std::vector<float> gainV2 = {0, 0, 0};
     // vectors = vector1, vector1Future, vector2, vector2Future
     std::vector<float> vector1 = vectors[0];
     std::vector<float> vector1Future = vectors[1];
 
     std::vector<float> vector2 = vectors[2];
     std::vector<float> vector2Future = vectors[3];
-
-    std::vector<float> gainV1;
-    std::vector<float> gainV2;
     
     for(int i = 0; i < 3; i++){
-        float distance= std::abs(vector1[i] - vector2[i]);         // get distance between two vectors
-        gainV1[i] = (1 - std::abs(vector1[i] - X_in(i)))/distance; // get distance between vector1 and current state
-        gainV2[i] = 1 - gainV1[i];
+        float distance = std::abs(vector1[i] - vector2[i]);         // get distance between two vectors
+        if(distance < 1){
+            gainV1[i] = 0.5;
+            gainV2[i] = 0.5;
+        }else{
+            gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance); // get distance between vector1 and current state
+            gainV2[i] = 1 - gainV1[i];
+        }
     }
+
+    printf("gainV1 (%f,%f,%f)\n", gainV1[0], gainV1[1], gainV1[2]);
+    printf("gainV2 (%f,%f,%f)\n", gainV2[0], gainV2[1], gainV2[2]);
 
     // interpolate between the two scenarios to get predicted values0
     float predicted_interpolated_alt  = prevGain1[0] * vector1Future[0] + prevGain2[0] * vector1Future[0];
@@ -594,6 +602,8 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     printf("futureV1 (%f,%f,%f)\n", vector2[0], vector2[1], vector2[2]);
     printf("vector2 (%f,%f,%f)\n", vector3[0], vector3[1], vector3[2]);
     printf("futureV2 (%f,%f,%f)\n", vector4[0], vector4[1], vector4[2]);
+
+    printf("X (%f,%f,%f)\n", X(0), X(1), X(2));
 
     Xprediction = predictNextValues(nearestVectors, X);
 
