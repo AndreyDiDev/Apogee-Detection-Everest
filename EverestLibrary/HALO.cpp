@@ -298,6 +298,7 @@ void HALO::calculateSigmaPoints() {
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         VectorXf column = sigmaPoints.col(i);
+        std::cout << "col: \n" << column << std::endl;
         sigmaPoints.col(i) = dynamicModel(column);
     }
 
@@ -406,8 +407,6 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
     std::vector<std::pair<float, std::pair<float, Scenario>>> distances;
     float minDistance = std::numeric_limits<float>::max();
 
-    // switch (measure) {
-    //     case 'a': // Acceleration
     for (Scenario scenario : scenarios) {
         std::vector<std::vector<float>> vectors = scenario.getLists();
         int lowestDistanceIndex = 0;
@@ -501,9 +500,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
 // std::vector<float> HALO::getGains(float x, float scenario1Distance, float scenario2Distance) {
 //     float gain1 = 1.0 / std::abs(x - scenario1Distance);
 //     float gain2 = 1.0 - gain1;
-
 //     this->scenarioWeights = {gain1, gain2};
-
 //     return {gain1, gain2};
 // }
 
@@ -538,6 +535,9 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     float predicted_interpolated_alt  = prevGain1[0] * vector1Future[0] + prevGain2[0] * vector1Future[0];
     float predicted_interpolated_velo = prevGain1[1] * vector1Future[1] + prevGain2[1] * vector2Future[1];
     float predicted_interpolated_acc  = prevGain1[2] * vector1Future[2] + prevGain2[2] * vector2Future[2];
+
+    this->prevGain1 = gainV1;
+    this->prevGain2 = gainV2;
 
     VectorXf X_pred(3,1);
     X_pred << predicted_interpolated_acc, predicted_interpolated_velo, predicted_interpolated_alt;
@@ -584,7 +584,20 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     // for every scenario get lists and find nearest 2 vectors to the current state
     std::vector<Scenario> scenarios = this->getScenarios();
     std::vector<std::vector<float>> nearestVectors = this->findNearestScenarios(scenarios, X);
+
+    std::vector<float> vector1 = nearestVectors[0];
+    std::vector<float> vector2 = nearestVectors[1];
+    std::vector<float> vector3 = nearestVectors[2];
+    std::vector<float> vector4 = nearestVectors[3];
+
+    printf("vector1 (%f,%f,%f)\n", vector1[0], vector1[1], vector1[2]);
+    printf("futureV1 (%f,%f,%f)\n", vector2[0], vector2[1], vector2[2]);
+    printf("vector2 (%f,%f,%f)\n", vector3[0], vector3[1], vector3[2]);
+    printf("futureV2 (%f,%f,%f)\n", vector4[0], vector4[1], vector4[2]);
+
     Xprediction = predictNextValues(nearestVectors, X);
+
+    printf("XPrediction of Model: (%f,%f,%f)\n", Xprediction(0), Xprediction(1), Xprediction(2));
 
     return Xprediction;
 }

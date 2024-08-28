@@ -264,9 +264,7 @@ void EverestTask::MadgwickWrapper(SensorDataNoMag data){
     }
 
     // madVector mag = {.axis = {x, y, z,}};
-
     // printf("Mag: (%.6f, %.6f, %.6f) uT\n", mag.axis.x, mag.axis.y, mag.axis.z);
-
     // madVector mag = axis.{x, y, z};
 
     // Update gyroscope AHRS algorithm
@@ -283,14 +281,14 @@ void EverestTask::MadgwickWrapper(SensorDataNoMag data){
     flags = infusion->madAhrsGetFlags(infusion->getMadAhrs());
 
     // write to file
-//    fprintf(file, "%f,", timestamp);
-//
-//    fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
-//
-//    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d,%f", internalStates.accelerationError,
-//    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError,
-//    internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising,
-//    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, earth.axis.z);
+    //    fprintf(file, "%f,", timestamp);
+    //
+    //    fprintf(file, "%f,%f,%f,", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
+    //
+    //    fprintf(file, "%f,%d,%.0f,%.0f,%d,%.0f,%d,%d,%d,%d,%f", internalStates.accelerationError,
+    //    internalStates.accelerometerIgnored, internalStates.accelerationRecoveryTrigger, internalStates.magneticError,
+    //    internalStates.magnetometerIgnored, internalStates.magneticRecoveryTrigger, flags.initialising,
+    //    flags.angularRateRecovery, flags.accelerationRecovery, flags.magneticRecovery, earth.axis.z);
 
     everest.state.earthAcceleration = earth.axis.z;
 
@@ -347,13 +345,25 @@ void EverestTask::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag&
         this->internalIMU_1.accelZ = 0;
     }else{
         // Apply calibration
-        this->internalIMU_1.accelX = this->internalIMU_1.accelX - sumZeroOffsetAccel[0];
-        this->internalIMU_1.accelY = this->internalIMU_1.accelY - sumZeroOffsetAccel[1];
-        this->internalIMU_1.accelZ = this->internalIMU_1.accelZ - sumZeroOffsetAccel[2];
+        printf("uncalibrated: %f, %f, %f ", this->internalIMU_1.accelX, this->internalIMU_1.accelY, this->internalIMU_1.accelZ);
 
-        this->internalIMU_1.gyroX = this->internalIMU_1.gyroX - sumZeroOffsetGyro[0];
-        this->internalIMU_1.gyroY = this->internalIMU_1.gyroY - sumZeroOffsetGyro[1];
-        this->internalIMU_1.gyroZ = this->internalIMU_1.gyroZ - sumZeroOffsetGyro[2];
+        this->internalIMU_1.accelX = this->internalIMU_1.accelX - this->zeroOffsetAccel[0];
+        this->internalIMU_1.accelY = this->internalIMU_1.accelY - this->zeroOffsetAccel[1];
+        this->internalIMU_1.accelZ = this->internalIMU_1.accelZ - this->zeroOffsetAccel[2];
+
+        printf("-> offset (%f, %f, %f) = calibrated accel (%f, %f, %f)\n", 
+        this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2],
+        this->internalIMU_1.accelX, this->internalIMU_1.accelY, this->internalIMU_1.accelZ);
+
+        printf("uncalibrated: %f, %f, %f ", this->internalIMU_1.gyroX, this->internalIMU_1.gyroY, this->internalIMU_1.gyroZ);
+
+        this->internalIMU_1.gyroX = this->internalIMU_1.gyroX - this->zeroOffsetGyro[0];
+        this->internalIMU_1.gyroY = this->internalIMU_1.gyroY - this->zeroOffsetGyro[1];
+        this->internalIMU_1.gyroZ = this->internalIMU_1.gyroZ - this->zeroOffsetGyro[2];
+
+        printf("-> offset (%f, %f, %f) = calibrated gyro (%f, %f, %f)\n", 
+        this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
+        this->internalIMU_1.gyroX, this->internalIMU_1.gyroY, this->internalIMU_1.gyroZ);
     }
 
     if (isinf(internalIMU_2.accelX)){
@@ -368,13 +378,25 @@ void EverestTask::IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag&
         this->internalIMU_2.accelZ = 0;
     }else{
         // Apply calibration
-        this->internalIMU_2.accelX = this->internalIMU_2.accelX - sumZeroOffsetAccel2[0];
-        this->internalIMU_2.accelY = this->internalIMU_2.accelY - sumZeroOffsetAccel2[1];
-        this->internalIMU_2.accelZ = this->internalIMU_2.accelZ - sumZeroOffsetAccel2[2];
+        printf("uncalibrated: %f, %f, %f ", this->internalIMU_2.accelX, this->internalIMU_2.accelY, this->internalIMU_2.accelZ);
 
-        this->internalIMU_2.gyroX = this->internalIMU_2.gyroX - sumZeroOffsetGyro2[0];
-        this->internalIMU_2.gyroY = this->internalIMU_2.gyroY - sumZeroOffsetGyro2[1];
-        this->internalIMU_2.gyroZ = this->internalIMU_2.gyroZ - sumZeroOffsetGyro2[2];
+        this->internalIMU_2.accelX = this->internalIMU_2.accelX - this->zeroOffsetAccel2[0];
+        this->internalIMU_2.accelY = this->internalIMU_2.accelY - this->zeroOffsetAccel2[1];
+        this->internalIMU_2.accelZ = this->internalIMU_2.accelZ - this->zeroOffsetAccel2[2];
+
+        printf("-> offset (%f, %f, %f) = calibrated accel2 (%f, %f, %f)\n", 
+        this->zeroOffsetAccel2[0], this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2],
+        this->internalIMU_2.accelX, this->internalIMU_2.accelY, this->internalIMU_2.accelZ);
+
+        printf("uncalibrated: %f, %f, %f ", this->internalIMU_2.gyroX, this->internalIMU_2.gyroY, this->internalIMU_2.gyroZ);
+
+        this->internalIMU_2.gyroX = this->internalIMU_2.gyroX - this->zeroOffsetGyro2[0];
+        this->internalIMU_2.gyroY = this->internalIMU_2.gyroY - this->zeroOffsetGyro2[1];
+        this->internalIMU_2.gyroZ = this->internalIMU_2.gyroZ - this->zeroOffsetGyro2[2];
+
+        printf("-> offset (%f, %f, %f) = calibrated gyro2 (%f, %f, %f)\n", 
+        this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
+        this->internalIMU_2.gyroX, this->internalIMU_2.gyroY, this->internalIMU_2.gyroZ);
     }
 
     // Calculate average of IMU parameters
@@ -839,12 +861,6 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
     double average = 0;
     int numberOfSamples = 0;
 
-    std::vector<double> averageAccel = {0, 0, 0}; // for this iteration
-    std::vector<double> averageGyro = {0, 0, 0}; // for this iteration
-
-    std::vector<double> averageAccel2 = {0, 0, 0}; // for this iteration
-    std::vector<double> averageGyro2 = {0, 0, 0}; // for this iteration
-
     if(baro1.pressure != 0){
         average = average + convertToAltitude(baro1.pressure);
         numberOfSamples++;
@@ -913,14 +929,14 @@ void EverestTask::tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData b
         this->zeroOffsetAccel = {this->zeroOffsetAccel[0]/(CALIBRATION_TIME*RATE_BARO), 
         this->zeroOffsetAccel[1]/(CALIBRATION_TIME*RATE_BARO), this->zeroOffsetAccel[2]/(CALIBRATION_TIME*RATE_BARO)};
 
-        this->zeroOffsetGyro = {averageGyro[0]/(CALIBRATION_TIME*RATE_BARO), 
-        averageGyro[1]/(CALIBRATION_TIME*RATE_BARO), averageGyro[2]/(CALIBRATION_TIME*RATE_BARO)};
+        this->zeroOffsetGyro = {this->zeroOffsetGyro[0]/(CALIBRATION_TIME*RATE_BARO), 
+        this->zeroOffsetGyro[1]/(CALIBRATION_TIME*RATE_BARO), this->zeroOffsetGyro[2]/(CALIBRATION_TIME*RATE_BARO)};
 
-        this->zeroOffsetAccel2 = {sumZeroOffsetAccel2[0]/(CALIBRATION_TIME*RATE_BARO),
-        sumZeroOffsetAccel2[1]/(CALIBRATION_TIME*RATE_BARO), sumZeroOffsetAccel2[2]/(CALIBRATION_TIME*RATE_BARO)};
+        this->zeroOffsetAccel2 = {this->zeroOffsetAccel2[0]/(CALIBRATION_TIME*RATE_BARO),
+        this->zeroOffsetAccel2[1]/(CALIBRATION_TIME*RATE_BARO), this->zeroOffsetAccel2[2]/(CALIBRATION_TIME*RATE_BARO)};
 
-        this->zeroOffsetGyro2 = {averageGyro2[0]/(CALIBRATION_TIME*RATE_BARO),
-        averageGyro2[1]/(CALIBRATION_TIME*RATE_BARO), averageGyro2[2]/(CALIBRATION_TIME*RATE_BARO)};
+        this->zeroOffsetGyro2 = {this->zeroOffsetGyro2[0]/(CALIBRATION_TIME*RATE_BARO),
+        this->zeroOffsetGyro2[1]/(CALIBRATION_TIME*RATE_BARO), this->zeroOffsetGyro2[2]/(CALIBRATION_TIME*RATE_BARO)};
 
         // SOAR_PRINT("Tare Initial Altitude: %f\n", this->Kinematics.initialAlt);
         isTared = true;
