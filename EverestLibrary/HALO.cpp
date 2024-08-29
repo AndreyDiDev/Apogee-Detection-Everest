@@ -305,7 +305,7 @@ void HALO::calculateSigmaPoints() {
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         VectorXf column = sigmaPoints.col(i);
-        printf("\nsPoint[%f]: \n", i);
+        printf("\nsPoint[%d]: \n", i);
         sigmaPoints.col(i) = dynamicModel(column);
     }
 
@@ -537,7 +537,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     this->prevGain2 = gainV2;
 
     VectorXf X_pred(3,1);
-    X_pred << predicted_interpolated_acc, predicted_interpolated_velo, predicted_interpolated_alt;
+    X_pred << predicted_interpolated_alt, predicted_interpolated_velo, predicted_interpolated_acc;
 
     return X_pred;
 }
