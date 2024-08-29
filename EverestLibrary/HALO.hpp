@@ -140,8 +140,22 @@ struct Scenario {
 
     }
 
+    /** finds vector at specified index **/
     std::vector<float> evaluateVectorAt(int index){
         return getLists()[index];
+    }
+
+    /** finds vector at specified time **/
+    std::vector<float> evaluateVectorAtTime(float time){
+        std::vector<std::vector<float>> list = getLists();
+        int index = 0;
+
+        while(time > list[index][2]){
+            printf("Considered: (%f)", list[index][2]);
+            index++;
+        }
+
+        return list[index];
     }
 
     // state machine on apogee
@@ -265,6 +279,18 @@ class HALO{
         bool isBeforeApogeeBoolHALO = false;
 
         bool isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude);
+
+        float deltaTime = 0.0001;
+
+        void setDeltaTime(float deltaTime){
+            this->deltaTime;
+        }
+
+        float time = 0;
+
+        void setTime(float time){
+            this->time;
+        }
 
     private:
 

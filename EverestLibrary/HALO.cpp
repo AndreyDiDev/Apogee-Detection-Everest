@@ -224,8 +224,6 @@ void HALO::stateUpdate(){
 }
 // ------------------------------------------------
 
-
-
 // Prediction--------------------------------------
 void HALO::prediction(){
 
@@ -246,25 +244,6 @@ void HALO::prediction(){
 
 }
 
-/**
- * From measurement to state transition 
- */
-MatrixXf HALO::observe(MatrixXf sigmaPoints){
-    VectorXf Z_out(2,1);
-
-    Z_out << sqrt(pow(sigmaPoints(0), 2) + pow(sigmaPoints(3), 2)),
-            atan(sigmaPoints(3)/sigmaPoints(0));
-
-    return Z_out;
-
-}
-
-/**
- * From state to state transition
- */
-// MatrixXf HALO::predict(MatrixXf sigmaPoints){
-//     return this->F * sigmaPoints;
-// }
 
 void HALO::calculateSigmaPoints() {
 
@@ -411,11 +390,16 @@ float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
  * @brief Given a list of scenarios, find the nearest 2 scenarios and returns the vectors of the nearest scenarios
  */
 std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement) {
+    printf("findNearestScenarios\n");
     std::vector<std::pair<float, std::pair<float, Scenario>>> distances;
     float minDistance = std::numeric_limits<float>::max();
 
     for (Scenario scenario : scenarios) {
         std::vector<std::vector<float>> vectors = scenario.getLists();
+        for(std::vector<float> vec : vectors){
+            printf("NS vec: %f, %f, %f\n", vec[0], vec[1], vec[2]);
+        }
+
         int lowestDistanceIndex = 0;
         std::vector<float> lowestVector = vectors[0];
         minDistance = std::numeric_limits<float>::max();
@@ -423,6 +407,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
         for(int i = 0; i < vectors.size(); i++){
 
             float distance = euclideanDistance(vectors[i], measurement);
+            printf("eucledian distance %f", distance);
 
             if (distance < minDistance) {
                 minDistance = distance;
@@ -451,13 +436,16 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
 
     });
 
+    // find current vector (by index) and future vector (by time)
     int indexFirst = distances[0].second.first;
     std::vector<float> currentVector1 = distances[0].second.second.evaluateVectorAt(indexFirst);
-    std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAt(indexFirst + 100);
+    float nextTimeStep = time + deltaTime;
+    printf("time %f, delta %f\n", time, deltaTime);
+    std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAtTime(nextTimeStep);
 
     int indexSecond = distances[1].second.first;
     std::vector<float> currentVector2 = distances[1].second.second.evaluateVectorAt(indexSecond);
-    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAt(indexSecond + 100);
+    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAtTime(nextTimeStep);
 
     std::vector<std::vector<float>> nearestVectors;
     nearestVectors.push_back(currentVector1);
@@ -581,6 +569,17 @@ VectorXf HALO::dynamicModel(VectorXf &X){
 
     // for every scenario get lists and find nearest 2 vectors to the current state
     std::vector<Scenario> scenarios = this->getScenarios();
+
+    // for(Scenario scenario : scenarios){
+    //     printf("Scenario\n");
+    //     for(std::vector<float> vec : scenario.getLists()){
+    //         for(float value : vec){
+    //             printf("%f ", value);
+    //         }
+    //         printf("\n");
+    //     }
+    // }
+
     std::vector<std::vector<float>> nearestVectors = this->findNearestScenarios(scenarios, X);
 
     std::vector<float> vector1 = nearestVectors[0];
