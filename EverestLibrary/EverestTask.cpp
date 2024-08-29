@@ -34,7 +34,8 @@ enum debug_level{
     Dynamite = 2,   // everything during dynamite
     Third = 3,      // after dynamite
     ALL = 4,        // all
-    NONE = 5        // none
+    NONE = 5,        // none
+    HAL0 = 6,        // HALO
 };
 bool isTared = false;
 debug_level debug = ALL;
@@ -1088,6 +1089,8 @@ int main()
         exit(1);
     }
 
+    fprintf(file, "Time,Everest_Alt,Everest_Velo,Everest_Accel,Halo_ALt, Halo_Velo, Halo_accel\n");
+
     FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
     if (!file1) {
         perror("Error opening Imu_Baro.csv");
@@ -1337,117 +1340,118 @@ int main()
             0
         };
 
-       // // if(howMany <= 10){
+       if(howMany <= 7){
 
-        printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+            printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
-       // // Example: Print all sensor readings
-       // if(debug == RAW || debug == ALL){
-       //     printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
-       //         time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ,
-       //         baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
-       // }
-
-       // madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
-       // madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
-
-       // madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
-       // madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
-
-       // madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
-       // madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
-
-       // madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
-       // madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
-
-       // if(debug == Secondary || debug == ALL){
-       //     printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
-       //         imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
-       // }
-
-       // // feed vectors into sensorData structs
-       // sensorData.gyroX = imu1GyroAligned.axis.x;
-       // sensorData.gyroY = imu1GyroAligned.axis.y;
-       // sensorData.gyroZ = imu1GyroAligned.axis.z;
-
-       // sensorData.accelX = imu1AccelAligned.axis.x;
-       // sensorData.accelY = imu1AccelAligned.axis.y;
-       // sensorData.accelZ = imu1AccelAligned.axis.z;
-
-       // // second IMU
-       // sensorData2.gyroX = imu2GyroAligned.axis.x;
-       // sensorData2.gyroY = imu2GyroAligned.axis.y;
-       // sensorData2.gyroZ = imu2GyroAligned.axis.z;
-
-       // sensorData2.accelX = imu2AccelAligned.axis.x;
-       // sensorData2.accelY = imu2AccelAligned.axis.y;
-       // sensorData2.accelZ = imu2AccelAligned.axis.z;
-
-       // everest.IMU_Update(sensorData, sensorData2);
-
-           // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
-       // double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
-    //    double eAltitude = finalWrapper(accelX, accelY, accelZ, gyroX, gyroY, gyroZ, pressure, pressure, pressure, pressure, time, time, time, time, time, time, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
-        EverestData everestData = {    
-            sensorData.time,
-            sensorData2.time,
-            baro1.time,
-            baro2.time,
-        
-            baro1.pressure,
-            baro2.pressure,
-
-            sensorData.accelX,
-            sensorData.accelY,
-            sensorData.accelZ,
-            sensorData.gyroX,
-            sensorData.gyroY,
-            sensorData.gyroZ,
-
-            sensorData2.accelX,
-            sensorData2.accelY,
-            sensorData2.accelZ,
-            sensorData2.gyroX,
-            sensorData2.gyroY,
-            sensorData2.gyroZ,
-        };
-        
-        double eAltitude = everest.TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
-        double eVelocity = everest.getKinematics()->initialVelo;
-        double eAccelerationZ = (everest.state.earthAcceleration-1) * -9.81;
-
-        if(howMany == 7){
-
-            VectorXf X0(3);
-            X0 << everest.Kinematics.initialAlt, 0, 0;
-
-            // Initialize with tare / GPS values 
-            halo.init(X0, P0, Q, R0);
-
-        }else if (howMany > 6){
-
-            halo.setStateVector(eAccelerationZ, eVelocity, eAltitude);
-
-            std::vector<double> unitedStates = { halo.X0[0], 
-                                halo.X0[1], 
-                                halo.X0[2]};
-
-            printf("Altitude: %f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
-
-            fprintf(file, "%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
-        }
-        
-        // update Kinematics 
-
+        // // Example: Print all sensor readings
+        // if(debug == RAW || debug == ALL){
+        //     printf("Raw Time: %.6f s, Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Pressure: (%.f, %.f, %.f, %.f)\n",
+        //         time, sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ, sensorData.accelX, sensorData.accelY, sensorData.accelZ,
+        //         baro1.pressure, baro2.pressure, baro3.pressure, realBaro.pressure);
         // }
 
-        howMany++;
+        // madVector imu1Gyro = {sensorData.gyroX, sensorData.gyroY, sensorData.gyroZ};
+        // madVector imu1Accel = {sensorData.accelX, sensorData.accelY, sensorData.accelZ};
 
-        clock_t endTime = std::clock();
+        // madVector imu1GyroAligned = infusion->AxesSwitch(imu1Gyro, MadAxesAlignmentPXPYNZ);
+        // madVector imu1AccelAligned = infusion->AxesSwitch(imu1Accel, MadAxesAlignmentPXPYNZ);
 
-        duration += endTime - start;
+        // madVector imu2Gyro = {sensorData2.gyroX, sensorData2.gyroY, sensorData2.gyroZ};
+        // madVector imu2Accel = {sensorData2.accelX, sensorData2.accelY, sensorData2.accelZ};
 
-        // printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
+        // madVector imu2GyroAligned = infusion->AxesSwitch(imu2Gyro, MadAxesAlignmentPXPYNZ);
+        // madVector imu2AccelAligned = infusion->AxesSwitch(imu2Accel, MadAxesAlignmentPXPYNZ);
+
+        // if(debug == Secondary || debug == ALL){
+        //     printf("Aligned: Gyro: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g\n",
+        //         imu1GyroAligned.axis.x, imu1GyroAligned.axis.y, imu1GyroAligned.axis.z, imu1AccelAligned.axis.x, imu1AccelAligned.axis.y, imu1AccelAligned.axis.z);
+        // }
+
+        // // feed vectors into sensorData structs
+        // sensorData.gyroX = imu1GyroAligned.axis.x;
+        // sensorData.gyroY = imu1GyroAligned.axis.y;
+        // sensorData.gyroZ = imu1GyroAligned.axis.z;
+
+        // sensorData.accelX = imu1AccelAligned.axis.x;
+        // sensorData.accelY = imu1AccelAligned.axis.y;
+        // sensorData.accelZ = imu1AccelAligned.axis.z;
+
+        // // second IMU
+        // sensorData2.gyroX = imu2GyroAligned.axis.x;
+        // sensorData2.gyroY = imu2GyroAligned.axis.y;
+        // sensorData2.gyroZ = imu2GyroAligned.axis.z;
+
+        // sensorData2.accelX = imu2AccelAligned.axis.x;
+        // sensorData2.accelY = imu2AccelAligned.axis.y;
+        // sensorData2.accelZ = imu2AccelAligned.axis.z;
+
+        // everest.IMU_Update(sensorData, sensorData2);
+
+            // double eAltitude = everest.AlignedExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro, MadAxesAlignmentPXPYNZ);
+        // double eAltitude = everest.ExternalUpdate(sensorData, sensorData2, baro1, baro2, baro3, realBaro);
+        //    double eAltitude = finalWrapper(accelX, accelY, accelZ, gyroX, gyroY, gyroZ, pressure, pressure, pressure, pressure, time, time, time, time, time, time, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
+            EverestData everestData = {    
+                sensorData.time,
+                sensorData2.time,
+                baro1.time,
+                baro2.time,
+            
+                baro1.pressure,
+                baro2.pressure,
+
+                sensorData.accelX,
+                sensorData.accelY,
+                sensorData.accelZ,
+                sensorData.gyroX,
+                sensorData.gyroY,
+                sensorData.gyroZ,
+
+                sensorData2.accelX,
+                sensorData2.accelY,
+                sensorData2.accelZ,
+                sensorData2.gyroX,
+                sensorData2.gyroY,
+                sensorData2.gyroZ,
+            };
+            
+            double eAltitude = everest.TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
+            double eVelocity = everest.getKinematics()->initialVelo;
+            double eAccelerationZ = (everest.state.earthAcceleration-1) * -9.81;
+
+            if(howMany == 7){
+
+                VectorXf X0(3);
+                X0 << everest.Kinematics.initialAlt, 0, 0;
+
+                // Initialize with tare / GPS values 
+                halo.init(X0, P0, Q, R0);
+
+            }else if (howMany > 6){
+
+                halo.setStateVector(eAccelerationZ, eVelocity, eAltitude);
+
+                std::vector<double> unitedStates = { halo.X0[0], 
+                                    halo.X0[1], 
+                                    halo.X0[2]};
+
+                printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
+
+                fprintf(file, "%f,%f,%f,%f,%f,%f,%f\n", time, eAltitude, eVelocity, eAccelerationZ, unitedStates[0], unitedStates[1], unitedStates[2]);
+            }
+            
+            // update Kinematics 
+
+            // }
+
+            howMany++;
+
+            clock_t endTime = std::clock();
+
+            duration += endTime - start;
+
+            // printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
+        }
     }
 
    // printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);

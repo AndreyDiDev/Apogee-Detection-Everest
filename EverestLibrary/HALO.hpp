@@ -186,7 +186,12 @@ struct Scenario {
     
 };
 
-
+/**
+ * @brief Kinematics struct to store the kinematics of the rocket
+ */
+struct kinematicsHalo {
+    float altitudeStore;
+};
 
 
 class HALO{
@@ -257,6 +262,10 @@ class HALO{
 
         std::vector<Scenario> scenarios;
 
+        bool isBeforeApogeeBoolHALO = false;
+
+        bool isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude);
+
     private:
 
         float Uaccel;
@@ -266,7 +275,7 @@ class HALO{
         VectorXf X_in;
         VectorXf X_pred;
 
-        float timeStep = 0.1;
+        float timeStep = 1/3;
 
         std::vector<float> prevGain1 = {0.5, 0.5, 0.5};
         std::vector<float> prevGain2 = {0.5, 0.5, 0.5};
@@ -288,7 +297,7 @@ class HALO{
         MatrixXf R; // measurement noise covariance matrix
         MatrixXf K; // Kalman gain matrix
 
-        // kinematics Kinematics;
+        kinematicsHalo KinematicsHalo;
 
         // kinematics* getKinematics();
 

@@ -47,19 +47,14 @@ void HALO::init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0){
     // std::cout << "N: " << N << std::endl;
 
     // Weights for sigma points
-    // float lambda = std::pow(alpha, 2) * (dim + k) - dim;
-    // lambda = -1.98;
     float dime = 3;
     float k1 = 3 - dime;
-    float w0_m = k1 / (dime + k1);    // weight for first sPoint when cal covar                                     // weight for first sPoint when cal mean
-    // float w0_c = lambda/(2 + lambda) + (1 - std::pow(alpha, 2) + beta);
+    float w0_m = k1 / (dime + k1);    // weight for first sPoint when cal covar
     float w_i = 1/ (2 * ( dime + k1));
-
-    // std::cout << "lambda: " << lambda << std::endl; 
     
-    std::cout << "w0_m: " << w0_m << std::endl;
+    // std::cout << "w0_m: " << w0_m << std::endl;
     
-    std::cout << "w_i: " << w_i << std::endl;
+    // std::cout << "w_i: " << w_i << std::endl;
 
     MatrixXf Weights(7, 7);
     VectorXf W(7, 1);
@@ -74,7 +69,7 @@ void HALO::init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0){
 
     this->WeightsUKF = Weights;
 
-    std::cout << "Weights: \n" << Weights << std::endl;
+    // std::cout << "Weights: \n" << Weights << std::endl;
 
     // errors can be because you didnt instatiate the matrix
     // or trying to make a vector and declaring as a matrix
@@ -83,10 +78,9 @@ void HALO::init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0){
     WeightsForSigmaPoints(0) = w0_m;
     this->WeightsForSigmaPoints = WeightsForSigmaPoints;
 
-    std::cout << "WeightsForSigmaPoints: \n" << WeightsForSigmaPoints << std::endl;
+    // std::cout << "WeightsForSigmaPoints: \n" << WeightsForSigmaPoints << std::endl;
 
-    // X0 = [acceleration, velocity, altitude]
-    // X0 << this->getFAccel(), this->getFVelo(), this->getFAlt();
+    this->KinematicsHalo.altitudeStore = X0(0);
 
     // Z_in = [GPS altitude]
     // Z_in << this->getGPSAlt();
@@ -133,7 +127,7 @@ void HALO::unscentedTransform(){
 
 void HALO::stateUpdate(){
     // Xn = Xn-1 + K (Zn - EstZn)
-    std::cout << "sigmaPoints state update: \n" << sigPoints << std::endl;
+    // std::cout << "sigmaPoints state update: \n" << sigPoints << std::endl;
 
     MatrixXf observedValues(3, 7);
     observedValues.setZero(3, 7);
@@ -142,34 +136,32 @@ void HALO::stateUpdate(){
         observedValues.col(i) = sigPoints.col(i);
     }
 
-    std::cout << "Observed Values: \n" << observedValues << std::endl;
+    // std::cout << "Observed Values: \n" << observedValues << std::endl;
+    // std::cout << "WeightsForSigmaPoints: \n" << WeightsForSigmaPoints << std::endl;
 
     // calculate the mean of the observed values
     VectorXf zMean(3);
     zMean = observedValues * WeightsForSigmaPoints;
 
-    std::cout << "Z_1: " << zMean << std::endl;
+    // std::cout << "Z_1: " << zMean << std::endl;
     this->Z = zMean;
 
-    MatrixXf R(2,2);
-    R <<std::pow(5, 2), 0,
-        0, std::pow(0.0087, 2);
-
     // calculate covariance of Z
-    MatrixXf zCovar(2, 7);
-    zCovar.setZero(2, (2 * 3) + 1);
+    MatrixXf zCovar(3, 7);
+    zCovar.setZero(3, (2 * 3) + 1);
     for (int i = 0; i < 2; i++)
     {
         zCovar.row(i) = (observedValues.row(i).array() - zMean.row(i).value()).matrix();
     }
 
-    // std::cout << "Z Covar: " << zCovar << std::endl;
+    std::cout << "Z Covar: " << zCovar << std::endl;
+    // std::cout << "R: " << this->R << std::endl;
 
     // calculate the innovation covariance
     MatrixXf Pz(3, 3);
     Pz.setZero(3, 3);
 
-    Pz = (zCovar * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose()) + R;
+    Pz = (zCovar * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose()) + this->R;
 
     // std::cout << "Pz: " << Pz << std::endl;
 
@@ -184,18 +176,33 @@ void HALO::stateUpdate(){
     // std::cout << "Pxz: " << Pxz << std::endl;
 
     // calculate the Kalman gain
-    MatrixXf K(3, 2);
+    MatrixXf K(3, 3);
     K.setZero();
 
     K = Pxz * Pz.inverse();
 
     // std::cout << "X: \n" << this->X << std::endl;
-    // std::cout << "Kalman Gain: \n" << K << std::endl;
+    std::cout << "\nKalman Gain: \n" << K << std::endl;
 
     // update the state vector
     X0 = this->Xprediction + K * (this->X - zMean);
 
-    std::cout << "X: \n" << X0 << std::endl;
+    // check and update before apogee bool
+    if(this->isBeforeApogeeBoolHALO){
+        std::vector<Scenario> scenarios = this->getScenarios();
+
+        for(Scenario scenario : scenarios){
+            scenario.setIsBeforeApogee(true);
+        }
+
+    }else{
+        // check if the rocket is before apogee
+        this->isBeforeApogeeBoolHALO = isBeforeApogee(this->Uaccel, this->Uvelo, this->Ualt, this->KinematicsHalo.altitudeStore);
+    }
+
+    std::cout << "Estimated X (HALO): \n" << X0 << std::endl;
+
+    this->KinematicsHalo.altitudeStore = X0(0);
 
     // update the covariance matrix
     MatrixXf P1(3,3);
@@ -274,7 +281,7 @@ void HALO::calculateSigmaPoints() {
 
     // std::cout << "N " << this->N1 << std::endl;
 
-    std::cout << "L: \n" << L << std::endl;
+    // std::cout << "L: \n" << L << std::endl;
 
     // Initialize sigma points matrix
     MatrixXf sigmaPoints(3, 7);
@@ -298,7 +305,7 @@ void HALO::calculateSigmaPoints() {
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         VectorXf column = sigmaPoints.col(i);
-        std::cout << "col: \n" << column << std::endl;
+        printf("\nsPoint[%f]: \n", i);
         sigmaPoints.col(i) = dynamicModel(column);
     }
 
@@ -432,26 +439,6 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
         distances.emplace_back(vector);
         
     }
-    //         break;
-    //     case 'v': // Velocity
-    //         for (const auto& scenario : scenarios) {
-    //             // float value = scenario.evaluateVelocity(time, this.isBeforeApogee);
-    //             float value = 0;
-    //             float distance = std::abs(value - targetValue);
-    //             distances.emplace_back(distance, scenario);
-    //         }
-    //         break;
-    //     case 'h': // Altitude
-    //         for (const auto& scenario : scenarios) {
-    //             // float value = scenario.evaluateAltitude(time, this.isBeforeApogee);
-    //             float value  =0;
-    //             float distance = std::abs(value - targetValue);
-    //             distances.emplace_back(distance, scenario);
-    //         }
-    //         break;
-    //     default:
-    //         throw std::invalid_argument("Invalid measure type");
-    // }
 
     /**
      * @brief Sorts a vector of distances based on the first element of each pair in ascending order.
@@ -487,10 +474,10 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
 // float HALO::interpolate(float x, float scenario1Distance, float scenario2Distance) {
 //     // Get gains for scenarios
 //     std::vector<float> gains = getGains(x, scenario1Distance, scenario2Distance);
-
+//
 //     double gain1 = gains[0];
 //     double gain2 = 1.0 - gain1;
-
+//
 //     return gain1 * scenario1Distance + gain2 * scenario2Distance;
 // }
 
@@ -526,12 +513,14 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     std::vector<float> vector2Future = vectors[3];
     
     for(int i = 0; i < 3; i++){
-        float distance = std::abs(vector1[i] - vector2[i]);         // get distance between two vectors
+        float distance = std::abs(vector1[i] - vector2[i]);             // get distance between two vectors
+        printf("distance: %f\n", distance);
         if(distance < 1){
             gainV1[i] = 0.5;
             gainV2[i] = 0.5;
         }else{
-            gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance); // get distance between vector1 and current state
+            gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance);  // get distance between vector1 and current state
+            // printf("gainV1[%d]: %f\n", i, gainV1[i]);
             gainV2[i] = 1 - gainV1[i];
         }
     }
@@ -556,13 +545,14 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
 /**
  * @brief Check if the rocket is before apogee, based on Everest filter values
  */
-bool isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude){
+bool HALO::isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude){
 
     if(acceleration < -9.81 || velocity < 0.5 || altitude < lastAltitude){
-        return false;
+        printf("Apogee at %f\n", altitude);
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 /**
@@ -579,7 +569,7 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
     /** X_in = [acceleration, velocity, altitude] */
     this->X = X_in;
 
-    std::cout << "X_in: \n" << this->X << std::endl;
+    std::cout << "X from Everest: \n" << this->X << std::endl;
 
     this->stateUpdate();
 }
@@ -607,21 +597,10 @@ VectorXf HALO::dynamicModel(VectorXf &X){
 
     Xprediction = predictNextValues(nearestVectors, X);
 
-    printf("XPrediction of Model: (%f,%f,%f)\n", Xprediction(0), Xprediction(1), Xprediction(2));
+    printf("\nXPrediction of Model: (%f,%f,%f)\n\n", Xprediction(0), Xprediction(1), Xprediction(2));
 
     return Xprediction;
 }
-
-// void createScenarios(std::vector<std::vector<float>> &scenarios){
-//     std::vector<Scenario> scenarios;
-//     std::vector<float> scenario1 = {1, 2, 3};
-//     std::vector<float> scenario2 = {4, 5, 6};
-//     std::vector<float> scenario3 = {7, 8, 9};
-
-//     scenarios.push_back(scenario1);
-//     scenarios.push_back(scenario2);
-//     scenarios.push_back(scenario3);
-// }
 
 // int main(){
 //     // only able to measure angle and extrapolate for velocity
