@@ -1097,7 +1097,6 @@ int main()
         return 1;
     } 
 
-    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF.csv", "r");
     if (!simsFile) {
         perror("Error opening simsFile.csv");
         return 1;
@@ -1122,14 +1121,9 @@ int main()
 
     int howMany = 1;
     int i = 0;
-    int numberOfScenarios = 5;
+    int numberOfScenarios = 6;
 
-    // std::vector<std::vector<float>> scenario1ListofVectorsBefore;
-    // std::vector<std::vector<float>> scenario2ListofVectorsBefore;
-    // std::vector<std::vector<float>> scenario3ListofVectorsBefore;
-    // std::vector<std::vector<float>> scenario4ListofVectorsBefore;
-    // std::vector<std::vector<float>> scenario5ListofVectorsBefore;
-    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsBefore = {{{}}, {{}}, {{}}, {{}}, {{}}};
+    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsBefore = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
     // for(int i = 0; i < numberOfScenarios; i++){
     //     scenarioListofVectorsBefore. = howMany;
     // }
@@ -1163,17 +1157,9 @@ int main()
 
         // printf("\n");
         
-        
     }
 
-    // after list
-    // std::vector<std::vector<float>> scenario1ListofVectorsAfter;
-    // std::vector<std::vector<float>> scenario2ListofVectorsAfter;
-    // std::vector<std::vector<float>> scenario3ListofVectorsAfter;
-    // std::vector<std::vector<float>> scenario4ListofVectorsAfter;
-    // std::vector<std::vector<float>> scenario5ListofVectorsAfter;
-
-    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}};
+    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
 
     while (fgets(line, sizeof(line), simsAfterFile)) {
         char *token = strtok(line, ",");
@@ -1189,15 +1175,13 @@ int main()
             token = strtok(NULL, ",");
 
             std::vector<float> temp = {alt, velo, acc, time1};
-            // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
+            printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
             scenarioListofVectorsAfter[i].push_back(temp);
 
         }
 
-        // printf("\n");
+        printf("\n");
     }
-
-    std::vector<std::vector<float>> vector = {{0,0,0,0}};
 
     // create scenarios with before and after lists
     Scenario scenario1 = Scenario{scenarioListofVectorsBefore[0], scenarioListofVectorsAfter[0], "Scenario 1"};
@@ -1205,6 +1189,7 @@ int main()
     Scenario scenario3 = Scenario{scenarioListofVectorsBefore[2], scenarioListofVectorsAfter[2], "Scenario 3"};
     Scenario scenario4 = Scenario{scenarioListofVectorsBefore[3], scenarioListofVectorsAfter[3], "Scenario 4"};
     Scenario scenario5 = Scenario{scenarioListofVectorsBefore[4], scenarioListofVectorsAfter[4], "Scenario 5"};
+    Scenario scenario6 = Scenario{scenarioListofVectorsBefore[5], scenarioListofVectorsAfter[5], "Scenario 6"};
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5};
 
@@ -1215,7 +1200,7 @@ int main()
     // }
      
     halo.setScenarios(scenarios);
-    halo.setDeltaTime(1/3);
+    halo.deltaTime = 1/3;
 
     while (fgets(line, sizeof(line), file1)) {
         // Tokenize the line using strtok

@@ -188,11 +188,11 @@ void HALO::stateUpdate(){
     X0 = this->Xprediction + K * (this->X - zMean);
 
     // check and update before apogee bool
-    if(this->isBeforeApogeeBoolHALO){
+    if(!this->isBeforeApogeeBoolHALO){
         std::vector<Scenario> scenarios = this->getScenarios();
 
         for(Scenario scenario : scenarios){
-            scenario.setIsBeforeApogee(true);
+            scenario.setIsBeforeApogee(false);
         }
 
     }else{
@@ -372,7 +372,7 @@ float HALO::interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenario
 }
 
 // Function to calculate the Euclidean distance between two 3D vectors
-float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
+float HALO::euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
     float x1, y1, z1, x2, y2, z2;
 
     x1 = vec1[0];
@@ -383,41 +383,48 @@ float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2) {
     y2 = vec2(1);
     z2 = vec2(2);
 
+    // printf("vec (%f,%f,%f) meas (%f,%f,%f)", x1, y1, z1, x2, y2, z2);
+
     return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2) + std::pow(z2 - z1, 2));
 }
 
 /**
  * @brief Given a list of scenarios, find the nearest 2 scenarios and returns the vectors of the nearest scenarios
  */
-std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement) {
-    printf("findNearestScenarios\n");
+std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>& scenarios, VectorXf &measurement) {
+    // printf("findNearestScenarios\n");
     std::vector<std::pair<float, std::pair<float, Scenario>>> distances;
     float minDistance = std::numeric_limits<float>::max();
+    int i = 0;
 
-    for (Scenario scenario : scenarios) {
-        std::vector<std::vector<float>> vectors = scenario.getLists();
-        for(std::vector<float> vec : vectors){
-            printf("NS vec: %f, %f, %f\n", vec[0], vec[1], vec[2]);
-        }
-
+    for(Scenario scenario : scenarios){
+        i = 0;
         int lowestDistanceIndex = 0;
-        std::vector<float> lowestVector = vectors[0];
+        std::vector<float> lowestVector = scenario.getLists()[0];
         minDistance = std::numeric_limits<float>::max();
 
-        for(int i = 0; i < vectors.size(); i++){
+        for(std::vector<float> vec : scenario.getLists()){
+            std::vector<float> vect = {0,0,0,0};
+            int valueIndex = 0;
 
-            float distance = euclideanDistance(vectors[i], measurement);
-            printf("eucledian distance %f", distance);
+            for(float value : vec){
+                vect[valueIndex] = value;
+                valueIndex++;
+            }
+
+            // printf(" NS vec: %f, %f, %f\n", vect[0], vect[1], vect[2]);
+            
+            float distance = euclideanDistance(vect, measurement);
+            // printf("eucledian distance %f\n", distance);
 
             if (distance < minDistance) {
                 minDistance = distance;
                 lowestDistanceIndex = i;
-                lowestVector = vectors[i];
+                lowestVector = scenario.getLists()[i];
             }
-            
 
+            i++;
         }
-
         // minDistance to order the list and get lowest 2
         // index go evaluate scenario at n+1
         std::pair<float, std::pair<float, Scenario>> vector = {minDistance, {lowestDistanceIndex, scenario}};
@@ -439,13 +446,15 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(const std::vector<Sce
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[0].second.first;
     std::vector<float> currentVector1 = distances[0].second.second.evaluateVectorAt(indexFirst);
-    float nextTimeStep = time + deltaTime;
-    printf("time %f, delta %f\n", time, deltaTime);
+    float deltaTime = 0.333333;
+    float nextTimeStep = currentVector1[3] + deltaTime;
+    printf("time %f, delta %f\n", currentVector1[3], deltaTime);
     std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAtTime(nextTimeStep);
 
     int indexSecond = distances[1].second.first;
     std::vector<float> currentVector2 = distances[1].second.second.evaluateVectorAt(indexSecond);
-    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAtTime(nextTimeStep);
+    float nextTimeStep2 = currentVector2[3] + deltaTime;
+    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAtTime(nextTimeStep2);
 
     std::vector<std::vector<float>> nearestVectors;
     nearestVectors.push_back(currentVector1);
@@ -537,10 +546,10 @@ bool HALO::isBeforeApogee(float acceleration, float velocity, float altitude, fl
 
     if(acceleration < -9.81 || velocity < 0.5 || altitude < lastAltitude){
         printf("Apogee at %f\n", altitude);
-        return true;
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 /**
@@ -592,7 +601,7 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     printf("vector2 (%f,%f,%f)\n", vector3[0], vector3[1], vector3[2]);
     printf("futureV2 (%f,%f,%f)\n", vector4[0], vector4[1], vector4[2]);
 
-    printf("X (%f,%f,%f)\n", X(0), X(1), X(2));
+    printf("Spoint being propagated X (%f,%f,%f)\n", X(0), X(1), X(2));
 
     Xprediction = predictNextValues(nearestVectors, X);
 

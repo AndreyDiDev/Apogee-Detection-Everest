@@ -43,15 +43,7 @@ struct Scenario {
     std::string name;
 
     std::vector<float> measurement;
-    bool isBeforeApogeeBool = false;
-
-    // Scenario(std::vector<float> beforeApogeeCoefficientsAccel, std::vector<float> afterApogeeCoefficientsAccel,
-    //     std::vector<float> beforeApogeeCoefficientsVelo, std::vector<float> afterApogeeCoefficientsVelo,
-    //     std::vector<float> beforeApogeeCoefficientsAlt, std::vector<float> afterApogeeCoefficientsAlt, std::string Name)
-
-    //     :beforeApogeeAccel(beforeApogeeCoefficientsAccel), afterApogeeAccel(afterApogeeCoefficientsAccel), 
-    //     beforeApogeeVelo(beforeApogeeCoefficientsVelo), afterApogeeVelo(afterApogeeCoefficientsVelo), 
-    //     beforeApogeeAlt(beforeApogeeCoefficientsAlt), afterApogeeAlt(afterApogeeCoefficientsAlt), name(Name) {};
+    bool isBeforeApogeeBool = true;
 
     Scenario(std::vector<std::vector<float>> beforelList, std::vector<std::vector<float>> afterList, std::string Name)
         :BeforeList(beforelList), AfterList(afterList){
@@ -129,12 +121,22 @@ struct Scenario {
      * Returns list of vectors of scenario {Altitude, Velocity, Acceleration} before or after apogee
      */
     std::vector<std::vector<float>> getLists(){
-
         if(isBeforeApogeeBool){
+            // for(std::vector<float> vec : BeforeList){
+            //     for(float value : vec){
+            //         printf("%f ", value);
+            //     }
+            //     printf("\n");
+            // }
             return BeforeList;
         }
         else{
-            // std::vector<std::vector<float>> lists = {afterApogeeAlt, afterApogeeVelo, afterApogeeAccel};
+            // for(std::vector<float> vec : AfterList){
+            //     for(float value : vec){
+            //         printf("%f ", value);
+            //     }
+            //     printf("after\n");
+            // }
             return AfterList;
         }
 
@@ -149,13 +151,34 @@ struct Scenario {
     std::vector<float> evaluateVectorAtTime(float time){
         std::vector<std::vector<float>> list = getLists();
         int index = 0;
+        printf(" starting to evaluate vector at time %f\n", time);
+        std::vector<float> vect = {0,0,0,0};
 
-        while(time > list[index][2]){
-            printf("Considered: (%f)", list[index][2]);
+        for(std::vector<float> vec : list){
+            // std::vector<float> vect = {0,0,0,0};
+            int valueIndex = 0;
+
+            for(float value : vec){
+                vect[valueIndex] = value;
+                valueIndex++;
+            }
+
+            if(time < vect[3]){
+                break;
+            }
+
             index++;
+
+            // printf("Considered: (%f)", vect[3]);
         }
 
-        return list[index];
+
+        // while(time > list[index][2]){
+        //     printf("Considered: (%f)", list[index][2]);
+        //     index++;
+        // }
+
+        return vect;
     }
 
     // state machine on apogee
@@ -242,7 +265,7 @@ class HALO{
 
         float interpolate(float x, float scenario1Distance, float scenario2Distance);
 
-        std::vector<std::vector<float>> findNearestScenarios(const std::vector<Scenario>& scenarios, VectorXf &measurement);
+        std::vector<std::vector<float>> findNearestScenarios(std::vector<Scenario>& scenarios, VectorXf &measurement);
 
         float interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenarios);
 
@@ -280,10 +303,14 @@ class HALO{
 
         bool isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude);
 
-        float deltaTime = 0.0001;
+        float deltaTime = 1/3;
 
         void setDeltaTime(float deltaTime){
             this->deltaTime;
+        }
+
+        float getDeltaTime(){
+            return this->deltaTime;
         }
 
         float time = 0;
@@ -291,6 +318,8 @@ class HALO{
         void setTime(float time){
             this->time;
         }
+
+        float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2);
 
     private:
 
