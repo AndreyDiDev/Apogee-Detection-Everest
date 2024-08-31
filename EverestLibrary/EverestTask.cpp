@@ -1131,7 +1131,16 @@ int main()
 
     fprintf(file, "Time,Everest_Alt,Everest_Velo,Everest_Accel,Halo_ALt, Halo_Velo, Halo_accel\n");
 
+    ///////
+    #ifndef LAPTOP
     FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
+    #endif
+
+    #ifdef LAPTOP
+    FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
+    #endif
+    ///////
+
     if (!file1) {
         perror("Error opening Imu_Baro.csv");
         return 1;

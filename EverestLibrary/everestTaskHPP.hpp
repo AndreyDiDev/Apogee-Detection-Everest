@@ -17,7 +17,6 @@
 #include <sstream>
 
 
-
 // task specific
 // #include "Task.hpp"
 // #include "Data.h"
@@ -30,6 +29,8 @@
 #define DELTA_TIME (1.0f / 3.0f)
 #define RATE_BARO (3)
 #define CALIBRATION_TIME (2)
+
+#define LAPTOP
 
 /* Macros/Enums ------------------------------------------------------------*/
 enum EVEREST_TASK_COMMANDS {

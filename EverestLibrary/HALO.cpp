@@ -1,7 +1,14 @@
 #include "HALO.hpp"
-#include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Dense"
+// #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
 // #include "everestTaskHPP.hpp"
 #include <fstream>
+
+#ifndef LAPTOP
+#endif
+
+#ifdef LAPTOP
+#include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
+#endif
 
 #ifndef HALO_CPP
 #define HALO_CPP
