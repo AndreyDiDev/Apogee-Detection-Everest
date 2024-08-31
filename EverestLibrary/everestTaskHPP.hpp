@@ -64,7 +64,7 @@ typedef struct {
     float std_Baro1;
     float std_Baro2;
 
-    SensorDataNoMag avgIMU;
+    IMUData avgIMU;
     float deltaTimeIMU;
     float earthAcceleration;
 } systemState;
@@ -75,12 +75,13 @@ typedef struct{
 } altitudeList;
 
 /**
- * @brief Keeps the data from the IMU sensor #1
+ * @brief Keeps the data from the IMU sensor #1 time, gyroXYZ, accelXYZ, magXYZ
 */
 typedef struct{
     float time;
     float gyroX, gyroY, gyroZ;
     float accelX, accelY, accelZ;
+    float magX, magY, magZ;
 } IMUData;
 
 typedef struct{
@@ -110,6 +111,9 @@ typedef struct{
     float gyroX1;
     float gyroY1;
     float gyroZ1;
+    float magX1;
+    float magY1;
+    float magZ1;
 
     float accelX2;
     float accelY2;
@@ -117,6 +121,9 @@ typedef struct{
     float gyroX2;
     float gyroY2;
     float gyroZ2;
+    float magX2;
+    float magY2;
+    float magZ2;
 
 }EverestData;
 
@@ -131,7 +138,7 @@ class EverestTask
 
 		// void InitTask();
 
-        void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2);
+        void IMU_Update(const IMUData& imu1, const IMUData& imu2);
 
         Infusion* ExternalInitialize();
 
@@ -156,19 +163,19 @@ class EverestTask
 
         double deriveChangeInVelocityToGetAltitude(double estimate);
 
-        void MadgwickWrapper(SensorDataNoMag data);
+        void MadgwickWrapper(IMUData data);
 
         // void IMU_Update(const SensorDataNoMag& imu1, const SensorDataNoMag& imu2, float magX, float magY, float magZ);
 
-        double ExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, BarosData baro1, 
+        double ExternalUpdate(IMUData imu1, IMUData imu2, BarosData baro1, 
                                 BarosData baro2);
 
-        double deriveForAltitudeIMU(SensorDataNoMag avgIMU);
+        double deriveForAltitudeIMU(IMUData avgIMU);
 
-        double AlignedExternalUpdate(SensorDataNoMag imu1, SensorDataNoMag imu2, 
+        double AlignedExternalUpdate(IMUData imu1, IMUData imu2, 
                     BarosData baro1, BarosData baro2, MadAxesAlignment alignment);
 
-        void tare(SensorDataNoMag &imu1, SensorDataNoMag &imu2, BarosData baro1, BarosData baro2);
+        void tare(IMUData &imu1, IMUData &imu2, BarosData baro1, BarosData baro2);
 
         void MadgwickSetup();
 
@@ -178,15 +185,16 @@ class EverestTask
 
         double TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2);
 
-        double finalWrapper(float accelX1,      float accelY1,      float accelZ1,
+        double finalWrapper(    float accelX1,      float accelY1,      float accelZ1,
                 float gyroX1,   float gyroY1,       float gyroZ1,       float accelX2,
-                float accelY2,  float accelZ2,      float gyroX2,       float gyroY2,
-                float gyroZ2,   float pressure1,    float pressure2,    float timeIMU1,
-                float timeIMU2, float timeBaro1,    float timeBaro2,    MadAxesAlignment alignment, 
-                MadAxesAlignment alignment2);
+                float magX1,    float magY1,        float magZ1,        float accelY2,  
+                float accelZ2,  float gyroX2,       float gyroY2,       float gyroZ2,   
+                float magX2,    float magY2,        float magZ2,        float pressure1,
+                float pressure2,float timeIMU1,     float timeIMU2,     float timeBaro1,    
+                float timeBaro2,MadAxesAlignment alignment, MadAxesAlignment alignment2);
 
     protected:
-        SensorDataNoMag internalIMU_1, internalIMU_2;
+        IMUData internalIMU_1, internalIMU_2;
 
         BarosData baro1, baro2;
 

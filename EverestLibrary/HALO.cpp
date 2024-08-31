@@ -587,6 +587,11 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
     this->stateUpdate();
 }
 
+void HALO::overrideStateWithGPS(float GPS){
+    this->X[0] = GPS;
+    printf("Override GPS (%f, %f, %f)", this->X[0], this->X[1], this->X[2]);
+}
+
 // prediction step based on the dynamic model
 VectorXf HALO::dynamicModel(VectorXf &X){
     // X = [acceleration, velocity, altitude]
