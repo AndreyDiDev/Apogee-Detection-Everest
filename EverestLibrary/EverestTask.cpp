@@ -1097,19 +1097,20 @@ int main()
         return 1;
     } 
 
+    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
     if (!simsFile) {
         perror("Error opening simsFile.csv");
         return 1;
     }
 
-    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF.csv", "r");
-    if (!simsFile) {
+    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+    if (!simsAfterFile) {
         perror("Error opening simsAfterFile.csv");
         return 1;
     }
 
     FILE *taberFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/taber_launch_formattedF.csv", "r");
-    if (!simsFile) {
+    if (!taberFile) {
         perror("Error opening taberFile.csv");
         return 1;
     }
@@ -1175,23 +1176,23 @@ int main()
             token = strtok(NULL, ",");
 
             std::vector<float> temp = {alt, velo, acc, time1};
-            printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
+            // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
             scenarioListofVectorsAfter[i].push_back(temp);
 
         }
 
-        printf("\n");
+        // printf("\n");
     }
 
     // create scenarios with before and after lists
-    Scenario scenario1 = Scenario{scenarioListofVectorsBefore[0], scenarioListofVectorsAfter[0], "Scenario 1"};
-    Scenario scenario2 = Scenario{scenarioListofVectorsBefore[1], scenarioListofVectorsAfter[1], "Scenario 2"};
-    Scenario scenario3 = Scenario{scenarioListofVectorsBefore[2], scenarioListofVectorsAfter[2], "Scenario 3"};
-    Scenario scenario4 = Scenario{scenarioListofVectorsBefore[3], scenarioListofVectorsAfter[3], "Scenario 4"};
-    Scenario scenario5 = Scenario{scenarioListofVectorsBefore[4], scenarioListofVectorsAfter[4], "Scenario 5"};
-    Scenario scenario6 = Scenario{scenarioListofVectorsBefore[5], scenarioListofVectorsAfter[5], "Scenario 6"};
+    Scenario scenario1 = Scenario{scenarioListofVectorsBefore[0], scenarioListofVectorsAfter[0], 1};
+    Scenario scenario2 = Scenario{scenarioListofVectorsBefore[1], scenarioListofVectorsAfter[1], 2};
+    Scenario scenario3 = Scenario{scenarioListofVectorsBefore[2], scenarioListofVectorsAfter[2], 3};
+    Scenario scenario4 = Scenario{scenarioListofVectorsBefore[3], scenarioListofVectorsAfter[3], 4};
+    Scenario scenario5 = Scenario{scenarioListofVectorsBefore[4], scenarioListofVectorsAfter[4], 5};
+    Scenario scenario6 = Scenario{scenarioListofVectorsBefore[5], scenarioListofVectorsAfter[5], 6};
 
-    std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5};
+    std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
 
     // add to a list of scenarios
     // for(int i = 0; i < numberOfScenarios; i++){

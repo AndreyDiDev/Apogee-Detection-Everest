@@ -284,8 +284,18 @@ void HALO::calculateSigmaPoints() {
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         VectorXf column = sigmaPoints.col(i);
+        this->prevGain1 = this->listOfGainsSigmaPoints[i][0];
+        this->prevGain2 = this->listOfGainsSigmaPoints[i][1];
         printf("\nsPoint[%d]: \n", i);
         sigmaPoints.col(i) = dynamicModel(column);
+        this->listOfGainsSigmaPoints[i] = {this->prevGain1, this->prevGain2};
+        printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
+        listOfGainsSigmaPoints[0][0][0], listOfGainsSigmaPoints[0][0][1], listOfGainsSigmaPoints[0][0][2], listOfGainsSigmaPoints[0][1][0], listOfGainsSigmaPoints[0][1][1], listOfGainsSigmaPoints[0][1][2],
+        listOfGainsSigmaPoints[1][0][0], listOfGainsSigmaPoints[1][0][1], listOfGainsSigmaPoints[1][0][2], listOfGainsSigmaPoints[1][1][0], listOfGainsSigmaPoints[1][1][1], listOfGainsSigmaPoints[1][1][2],
+        listOfGainsSigmaPoints[2][0][0], listOfGainsSigmaPoints[2][0][1], listOfGainsSigmaPoints[2][0][2], listOfGainsSigmaPoints[2][1][0], listOfGainsSigmaPoints[2][1][1], listOfGainsSigmaPoints[2][1][2],
+        listOfGainsSigmaPoints[3][0][0], listOfGainsSigmaPoints[3][0][1], listOfGainsSigmaPoints[3][0][2], listOfGainsSigmaPoints[3][1][0], listOfGainsSigmaPoints[3][1][1], listOfGainsSigmaPoints[3][1][2],
+        listOfGainsSigmaPoints[4][0][0], listOfGainsSigmaPoints[4][0][1], listOfGainsSigmaPoints[4][0][2], listOfGainsSigmaPoints[4][1][0], listOfGainsSigmaPoints[4][1][1], listOfGainsSigmaPoints[4][1][2],
+        listOfGainsSigmaPoints[5][0][0], listOfGainsSigmaPoints[5][0][1], listOfGainsSigmaPoints[5][0][2], listOfGainsSigmaPoints[5][1][0], listOfGainsSigmaPoints[5][1][1], listOfGainsSigmaPoints[5][1][2]);
     }
 
     std::cout << "after predict sPoints: \n" << sigmaPoints << std::endl;
@@ -432,6 +442,12 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
         
     }
 
+    // print distances list
+    for(int i = 0; i < distances.size(); i++){
+        printf("minDistance: %f, lowestIndex: %d, scenario %d\n", distances[i].first, distances[i].second.first, 
+        distances[i].second.second.name);
+    }
+
     /**
      * @brief Sorts a vector of distances based on the first element of each pair in ascending order.
      */
@@ -522,13 +538,13 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
         }
     }
 
-    printf("gainV1 (%f,%f,%f)\n", gainV1[0], gainV1[1], gainV1[2]);
-    printf("gainV2 (%f,%f,%f)\n", gainV2[0], gainV2[1], gainV2[2]);
+    printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
+    printf("prevGain1 (%f,%f,%f), gainV2 (%f,%f,%f)\n", this->prevGain2[0], this->prevGain2[1], this->prevGain2[2], gainV2[0], gainV2[1], gainV2[2]);
 
     // interpolate between the two scenarios to get predicted values0
-    float predicted_interpolated_alt  = prevGain1[0] * vector1Future[0] + prevGain2[0] * vector1Future[0];
-    float predicted_interpolated_velo = prevGain1[1] * vector1Future[1] + prevGain2[1] * vector2Future[1];
-    float predicted_interpolated_acc  = prevGain1[2] * vector1Future[2] + prevGain2[2] * vector2Future[2];
+    float predicted_interpolated_alt  = this->prevGain1[0] * vector1Future[0] + this->prevGain2[0] * vector2Future[0];
+    float predicted_interpolated_velo = this->prevGain1[1] * vector1Future[1] + this->prevGain2[1] * vector2Future[1];
+    float predicted_interpolated_acc  = this->prevGain1[2] * vector1Future[2] + this->prevGain2[2] * vector2Future[2];
 
     this->prevGain1 = gainV1;
     this->prevGain2 = gainV2;

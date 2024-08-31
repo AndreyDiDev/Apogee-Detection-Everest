@@ -40,15 +40,16 @@ struct Scenario {
     std::vector<std::vector<float>> BeforeList;
     std::vector<std::vector<float>> AfterList;
 
-    std::string name;
+    int name;
 
     std::vector<float> measurement;
     bool isBeforeApogeeBool = true;
 
-    Scenario(std::vector<std::vector<float>> beforelList, std::vector<std::vector<float>> afterList, std::string Name)
-        :BeforeList(beforelList), AfterList(afterList){
+    Scenario(std::vector<std::vector<float>> beforelList, std::vector<std::vector<float>> afterList, int Name)
+        :BeforeList(beforelList), AfterList(afterList), name(Name){
 
         // auto [firstPart, secondPart] = findAndSplitVector(list);
+
 
         // FILE *file = fopen("Sims.txt", "w+"); // Open the file for appending or create it if it doesn't exist
         // if (!file) {
@@ -56,7 +57,7 @@ struct Scenario {
         //     exit(1);
         // }
 
-        // fprintf(file, "%s\n", Name);
+        printf("%d\n", name);
 
         // // Print the first part
         // // std::cout << "First Part:" << std::endl;
@@ -151,7 +152,7 @@ struct Scenario {
     std::vector<float> evaluateVectorAtTime(float time){
         std::vector<std::vector<float>> list = getLists();
         int index = 0;
-        printf(" starting to evaluate vector at time %f\n", time);
+        printf("starting to evaluate vector at time %f\n", time);
         std::vector<float> vect = {0,0,0,0};
 
         for(std::vector<float> vec : list){
@@ -320,6 +321,12 @@ class HALO{
         }
 
         float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2);
+
+        std::vector<std::vector<std::vector<float>>> listOfGainsSigmaPoints = 
+        {{{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, 
+         {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}},
+         {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}},
+         {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}};
 
     private:
 
