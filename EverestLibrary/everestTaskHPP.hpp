@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\EverestLibrary_HALO\EverestL\EverestLibrary\HALO.hpp"
 
 
 // task specific
@@ -48,6 +49,17 @@ typedef struct{
 } kinematics;
 
 /**
+ * @brief Keeps the data from the IMU sensor #1 time, gyroXYZ, accelXYZ, magXYZ
+*/
+typedef struct{
+    float time;
+    float gyroX, gyroY, gyroZ;
+    float accelX, accelY, accelZ;
+    float magX, magY, magZ;
+    float altitude;
+} IMUData;
+
+/**
  * @brief Keeps whole system's states, including apogee detection results and confidence values 
  * for each system
 */
@@ -74,16 +86,6 @@ typedef struct{
     float secondLastAltitude;
     float lastAltitude;
 } altitudeList;
-
-/**
- * @brief Keeps the data from the IMU sensor #1 time, gyroXYZ, accelXYZ, magXYZ
-*/
-typedef struct{
-    float time;
-    float gyroX, gyroY, gyroZ;
-    float accelX, accelY, accelZ;
-    float magX, magY, magZ;
-} IMUData;
 
 typedef struct{
     float time;
@@ -126,7 +128,7 @@ typedef struct{
     float magY2;
     float magZ2;
 
-}EverestData;
+} EverestData;
 
 class EverestTask
 {
@@ -186,7 +188,8 @@ class EverestTask
 
         double TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2);
 
-        double finalWrapper(    float accelX1,      float accelY1,      float accelZ1,
+        double finalWrapper(    
+                float accelX1,  float accelY1,      float accelZ1,
                 float gyroX1,   float gyroY1,       float gyroZ1,       float accelX2,
                 float magX1,    float magY1,        float magZ1,        float accelY2,  
                 float accelZ2,  float gyroX2,       float gyroY2,       float gyroZ2,   

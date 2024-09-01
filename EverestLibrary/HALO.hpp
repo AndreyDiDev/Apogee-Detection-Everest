@@ -1,20 +1,19 @@
 #ifndef HALO_HPP
 #define HALO_HPP
 
-// #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Cholesky"
-// #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
 #include <cmath>
 #include <string>
 #include <vector>
 #include <iostream>
 
-#ifndef LAPTOP
-#endif
+// home
+#include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Cholesky"
+#include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Dense"
 
-#ifdef LAPTOP
-#include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Cholesky"
-#include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
-#endif
+
+// away
+// #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Cholesky"
+// #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
 
 
 
@@ -333,7 +332,7 @@ class HALO{
         float euclideanDistance(const std::vector<float>& vec1, const VectorXf& vec2);
 
         std::vector<std::vector<std::vector<float>>> listOfGainsSigmaPoints = 
-        {{{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, 
+        {{{0.4, 0.5, 0.5}, {0.6, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, 
         {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}},
         {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}, {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}},
         {{0.5, 0.5, 0.5}, {0.5, 0.5, 0.5}}};

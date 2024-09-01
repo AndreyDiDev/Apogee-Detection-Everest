@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 
+
 // task specific defines
 // #include "main.h"
 // #include "Data.h"
@@ -174,11 +175,14 @@ EverestData everestData;
 */
 double EverestTask::TaskWrapper(EverestData everestData, MadAxesAlignment alignment, MadAxesAlignment alignment2){
 
-    return this->finalWrapper(everestData.accelX1, everestData.accelY1, everestData.accelZ1,
-    everestData.gyroX1, everestData.gyroY1, everestData.gyroZ1, everestData.accelX2,
-    everestData.accelY2, everestData.accelZ2, everestData.gyroX2, everestData.gyroY2,
-    everestData.gyroZ2, everestData.pressure1, everestData.pressure2, everestData.timeIMU1,
-    everestData.timeIMU2, everestData.timeBaro1, everestData.timeBaro2, alignment, alignment2);
+    return this->finalWrapper(
+    everestData.accelX1,    everestData.accelY1,    everestData.accelZ1,        everestData.gyroX1, 
+    everestData.gyroY1,     everestData.gyroZ1,     everestData.magX1,          everestData.magY1,
+    everestData.magZ1,      everestData.accelX2,    everestData.accelY2,        everestData.accelZ2,
+    everestData.gyroX2,     everestData.gyroY2,     everestData.gyroZ2,         everestData.magX2,
+    everestData.magY2,      everestData.magZ2,      everestData.pressure1,      everestData.pressure2,
+    everestData.timeIMU1,   everestData.timeIMU2,   everestData.timeBaro1,      everestData.timeBaro2,
+    alignment,              alignment2);
 
 }
 
