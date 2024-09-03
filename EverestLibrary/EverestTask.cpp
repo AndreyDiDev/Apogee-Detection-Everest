@@ -1135,34 +1135,49 @@ int main()
 
     fprintf(file, "Time,Everest_Alt,Everest_Velo,Everest_Accel,Halo_ALt, Halo_Velo, Halo_accel\n");
 
-    ///////
-    #ifndef LAPTOP
+    /////// home
+    #ifdef HOME
+    
     FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
+
+    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+
+    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+
+    FILE *taberFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/taber_launch_formattedF.csv", "r");
+    
     #endif
 
-    #ifdef LAPTOP
-    FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
+    ////// away
+    #ifndef HOME
+
+    FILE *file1         = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
+
+    FILE *simsFile      = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+
+    FILE *simsAfterFile = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+    
+    FILE *taberFile     = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/taber_launch_formattedF.csv", "r");
+
     #endif
-    ///////
+
+    ////// 
 
     if (!file1) {
         perror("Error opening Imu_Baro.csv");
         return 1;
     } 
 
-    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
     if (!simsFile) {
         perror("Error opening simsFile.csv");
         return 1;
     }
 
-    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
     if (!simsAfterFile) {
         perror("Error opening simsAfterFile.csv");
         return 1;
     }
 
-    FILE *taberFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/taber_launch_formattedF.csv", "r");
     if (!taberFile) {
         perror("Error opening taberFile.csv");
         return 1;

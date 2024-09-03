@@ -3,11 +3,14 @@
 #include <fstream>
 
 // home
-#include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Dense"
+#ifdef HOME
+    #include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Dense"
+#endif
 
 // away
-// #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
-
+#ifndef HOME
+    #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\eigen-3.4.0\eigen-3.4.0\Eigen\Dense"
+#endif
 
 #ifndef HALO_CPP
 #define HALO_CPP
@@ -536,6 +539,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     std::vector<float> vector2 = vectors[2];
     std::vector<float> vector2Future = vectors[3];
     bool both = false;
+    bool v1OnTop = false;
     
     for(int i = 0; i < 3; i++){
 
@@ -544,6 +548,12 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
             if(vector2[i] > X_in(i)){
                 // point below both lines
                 both = true;
+                if(vector1[i] > vector2[i]){
+                    // vector1 on top
+                    v1OnTop = true;
+                }else{
+                    v1OnTop = false;
+                }
             }else{
                 // point between lines
             }
@@ -558,12 +568,25 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
 
         // point below both lines -----------------------------------------------------------
         if(both){
-            float longestDistance = vector2[i] - X_in(i);
-            float distance1 = std::abs(vector1[i] - X_in(i));
+            float longestDistance = 0;
+            float distance1 = 0;
+
+            if(v1OnTop){
+                longestDistance = vector2[i] - X_in(i);
+                distance1 = std::abs(vector1[i] - X_in(i));
+            }else{
+                longestDistance = vector2[i] - X_in(i);
+                distance1 = std::abs(vector1[i] - X_in(i));
+            }
 
             float relativeFactor = longestDistance / distance1;
 
-            gainV1[i] = ((vector1[i] * relativeFactor) / (vector1[i] * relativeFactor + vector2[i]));
+            if(v1OnTop){
+                gainV1[i] = ((vector1[i] * relativeFactor) / (vector1[i] * relativeFactor + vector2[i]));
+            }else{
+                gainV1[i] = ((vector2[i] * relativeFactor) / (vector2[i] * relativeFactor + vector1[i]));
+            }
+
             printf("gainV1[%d]: %f\n", i, gainV1[i]);
             gainV2[i] = 1 - gainV1[i];
         }else{
@@ -633,8 +656,10 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
 }
 
 void HALO::overrideStateWithGPS(float GPS){
-    this->X[0] = GPS;
-    printf("Override GPS (%f, %f, %f)", this->X[0], this->X[1], this->X[2]);
+    if(GPS > (this->X[0] - 300) && GPS < (this->X[0] + 300)){
+        this->X[0] = GPS;
+        printf("Override GPS (%f, %f, %f)", this->X[0], this->X[1], this->X[2]);
+    }
 }
 
 // prediction step based on the dynamic model

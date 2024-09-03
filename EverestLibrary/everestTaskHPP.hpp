@@ -15,7 +15,14 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\EverestLibrary_HALO\EverestL\EverestLibrary\HALO.hpp"
+
+#ifdef HOME
+    #include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\EverestLibrary_HALO\EverestL\EverestLibrary\HALO.hpp"
+#endif
+
+#ifndef HOME
+    #include "C:\Users\Andrey\Documents\UKFRepo\UnscentedKalmanFilter\EverestLibrary_HALO\EverestL\EverestLibrary\HALO.hpp"
+#endif
 
 
 // task specific
