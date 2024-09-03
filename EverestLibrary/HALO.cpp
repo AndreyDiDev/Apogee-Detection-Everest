@@ -399,7 +399,7 @@ float HALO::euclideanDistance(const std::vector<float>& vec1, const VectorXf& ve
     y2 = vec2(1);
     z2 = vec2(2);
 
-    // printf("vec (%f,%f,%f) meas (%f,%f,%f)", x1, y1, z1, x2, y2, z2);
+    // printf("vec (%f,%f,%f) meas (%f,%f,%f)\n", x1, y1, z1, x2, y2, z2);
 
     return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2) + std::pow(z2 - z1, 2));
 }
@@ -454,29 +454,34 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
         distances[i].second.second.name);
     }
 
-    /**
-     * @brief Sorts a vector of distances based on the first element of each pair in ascending order.
-     */
-    std::sort(distances.begin(), distances.end(), [](
-        const std::pair<float, std::pair<float, Scenario>>& a, 
-        const std::pair<float, std::pair<float, Scenario>>& b) {
+    float lowestDistance = distances[0].first;
+    float lowestDistanceIndex = 0;
+    float secondLowestDistance = distances[1].first;
+    float secondLowestDistanceIndex = 1;
 
-        return a.first < b.first;
+    for(int i = 0; i < distances.size(); i++){
+        if(distances[i].first < lowestDistance){
 
-    });
+            secondLowestDistance = lowestDistance;
+            secondLowestDistanceIndex = lowestDistanceIndex;
+
+            lowestDistance = distances[i].first;
+            lowestDistanceIndex = i;
+        }
+    }
 
     // find current vector (by index) and future vector (by time)
-    int indexFirst = distances[0].second.first;
-    std::vector<float> currentVector1 = distances[0].second.second.evaluateVectorAt(indexFirst);
+    int indexFirst = distances[lowestDistanceIndex].second.first;
+    std::vector<float> currentVector1 = distances[lowestDistanceIndex].second.second.evaluateVectorAt(indexFirst);
     float deltaTime = 0.333333;
     float nextTimeStep = currentVector1[3] + deltaTime;
     printf("time %f, delta %f\n", currentVector1[3], deltaTime);
-    std::vector<float> futureVector1 = distances[0].second.second.evaluateVectorAtTime(nextTimeStep);
+    std::vector<float> futureVector1 = distances[lowestDistanceIndex].second.second.evaluateVectorAtTime(nextTimeStep);
 
-    int indexSecond = distances[1].second.first;
-    std::vector<float> currentVector2 = distances[1].second.second.evaluateVectorAt(indexSecond);
+    int indexSecond = distances[secondLowestDistanceIndex].second.first;
+    std::vector<float> currentVector2 = distances[secondLowestDistanceIndex].second.second.evaluateVectorAt(indexSecond);
     float nextTimeStep2 = currentVector2[3] + deltaTime;
-    std::vector<float> futureVector2 = distances[1].second.second.evaluateVectorAtTime(nextTimeStep2);
+    std::vector<float> futureVector2 = distances[secondLowestDistanceIndex].second.second.evaluateVectorAtTime(nextTimeStep2);
 
     std::vector<std::vector<float>> nearestVectors;
     nearestVectors.push_back(currentVector1);
@@ -530,17 +535,51 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
 
     std::vector<float> vector2 = vectors[2];
     std::vector<float> vector2Future = vectors[3];
+    bool both = false;
     
     for(int i = 0; i < 3; i++){
-        float distance = std::abs(vector1[i] - vector2[i]);             // get distance between two vectors
-        printf("distance: %f\n", distance);
-        if(distance < 1){
-            gainV1[i] = 0.5;
-            gainV2[i] = 0.5;
+
+        if(vector1[i] > X_in(i)){
+            // below vector1
+            if(vector2[i] > X_in(i)){
+                // point below both lines
+                both = true;
+            }else{
+                // point between lines
+            }
         }else{
-            gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance);  // get distance between vector1 and current state
-            // printf("gainV1[%d]: %f\n", i, gainV1[i]);
+            if(vector2[i] > X_in(i)){
+                // point between lines
+            }else{
+                // point above both lines
+                both = true;
+            }
+        }
+
+        // point below both lines -----------------------------------------------------------
+        if(both){
+            float longestDistance = vector2[i] - X_in(i);
+            float distance1 = std::abs(vector1[i] - X_in(i));
+
+            float relativeFactor = longestDistance / distance1;
+
+            gainV1[i] = ((vector1[i] * relativeFactor) / (vector1[i] * relativeFactor + vector2[i]));
+            printf("gainV1[%d]: %f\n", i, gainV1[i]);
             gainV2[i] = 1 - gainV1[i];
+        }else{
+            // point between lines ------------------------------------------------------------
+            float distance = std::abs(vector1[i] - vector2[i]);             // get distance between two vectors
+            printf("distance: %f\n", distance);
+            if(distance < 1){
+                gainV1[i] = 0.5;
+                gainV2[i] = 0.5;
+            }else{
+                gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance);  // get distance between vector1 and current state
+                // printf("gainV1[%d]: %f\n", i, gainV1[i]);
+                gainV2[i] = 1 - gainV1[i];
+            }
+            //--------------------------------------------------------------------------------
+
         }
     }
 
