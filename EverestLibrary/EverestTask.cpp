@@ -964,8 +964,12 @@ void EverestTask::tare(IMUData &imu1, IMUData &imu2, BarosData baro1, BarosData 
         // SOAR_PRINT("Tare Initial Altitude: %f\n", this->Kinematics.initialAlt);
         isTared = true;
 
-        printf("Calibration offsets:\n %f,%f,%f,%f\n", this->zeroOffsetAccel, this->zeroOffsetGyro,
-        this->zeroOffsetAccel2, this->zeroOffsetGyro2);
+        printf("\nCalibration offsets:\n  accel1(%f,%f,%f),\n  accel2(%f,%f,%f),\n  gyro(%f,%f,%f),\n  gyro2(%f,%f,%f)\n\n", 
+        this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2],
+        this->zeroOffsetGyro[0],  this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
+        this->zeroOffsetAccel2[0],this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2],
+        this->zeroOffsetGyro2[0], this->zeroOffsetGyro2[1], this->zeroOffsetGyro2[2]
+        );
         
         // ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
     }
