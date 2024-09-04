@@ -483,6 +483,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
+    printf("indexFirst: %d\n", indexFirst);
     std::vector<float> currentVector1 = distances[lowestDistanceIndex].second.second.evaluateVectorAt(indexFirst);
     float deltaTime = 0.333333;
     float nextTimeStep = currentVector1[3] + deltaTime;
