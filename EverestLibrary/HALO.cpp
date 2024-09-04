@@ -136,7 +136,7 @@ void HALO::unscentedTransform(){
 
 void HALO::stateUpdate(){
     // Xn = Xn-1 + K (Zn - EstZn)
-    // std::cout << "sigmaPoints state update: \n" << sigPoints << std::endl;
+    std::cout << "\n---- State Update ---- \n" << std::endl;
 
     MatrixXf observedValues(3, 7);
     observedValues.setZero(3, 7);
@@ -152,37 +152,37 @@ void HALO::stateUpdate(){
     VectorXf zMean(3);
     zMean = observedValues * WeightsForSigmaPoints;
 
-    // std::cout << "Z_1: " << zMean << std::endl;
+    std::cout << "\nZ mean:\n " << zMean << std::endl;
     this->Z = zMean;
 
     // calculate covariance of Z
     MatrixXf zCovar(3, 7);
     zCovar.setZero(3, (2 * 3) + 1);
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         zCovar.row(i) = (observedValues.row(i).array() - zMean.row(i).value()).matrix();
     }
 
-    std::cout << "Z Covar: " << zCovar << std::endl;
+    std::cout << "\nZ Covar:\n " << zCovar << std::endl;
     // std::cout << "R: " << this->R << std::endl;
 
-    // calculate the innovation covariance
+    // calculate the innovation covariance, measurement covariance
     MatrixXf Pz(3, 3);
     Pz.setZero(3, 3);
 
     Pz = (zCovar * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose()) + this->R;
 
-    // std::cout << "Pz: " << Pz << std::endl;
+    std::cout << "\nPz:\n " << Pz << std::endl;
 
     // calculate the cross covariance
-    MatrixXf Pxz(6,2);
+    MatrixXf Pxz(3,2);
     Pxz.setZero();
 
-    // std::cout << "projectError: " << projectError << std::endl;
+    std::cout << "\nprojectError: \n" << projectError << std::endl;
 
     Pxz = projectError * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose(); 
 
-    // std::cout << "Pxz: " << Pxz << std::endl;
+    std::cout << "Pxz:\n " << Pxz << std::endl;
 
     // calculate the Kalman gain
     MatrixXf K(3, 3);
@@ -194,6 +194,7 @@ void HALO::stateUpdate(){
     std::cout << "\nKalman Gain: \n" << K << std::endl;
 
     // update the state vector
+    printf("\nthis->Xprediction + K * (this->X - zMean)\n\n");
     X0 = this->Xprediction + K * (this->X - zMean);
 
     // check and update before apogee bool
@@ -213,7 +214,8 @@ void HALO::stateUpdate(){
 
     this->KinematicsHalo.altitudeStore = X0(0);
 
-    // update the covariance matrix
+    // update the estimate covariance matrix
+    // when variations in the estimate are small then its good
     MatrixXf P1(3,3);
 
     // // std::cout << "Pprediction: " << Pprediction << std::endl;
@@ -224,7 +226,7 @@ void HALO::stateUpdate(){
 
     this->P = P1;
 
-    std::cout << "P(1,1): " << P << std::endl;
+    std::cout << "P(1,1):\n " << P << std::endl;
 
     std::cout << "\n end of state Update\n " << std::endl;
 
@@ -257,6 +259,7 @@ void HALO::prediction(){
 void HALO::calculateSigmaPoints() {
 
     // std::cout << "X0: " << X0 << std::endl;
+    std::cout << " ---- Predict Step ---- \n" << std::endl;
 
     // std::cout << "Q: " << Q << std::endl;
 
@@ -328,7 +331,7 @@ void HALO::calculateSigmaPoints() {
         // std::cout << "XpreMean: \n" << xPreMean << std::endl;
     }
 
-    // std::cout << "XpreMean: \n" << xPreMean << std::endl;
+    std::cout << "Xprediction: \n" << xPreMean << std::endl;
     // std::cout << "Xprediction: \n" << Xprediction << std::endl;
     this->Xprediction = xPreMean;
 
@@ -357,6 +360,8 @@ void HALO::calculateSigmaPoints() {
     this->Pprediction = Pprediction;
 
     this->sigPoints =  sigmaPoints;
+
+    std::cout << " ---- End Predict Step ---- \n" << std::endl;
 }
 
 // Function to interpolate between two nearest scenarios
@@ -452,7 +457,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     }
 
     // print distances list
-    for(int i = 0; i < distances.size(); i++){
+    for(int i = 0; i < 6; i++){
         printf("minDistance: %f, lowestIndex: %d, scenario %d\n", distances[i].first, distances[i].second.first, 
         distances[i].second.second.name);
     }
@@ -462,8 +467,9 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     float secondLowestDistance = distances[1].first;
     float secondLowestDistanceIndex = 1;
 
-    for(int i = 0; i < distances.size(); i++){
-        if(distances[i].first < lowestDistance){
+    for(int i = 0; i < 6; i++){
+        if(distances[i].first <= lowestDistance){
+            printf("new lowest distance %f\n", distances[i].first);
 
             secondLowestDistance = lowestDistance;
             secondLowestDistanceIndex = lowestDistanceIndex;
@@ -472,6 +478,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
             lowestDistanceIndex = i;
         }
     }
+
+    printf("lowest distance(%d) = %f, second lowest distance(%d) = %f\n", lowestDistanceIndex, lowestDistance, secondLowestDistanceIndex, secondLowestDistance);
 
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
