@@ -560,9 +560,10 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     std::vector<float> vector2 = vectors[2];
     std::vector<float> vector2Future = vectors[3];
     bool both = false;
-    bool v1OnTop = false;
+    bool vector1Further = false;
     
     for(int i = 0; i < 3; i++){
+        printf("[%d], v1 (%f), v2 (%f)\n", i, vector1[i], vector2[i]);
 
         if(vector1[i] > X_in(i)){
             // below vector1
@@ -571,18 +572,27 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
                 both = true;
                 if(vector1[i] > vector2[i]){
                     // vector1 on top
-                    v1OnTop = true;
+                    printf("point below both, v1 on top\n");
+                    vector1Further = true;
                 }else{
-                    v1OnTop = false;
+                    vector1Further = false;
+                    printf("point below both, v2 on top\n");
                 }
             }else{
                 // point between lines
+                printf("point between lines\n");
+
             }
         }else{
             if(vector2[i] > X_in(i)){
                 // point between lines
+                printf("point between\n");
             }else{
                 // point above both lines
+                if(vector1[i] < vector2[i]){
+                    vector1Further = true;
+                    printf("point above lines, vector1 further");
+                }
                 both = true;
             }
         }
@@ -592,7 +602,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
             float longestDistance = 0;
             float distance1 = 0;
 
-            if(v1OnTop){
+            if(!vector1Further){
                 longestDistance = vector2[i] - X_in(i);
                 distance1 = std::abs(vector1[i] - X_in(i));
             }else{
@@ -602,7 +612,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
 
             float relativeFactor = longestDistance / distance1;
 
-            if(v1OnTop){
+            if(!vector1Further){
                 gainV1[i] = ((vector1[i] * relativeFactor) / (vector1[i] * relativeFactor + vector2[i]));
             }else{
                 gainV1[i] = ((vector2[i] * relativeFactor) / (vector2[i] * relativeFactor + vector1[i]));
