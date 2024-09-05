@@ -565,75 +565,80 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     for(int i = 0; i < 3; i++){
         printf("[%d], v1 (%f), v2 (%f)\n", i, vector1[i], vector2[i]);
 
-        if(vector1[i] > X_in(i)){
-            // below vector1
-            if(vector2[i] > X_in(i)){
-                // point below both lines
-                both = true;
-                if(vector1[i] > vector2[i]){
-                    // vector1 on top
-                    printf("point below both, v1 on top\n");
-                    vector1Further = true;
+        float distance = std::abs(vector1[i] - vector2[i]);
+
+        if(distance < 1){
+            gainV1[i] = 0.5;
+            gainV2[i] = 0.5;
+            printf("similar vectors gains default");
+        }else{
+            if(vector1[i] > X_in(i)){
+                printf("---below v1----\n");
+                // below vector1
+                if(vector2[i] > X_in(i)){
+                    // point below both lines
+                    both = true;
+                    if(vector1[i] > vector2[i]){
+                        // vector1 on top
+                        printf("point below both, v1 on top\n\n");
+                        vector1Further = true;
+                    }else{
+                        vector1Further = false;
+                        printf("point below both, v2 on top\n\n");
+                    }
                 }else{
-                    vector1Further = false;
-                    printf("point below both, v2 on top\n");
+                    // point between lines
+                    printf("point between lines\n");
+
                 }
             }else{
-                // point between lines
-                printf("point between lines\n");
-
-            }
-        }else{
-            if(vector2[i] > X_in(i)){
-                // point between lines
-                printf("point between\n");
-            }else{
-                // point above both lines
-                if(vector1[i] < vector2[i]){
-                    vector1Further = true;
-                    printf("point above lines, vector1 further");
+                if(vector2[i] > X_in(i)){
+                    // point between lines
+                    printf("point between\n");
+                }else{
+                    // point above both lines
+                    if(vector1[i] < vector2[i]){
+                        vector1Further = true;
+                        printf("point above both lines, vector1 further\n\n");
+                    }else{
+                        vector1Further = false;
+                        printf("point above both lines, vector2 further\n\n");
+                    }
+                    both = true;
                 }
-                both = true;
-            }
-        }
-
-        // point below both lines -----------------------------------------------------------
-        if(both){
-            float longestDistance = 0;
-            float distance1 = 0;
-
-            if(!vector1Further){
-                longestDistance = vector2[i] - X_in(i);
-                distance1 = std::abs(vector1[i] - X_in(i));
-            }else{
-                longestDistance = vector2[i] - X_in(i);
-                distance1 = std::abs(vector1[i] - X_in(i));
             }
 
-            float relativeFactor = longestDistance / distance1;
+            // point below both lines -----------------------------------------------------------
+            if(both){
+                float longestDistance = 0;
+                float distance1 = 0;
 
-            if(!vector1Further){
-                gainV1[i] = ((vector1[i] * relativeFactor) / (vector1[i] * relativeFactor + vector2[i]));
-            }else{
-                gainV1[i] = ((vector2[i] * relativeFactor) / (vector2[i] * relativeFactor + vector1[i]));
-            }
+                if(!vector1Further){
+                    longestDistance = std::abs(vector1[i] - X_in(i));
+                    distance1 = std::abs(vector2[i] - X_in(i));
+                }else{
+                    longestDistance = std::abs(vector2[i] - X_in(i));
+                    distance1 = std::abs(vector1[i] - X_in(i));
+                }
 
-            printf("gainV1[%d]: %f\n", i, gainV1[i]);
-            gainV2[i] = 1 - gainV1[i];
-        }else{
-            // point between lines ------------------------------------------------------------
-            float distance = std::abs(vector1[i] - vector2[i]);             // get distance between two vectors
-            printf("distance: %f\n", distance);
-            if(distance < 1){
-                gainV1[i] = 0.5;
-                gainV2[i] = 0.5;
+                float relativeFactor = longestDistance / distance1;
+
+                if(!vector1Further){
+                    gainV1[i] = relativeFactor / (relativeFactor + 1);
+                }else{
+                    gainV1[i] = 1 - (relativeFactor / (relativeFactor + 1));
+                }
+
+                printf("gainV1[%d]: %f\n", i, gainV1[i]);
+                gainV2[i] = 1 - gainV1[i];
             }else{
+                // point between lines ------------------------------------------------------------
+                printf("distance: %f\n", distance);
                 gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance);  // get distance between vector1 and current state
                 // printf("gainV1[%d]: %f\n", i, gainV1[i]);
                 gainV2[i] = 1 - gainV1[i];
+                //--------------------------------------------------------------------------------
             }
-            //--------------------------------------------------------------------------------
-
         }
     }
 
