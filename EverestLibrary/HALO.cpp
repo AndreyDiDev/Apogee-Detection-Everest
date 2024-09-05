@@ -80,7 +80,7 @@ void HALO::init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0){
 
     // std::cout << "Weights: \n" << Weights << std::endl;
 
-    // errors can be because you didnt instatiate the matrix
+    // errors can be because you didnt instantiate the matrix
     // or trying to make a vector and declaring as a matrix
     VectorXf WeightsForSigmaPoints(7, 1);
     WeightsForSigmaPoints.setConstant(7, w_i);
@@ -195,7 +195,19 @@ void HALO::stateUpdate(){
 
     // update the state vector
     printf("\nthis->Xprediction + K * (this->X - zMean)\n\n");
-    X0 = this->Xprediction + K * (this->X - zMean);
+
+    std::cout << "Xprediction\n" <<  this->Xprediction << std::endl;
+    std::cout << "\nthis->X\n" << this->X;
+    std::cout << "\n\nzMean\n" << zMean;
+    std::cout << "\nK\n" << K;
+
+    VectorXf difference(3,1);
+    difference.setZero();
+    difference << this->X[2] - zMean(0), this->X[1] - zMean(1), this->X[0] - zMean(2);
+
+    std::cout << "\n difference\n" << difference << std::endl;
+
+    X0 = this->Xprediction + K * difference;
 
     // check and update before apogee bool
     if(!this->isBeforeApogeeBoolHALO){
@@ -210,7 +222,7 @@ void HALO::stateUpdate(){
         this->isBeforeApogeeBoolHALO = isBeforeApogee(this->Uaccel, this->Uvelo, this->Ualt, this->KinematicsHalo.altitudeStore);
     }
 
-    std::cout << "Estimated X (HALO): \n" << X0 << std::endl;
+    std::cout << "\nEstimated X (HALO): \n" << X0 << std::endl;
 
     this->KinematicsHalo.altitudeStore = X0(0);
 
