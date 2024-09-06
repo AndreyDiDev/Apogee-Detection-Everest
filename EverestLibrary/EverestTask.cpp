@@ -1266,6 +1266,8 @@ int main()
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
 
+    float totalTime = 0;
+
     // add to a list of scenarios
     // for(int i = 0; i < numberOfScenarios; i++){
     //     Scenario scenario = Scenario{scenarioListofVectorsBefore[i], scenarioListofVectorsAfter[i], "Scenario " + std::to_string(i)};
@@ -1353,7 +1355,7 @@ int main()
             0
         };
 
-        if(howMany <= 13){
+        // if(howMany <= 13){
 
             printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
@@ -1433,6 +1435,9 @@ int main()
                 sensorData2.magY,
                 sensorData2.magZ,
             };
+
+            // start timer for iteration
+            start = std::clock();
             
             double eAltitude = everest.TaskWrapper(everestData, MadAxesAlignmentPXPYNZ, MadAxesAlignmentPXPYNZ);
             double eVelocity = everest.getKinematics()->initialVelo;
@@ -1468,13 +1473,13 @@ int main()
 
             clock_t endTime = std::clock();
 
-            duration += endTime - start;
+            totalTime += endTime - start;
 
             // printf("Time for one more (seconds): %f\n", duration/CLOCKS_PER_SEC);
         }
-    }
+    // }
 
-   // printf("Overall for (13k samples): %f", duration/CLOCKS_PER_SEC);
+   printf("Overall for %d samples: %f", howMany, totalTime/CLOCKS_PER_SEC);
 
     fclose(file1);
     fclose(file);

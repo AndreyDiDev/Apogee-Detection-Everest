@@ -200,7 +200,17 @@ void HALO::stateUpdate(){
 
     std::cout << "Xprediction\n" <<  this->Xprediction << std::endl;
     std::cout << "\nthis->X\n" << this->X;
-    std::cout << "\n\nzMean\n" << zMean;
+    std::cout << "\n\nzMean\n\n" << zMean;
+
+    for(int row = 0; row < 3; row++){
+        for(int col = 0; col < 3; col++){
+            if(std::isnan(K(row, col))){
+                std::cout << "NAN detected in the Kalman Gain, defaulting to 0" << std::endl;
+                K(row, col) = 0;
+            }
+        }
+    }
+
     std::cout << "\n\nK\n" << K;
 
     VectorXf difference(3,1);
@@ -222,6 +232,11 @@ void HALO::stateUpdate(){
     }else{
         // check if the rocket is before apogee
         this->isBeforeApogeeBoolHALO = isBeforeApogee(this->Uaccel, this->Uvelo, this->Ualt, this->KinematicsHalo.altitudeStore);
+    }
+
+    if(std::isnan(X0(0)) || std::isnan(X0(1)) || std::isnan(X0(2))){
+        std::cout << "NAN detected in the state update, defaulting to Prediction as Estimation" << std::endl;
+        X0 = this->Xprediction;
     }
 
     std::cout << "\nEstimated X (HALO): \n" << X0 << std::endl;
