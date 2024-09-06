@@ -150,6 +150,7 @@ void HALO::stateUpdate(){
 
     // calculate the mean of the observed values
     VectorXf zMean(3);
+    zMean.setZero(3);
     zMean = observedValues * WeightsForSigmaPoints;
 
     std::cout << "\nZ mean:\n " << zMean << std::endl;
@@ -158,6 +159,7 @@ void HALO::stateUpdate(){
     // calculate covariance of Z
     MatrixXf zCovar(3, 7);
     zCovar.setZero(3, (2 * 3) + 1);
+
     for (int i = 0; i < 3; i++)
     {
         zCovar.row(i) = (observedValues.row(i).array() - zMean.row(i).value()).matrix();
@@ -182,7 +184,7 @@ void HALO::stateUpdate(){
 
     Pxz = projectError * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose(); 
 
-    std::cout << "Pxz:\n " << Pxz << std::endl;
+    std::cout << "\nPxz:\n " << Pxz << std::endl;
 
     // calculate the Kalman gain
     MatrixXf K(3, 3);
@@ -199,13 +201,13 @@ void HALO::stateUpdate(){
     std::cout << "Xprediction\n" <<  this->Xprediction << std::endl;
     std::cout << "\nthis->X\n" << this->X;
     std::cout << "\n\nzMean\n" << zMean;
-    std::cout << "\nK\n" << K;
+    std::cout << "\n\nK\n" << K;
 
     VectorXf difference(3,1);
     difference.setZero();
     difference << this->X[2] - zMean(0), this->X[1] - zMean(1), this->X[0] - zMean(2);
 
-    std::cout << "\n difference\n" << difference << std::endl;
+    std::cout << "\n\n difference\n" << difference << std::endl;
 
     X0 = this->Xprediction + K * difference;
 
@@ -229,6 +231,7 @@ void HALO::stateUpdate(){
     // update the estimate covariance matrix
     // when variations in the estimate are small then its good
     MatrixXf P1(3,3);
+    P1.setZero();
 
     // // std::cout << "Pprediction: " << Pprediction << std::endl;
     // // std::cout << "K: " << K << std::endl;
@@ -238,7 +241,7 @@ void HALO::stateUpdate(){
 
     this->P = P1;
 
-    std::cout << "P(1,1):\n " << P << std::endl;
+    std::cout << "\nP(1,1):\n " << P << std::endl;
 
     std::cout << "\n end of state Update\n " << std::endl;
 
@@ -307,13 +310,19 @@ void HALO::calculateSigmaPoints() {
 
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
+        // load variables
         VectorXf column = sigmaPoints.col(i);
+        this->firstTimeForPoint = firstTime[i];
         this->prevGain1 = this->listOfGainsSigmaPoints[i].first;
         this->prevGain2 = this->listOfGainsSigmaPoints[i].second;
-        printf("prevGain1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2]);
+
+        printf("\nprevGain1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2]);
         printf("\nsPoint[%d]: \n", i);
+
+        // update
         sigmaPoints.col(i) = dynamicModel(column);
         this->listOfGainsSigmaPoints[i] = {this->prevGain1, this->prevGain2};
+        this->firstTime[i] = this->firstTimeForPoint;
         printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
         listOfGainsSigmaPoints[0].first[0], listOfGainsSigmaPoints[0].first[1], listOfGainsSigmaPoints[0].first[2], listOfGainsSigmaPoints[0].second[0], listOfGainsSigmaPoints[0].second[1], listOfGainsSigmaPoints[0].second[2],
         listOfGainsSigmaPoints[1].first[0], listOfGainsSigmaPoints[1].first[1], listOfGainsSigmaPoints[1].first[2], listOfGainsSigmaPoints[1].second[0], listOfGainsSigmaPoints[1].second[1], listOfGainsSigmaPoints[1].second[2],
@@ -323,7 +332,7 @@ void HALO::calculateSigmaPoints() {
         listOfGainsSigmaPoints[5].first[0], listOfGainsSigmaPoints[5].first[1], listOfGainsSigmaPoints[5].first[2], listOfGainsSigmaPoints[5].second[0], listOfGainsSigmaPoints[5].second[1], listOfGainsSigmaPoints[5].second[2]);
     }
 
-    std::cout << "after predict sPoints: \n" << sigmaPoints << std::endl;
+    std::cout << "\nafter predict sPoints: \n" << sigmaPoints << std::endl;
 
     // std::cout << "Sigma Points row: " << sigmaPoints.rows() << " col: " << sigmaPoints.cols() << std::endl;
     // std::cout << "Sigma Points row 0 \n" << sigmaPoints.row(0) << std::endl;
@@ -344,7 +353,7 @@ void HALO::calculateSigmaPoints() {
         // std::cout << "XpreMean: \n" << xPreMean << std::endl;
     }
 
-    std::cout << "Xprediction: \n" << xPreMean << std::endl;
+    std::cout << "\nXprediction: \n" << xPreMean << std::endl;
     // std::cout << "Xprediction: \n" << Xprediction << std::endl;
     this->Xprediction = xPreMean;
 
@@ -360,7 +369,7 @@ void HALO::calculateSigmaPoints() {
         projError.row(i) = (sigmaPoints.row(i).array() - (this->Xprediction).row(i).value()).matrix();
     }
 
-    std::cout << "Project Error: \n" << projError << std::endl;
+    std::cout << "\nProject Error: \n" << projError << std::endl;
 
     this->projectError = projError;
 
@@ -644,6 +653,13 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
         }
     }
 
+    if(firstTimeForPoint = 1){
+        printf("first time\n");
+        this->prevGain1 = gainV1;
+        this->prevGain2 = gainV2;
+        firstTimeForPoint = 0;
+    }
+
     printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
     printf("prevGain1 (%f,%f,%f), gainV2 (%f,%f,%f)\n", this->prevGain2[0], this->prevGain2[1], this->prevGain2[2], gainV2[0], gainV2[1], gainV2[2]);
 
@@ -717,6 +733,19 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     //         printf("\n");
     //     }
     // }
+
+    if(std::isnan(X(0)) || std::isnan(X(1)) || std::isnan(X(2))){
+        printf("X is nan, defaulting to static integration\n");
+
+        double finalVelocity = X(1) + X(0) * deltaTime;
+        double altitude = X(2) + (X(1) + finalVelocity) * deltaTime / 2.0;
+
+        Xprediction(0) = altitude;
+        Xprediction(1) = finalVelocity;
+        Xprediction(2) = X(0);
+
+        return Xprediction;
+    }
 
     std::vector<std::vector<float>> nearestVectors = this->findNearestScenarios(scenarios, X);
 

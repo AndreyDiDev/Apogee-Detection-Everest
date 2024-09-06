@@ -345,6 +345,10 @@ class HALO{
 
         void overrideStateWithGPS(float GPS);
 
+        std::vector<int> firstTime = {1, 1, 1, 1, 1, 1 ,1};
+
+        int firstTimeForPoint = 1;
+
     private:
 
         float Uaccel;
