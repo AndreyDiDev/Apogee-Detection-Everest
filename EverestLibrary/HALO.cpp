@@ -308,18 +308,19 @@ void HALO::calculateSigmaPoints() {
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         VectorXf column = sigmaPoints.col(i);
-        this->prevGain1 = this->listOfGainsSigmaPoints[i][0];
-        this->prevGain2 = this->listOfGainsSigmaPoints[i][1];
+        this->prevGain1 = this->listOfGainsSigmaPoints[i].first;
+        this->prevGain2 = this->listOfGainsSigmaPoints[i].second;
+        printf("prevGain1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2]);
         printf("\nsPoint[%d]: \n", i);
         sigmaPoints.col(i) = dynamicModel(column);
         this->listOfGainsSigmaPoints[i] = {this->prevGain1, this->prevGain2};
         printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
-        listOfGainsSigmaPoints[0][0][0], listOfGainsSigmaPoints[0][0][1], listOfGainsSigmaPoints[0][0][2], listOfGainsSigmaPoints[0][1][0], listOfGainsSigmaPoints[0][1][1], listOfGainsSigmaPoints[0][1][2],
-        listOfGainsSigmaPoints[1][0][0], listOfGainsSigmaPoints[1][0][1], listOfGainsSigmaPoints[1][0][2], listOfGainsSigmaPoints[1][1][0], listOfGainsSigmaPoints[1][1][1], listOfGainsSigmaPoints[1][1][2],
-        listOfGainsSigmaPoints[2][0][0], listOfGainsSigmaPoints[2][0][1], listOfGainsSigmaPoints[2][0][2], listOfGainsSigmaPoints[2][1][0], listOfGainsSigmaPoints[2][1][1], listOfGainsSigmaPoints[2][1][2],
-        listOfGainsSigmaPoints[3][0][0], listOfGainsSigmaPoints[3][0][1], listOfGainsSigmaPoints[3][0][2], listOfGainsSigmaPoints[3][1][0], listOfGainsSigmaPoints[3][1][1], listOfGainsSigmaPoints[3][1][2],
-        listOfGainsSigmaPoints[4][0][0], listOfGainsSigmaPoints[4][0][1], listOfGainsSigmaPoints[4][0][2], listOfGainsSigmaPoints[4][1][0], listOfGainsSigmaPoints[4][1][1], listOfGainsSigmaPoints[4][1][2],
-        listOfGainsSigmaPoints[5][0][0], listOfGainsSigmaPoints[5][0][1], listOfGainsSigmaPoints[5][0][2], listOfGainsSigmaPoints[5][1][0], listOfGainsSigmaPoints[5][1][1], listOfGainsSigmaPoints[5][1][2]);
+        listOfGainsSigmaPoints[0].first[0], listOfGainsSigmaPoints[0].first[1], listOfGainsSigmaPoints[0].first[2], listOfGainsSigmaPoints[0].second[0], listOfGainsSigmaPoints[0].second[1], listOfGainsSigmaPoints[0].second[2],
+        listOfGainsSigmaPoints[1].first[0], listOfGainsSigmaPoints[1].first[1], listOfGainsSigmaPoints[1].first[2], listOfGainsSigmaPoints[1].second[0], listOfGainsSigmaPoints[1].second[1], listOfGainsSigmaPoints[1].second[2],
+        listOfGainsSigmaPoints[2].first[0], listOfGainsSigmaPoints[2].first[1], listOfGainsSigmaPoints[2].first[2], listOfGainsSigmaPoints[2].second[0], listOfGainsSigmaPoints[2].second[1], listOfGainsSigmaPoints[2].second[2],
+        listOfGainsSigmaPoints[3].first[0], listOfGainsSigmaPoints[3].first[1], listOfGainsSigmaPoints[3].first[2], listOfGainsSigmaPoints[3].second[0], listOfGainsSigmaPoints[3].second[1], listOfGainsSigmaPoints[3].second[2],
+        listOfGainsSigmaPoints[4].first[0], listOfGainsSigmaPoints[4].first[1], listOfGainsSigmaPoints[4].first[2], listOfGainsSigmaPoints[4].second[0], listOfGainsSigmaPoints[4].second[1], listOfGainsSigmaPoints[4].second[2],
+        listOfGainsSigmaPoints[5].first[0], listOfGainsSigmaPoints[5].first[1], listOfGainsSigmaPoints[5].first[2], listOfGainsSigmaPoints[5].second[0], listOfGainsSigmaPoints[5].second[1], listOfGainsSigmaPoints[5].second[2]);
     }
 
     std::cout << "after predict sPoints: \n" << sigmaPoints << std::endl;
@@ -359,11 +360,12 @@ void HALO::calculateSigmaPoints() {
         projError.row(i) = (sigmaPoints.row(i).array() - (this->Xprediction).row(i).value()).matrix();
     }
 
-    // std::cout << "Project Error: \n" << projError << std::endl;
+    std::cout << "Project Error: \n" << projError << std::endl;
 
     this->projectError = projError;
 
     MatrixXf Pprediction(3,3);
+    Pprediction.setZero(3,3);
 
     Pprediction = projError * WeightsForSigmaPoints.asDiagonal() * projError.transpose() + this->Q;
 
@@ -475,9 +477,9 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     }
 
     float lowestDistance = distances[0].first;
-    float lowestDistanceIndex = 0;
+    int lowestDistanceIndex = 0;
     float secondLowestDistance = distances[1].first;
-    float secondLowestDistanceIndex = 1;
+    int secondLowestDistanceIndex = 1;
 
     for(int i = 0; i < 6; i++){
         if(distances[i].first <= lowestDistance){
@@ -588,7 +590,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
                     }
                 }else{
                     // point between lines
-                    printf("point between lines\n");
+                    printf("point between lines\n\n");
 
                 }
             }else{
@@ -613,7 +615,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
                 float longestDistance = 0;
                 float distance1 = 0;
 
-                if(!vector1Further){
+                if(vector1Further){
                     longestDistance = std::abs(vector1[i] - X_in(i));
                     distance1 = std::abs(vector2[i] - X_in(i));
                 }else{
