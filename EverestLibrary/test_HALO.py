@@ -2,7 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Read the CSV file
-df = pd.read_csv('HALO.txt', delimiter = ',')
+df = pd.read_csv('HALO1.txt', delimiter = ',')
+sims = pd.read_csv('beforeSimsF2_Short.csv')
 
 # plot Madgwick
 
@@ -16,12 +17,14 @@ plt.plot(df['Time'], df['Halo_ALt'], label='HALO Alt')
 # plt.plot(df['Time'], df['GPS_Alt'], label='GPS Alt')
 # plt.plot(df['Time'], df['Sigma_Alt_Upper'], label='Sigma Alt Upper', marker = "x")
 # plt.plot(df['Time'], df['Sigma_Alt_Lower'], label='Sigma Alt Lower', marker = "o")
-# plt.plot(df['Time'], df['Scenarios_Alt1'], label='Scenarios Alt1')
-# plt.plot(df['Time'], df['Scenarios_Alt2'], label='Scenarios Alt2')
-# plt.plot(df['Time'], df['Scenarios_Alt3'], label='Scenarios Alt3')
-# plt.plot(df['Time'], df['Scenarios_Alt4'], label='Scenarios Alt4')
-# plt.plot(df['Time'], df['Scenarios_Alt5'], label='Scenarios Alt5')
-# plt.plot(df['Time'], df['Scenarios_Alt6'], label='Scenarios Alt6')
+plt.plot(sims['time_1'], sims['alt_1'], label='Scenarios Alt1')
+plt.plot(sims['time_2'], sims['alt_2'], label='Scenarios Alt2')
+plt.plot(sims['time_3'], sims['alt_3'], label='Scenarios Alt3')
+plt.plot(sims['time_4'], sims['alt_4'], label='Scenarios Alt4')
+plt.plot(sims['time_5'], sims['alt_5'], label='Scenarios Alt5')
+# change color 
+plt.plot(sims['time_6'], sims['alt_6'], color = "red", label='Altimeter')
+
 plt.xlabel('Time')
 plt.ylabel('Altitude')
 plt.title('Time vs Alt')
