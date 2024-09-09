@@ -604,7 +604,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     fprintf(file, "%d,%d,", lowestDistanceIndex, secondLowestDistanceIndex);
     fprintf(file, "%d,%d\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
 
-    fprintf(file2, "lowest(%f),secondL(%f),", lowestDistance, secondLowestDistance);
+    fprintf(file2, "For Meas(%f,%f,%f) V1(%f) lowest(%f),secondL(%f),", measurement[0], measurement[1], measurement[2], lowestDistance, secondLowestDistance);
     fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
     fprintf(file2, "lowestName(%d),secondLN(%d)\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
 
