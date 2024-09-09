@@ -1130,10 +1130,6 @@ int main()
             0, 0, 0;
 
     // clear log files
-    // const char* gains = "gains.txt";
-    // const char* predictedValues = "predictedValues.txt";
-    // const char* sigmaPoints = "sigmaPoints.txt";
-    // const char* filename = "log.txt";
 
     if (remove("gains.txt") == 0) {
         std::cout << "File deleted successfully: " << "gains.txt" << std::endl;
@@ -1155,6 +1151,18 @@ int main()
 
     if (remove("log.txt") == 0) {
         std::cout << "File deleted successfully: " << "log.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("nearestScenarios.txt") == 0) {
+        std::cout << "File deleted successfully: " << "nearestScenarios.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("nearestScenariosFormatted.txt") == 0) {
+        std::cout << "File deleted successfully: " << "nearestScenariosFormatted.txt" << std::endl;
     } else {
         std::perror("Error deleting file");
     }

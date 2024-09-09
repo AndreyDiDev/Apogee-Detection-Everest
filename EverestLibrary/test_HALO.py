@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 # Read the CSV file
 df = pd.read_csv('HALO.txt', delimiter = ',')
 sims = pd.read_csv('beforeSimsF2_Short.csv')
-predictedValues = pd.read_csv('predictedValues.csv')
-gains = pd.read_csv('gains.csv')
-sigmaPoints = pd.read_csv('sigmaPoints.csv')
+predictedValues = pd.read_csv('predictedValues.txt')
+gains = pd.read_csv('gains.txt')
+sigmaPoints = pd.read_csv('sigmaPoints.txt')
 
 # plot Madgwick
 

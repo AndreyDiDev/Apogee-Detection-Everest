@@ -410,7 +410,7 @@ void HALO::calculateSigmaPoints() {
     fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,3), sigmaPoints(1,3), sigmaPoints(2,3));
     fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,4), sigmaPoints(1,4), sigmaPoints(2,4));
     fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,5), sigmaPoints(1,5), sigmaPoints(2,5));
-    fprintf(sigmaPointsFile, "%f,%f,%f\n", sigmaPoints(0,6), sigmaPoints(1,6), sigmaPoints(2,6));
+    fprintf(sigmaPointsFile, "%f,%f,%f\n",sigmaPoints(0,6), sigmaPoints(1,6), sigmaPoints(2,6));
 
     fclose(file);
     fclose(sigmaPointsFile);
@@ -588,6 +588,29 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     printf("lowest distance(%d) = %f, second lowest distance(%d) = %f\n", lowestDistanceIndex, lowestDistance, secondLowestDistanceIndex, secondLowestDistance);
 
+    FILE* file = fopen("nearestScenarios.txt", "a+");
+    if (!file) {
+        fprintf(stderr, "Error opening nearestScenarios.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* file2 = fopen("nearestScenariosFormatted.txt", "a+");
+    if (!file2) {
+        fprintf(stderr, "Error opening nearestScenariosFormatted.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(file, "%f,%f,", lowestDistance, secondLowestDistance);
+    fprintf(file, "%d,%d,", lowestDistanceIndex, secondLowestDistanceIndex);
+    fprintf(file, "%d,%d\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+
+    fprintf(file2, "lowest(%f),secondL(%f),", lowestDistance, secondLowestDistance);
+    fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
+    fprintf(file2, "lowestName(%d),secondLN(%d)\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+
+    fclose(file);
+    fclose(file2);
+
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
     printf("indexFirst: %d\n", indexFirst);
@@ -608,18 +631,18 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     nearestVectors.push_back(currentVector2);
     nearestVectors.push_back(futureVector2);
 
-    FILE* file = fopen("predictedValues.txt", "a+");
-    if (!file) {
+    FILE* file3 = fopen("predictedValues.txt", "a+");
+    if (!file3) {
         fprintf(stderr, "Error opening predictedValues.txt...exiting\n");
         exit(1);
     }
 
-    fprintf(file, "%f,%f,%f,%f,", currentVector1[0], currentVector1[1], currentVector1[2], currentVector1[3]);
-    fprintf(file, "%f,%f,%f,%f,", futureVector1[0], futureVector1[1], futureVector1[2], futureVector1[3]);
-    fprintf(file, "%f,%f,%f,%f,", currentVector2[0], currentVector2[1], currentVector2[2], currentVector2[3]);
-    fprintf(file, "%f,%f,%f,%f\n", futureVector2[0], futureVector2[1], futureVector2[2], futureVector2[3]);
+    fprintf(file3, "%f,%f,%f,%f,", currentVector1[0], currentVector1[1], currentVector1[2], currentVector1[3]);
+    fprintf(file3, "%f,%f,%f,%f,", futureVector1[0], futureVector1[1], futureVector1[2], futureVector1[3]);
+    fprintf(file3, "%f,%f,%f,%f,", currentVector2[0], currentVector2[1], currentVector2[2], currentVector2[3]);
+    fprintf(file3, "%f,%f,%f,%f\n", futureVector2[0], futureVector2[1], futureVector2[2], futureVector2[3]);
 
-    fclose(file);
+    fclose(file3);
 
     return nearestVectors;
 }
@@ -750,7 +773,7 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
         }
     }
 
-    if(firstTimeForPoint = 1){
+    if(this->firstTimeForPoint == 1){
         FILE* file = fopen("log.txt", "a+");
 
         if (!file) {
@@ -762,10 +785,9 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
 
         fclose(file);
 
-        printf("first time\n");
         this->prevGain1 = gainV1;
         this->prevGain2 = gainV2;
-        firstTimeForPoint = 0;
+        this->firstTimeForPoint = 0;
     }
 
     printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
@@ -838,7 +860,7 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
 }
 
 void HALO::overrideStateWithGPS(float GPS){
-    if(GPS > (this->X[0] - 300) && GPS < (this->X[0] + 300)){
+    if(GPS > (this->X[0] - 200) && GPS < (this->X[0] + 200)){
         this->X[0] = GPS;
         printf("Override GPS (%f, %f, %f)", this->X[0], this->X[1], this->X[2]);
 
