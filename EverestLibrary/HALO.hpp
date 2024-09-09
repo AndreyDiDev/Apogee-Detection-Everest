@@ -349,6 +349,8 @@ class HALO{
 
         int firstTimeForPoint = 1;
 
+        FILE* file;
+
     private:
 
         float Uaccel;

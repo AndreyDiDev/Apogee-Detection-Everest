@@ -1129,9 +1129,40 @@ int main()
             0, 0, 0,
             0, 0, 0;
 
+    // clear log files
+    // const char* gains = "gains.txt";
+    // const char* predictedValues = "predictedValues.txt";
+    // const char* sigmaPoints = "sigmaPoints.txt";
+    // const char* filename = "log.txt";
+
+    if (remove("gains.txt") == 0) {
+        std::cout << "File deleted successfully: " << "gains.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("predictedValues.txt") == 0) {
+        std::cout << "File deleted successfully: " << "predictedValues.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("log.txt") == 0) {
+        std::cout << "File deleted successfully: " << "log.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
 
     // test purposes
-    FILE *file = fopen("HALO.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    FILE* file = fopen("HALO.txt", "w+"); // Open the file for appending or create it if it doesn't exist
+    halo.file = file;
     if (!file) {
         fprintf(stderr, "Error opening HALO.txt...exiting\n");
         exit(1);
@@ -1144,9 +1175,9 @@ int main()
     
     FILE *file1 = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
 
-    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+    FILE *simsFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2_short.csv", "r");
 
-    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+    FILE *simsAfterFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2_short.csv", "r");
 
     FILE *taberFile = fopen("C:/Users/andin/OneDrive/Documents/AllRepos/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/taber_launch_formattedF.csv", "r");
     

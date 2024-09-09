@@ -202,13 +202,42 @@ void HALO::stateUpdate(){
     std::cout << "\nthis->X\n" << this->X;
     std::cout << "\n\nzMean\n\n" << zMean;
 
+    bool kZero = false;
+
     for(int row = 0; row < 3; row++){
         for(int col = 0; col < 3; col++){
             if(std::isnan(K(row, col))){
                 std::cout << "NAN detected in the Kalman Gain, defaulting to 0" << std::endl;
+
+                FILE* log = fopen("log.txt", "a+"); // Open the file for appending or create it if it doesn't exist
+
+                kZero = true;
+
+                if (!log) {
+                    fprintf(stderr, "Error opening log.txt...exiting\n");
+                    exit(1);
+                }
+
+                fprintf(log, "At time %f s NAN detected in the Kalman Gain, " , this->time);
+
+                fclose(log);
+
                 K(row, col) = 0;
             }
         }
+    }
+
+    if(kZero){
+
+        FILE* log = fopen("log.txt", "a+"); // Open the file for appending or create it if it doesn't exist
+
+        if (!log) {
+            fprintf(stderr, "Error opening log.txt...exiting\n");
+            exit(1);
+        }
+
+        fprintf(log, "\n");
+        fclose(log);
     }
 
     std::cout << "\n\nK\n" << K;
@@ -235,8 +264,21 @@ void HALO::stateUpdate(){
     }
 
     if(std::isnan(X0(0)) || std::isnan(X0(1)) || std::isnan(X0(2))){
+
+        FILE* log = fopen("log.txt", "a+"); // Open the file for appending or create it if it doesn't exist
+
+        if (!log) {
+            fprintf(stderr, "Error opening log.txt...exiting\n");
+            exit(1);
+        }
+
+        fprintf(log, "At time %f s NAN detected in the state update, defaulting to Prediction as Estimation\n" , this->time);
+
         std::cout << "NAN detected in the state update, defaulting to Prediction as Estimation" << std::endl;
+
         X0 = this->Xprediction;
+
+        fclose(log);
     }
 
     std::cout << "\nEstimated X (HALO): \n" << X0 << std::endl;
@@ -323,6 +365,18 @@ void HALO::calculateSigmaPoints() {
     // before dynamics
     std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
 
+    FILE* file = fopen("gains.txt", "a+");
+    if (!file) {
+        fprintf(stderr, "Error opening gains.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* sigmaPointsFile = fopen("sigmaPoints.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         // load variables
@@ -338,6 +392,7 @@ void HALO::calculateSigmaPoints() {
         sigmaPoints.col(i) = dynamicModel(column);
         this->listOfGainsSigmaPoints[i] = {this->prevGain1, this->prevGain2};
         this->firstTime[i] = this->firstTimeForPoint;
+        fprintf(file, " ");
         printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
         listOfGainsSigmaPoints[0].first[0], listOfGainsSigmaPoints[0].first[1], listOfGainsSigmaPoints[0].first[2], listOfGainsSigmaPoints[0].second[0], listOfGainsSigmaPoints[0].second[1], listOfGainsSigmaPoints[0].second[2],
         listOfGainsSigmaPoints[1].first[0], listOfGainsSigmaPoints[1].first[1], listOfGainsSigmaPoints[1].first[2], listOfGainsSigmaPoints[1].second[0], listOfGainsSigmaPoints[1].second[1], listOfGainsSigmaPoints[1].second[2],
@@ -346,6 +401,20 @@ void HALO::calculateSigmaPoints() {
         listOfGainsSigmaPoints[4].first[0], listOfGainsSigmaPoints[4].first[1], listOfGainsSigmaPoints[4].first[2], listOfGainsSigmaPoints[4].second[0], listOfGainsSigmaPoints[4].second[1], listOfGainsSigmaPoints[4].second[2],
         listOfGainsSigmaPoints[5].first[0], listOfGainsSigmaPoints[5].first[1], listOfGainsSigmaPoints[5].first[2], listOfGainsSigmaPoints[5].second[0], listOfGainsSigmaPoints[5].second[1], listOfGainsSigmaPoints[5].second[2]);
     }
+
+    fprintf(file, "\n");
+
+    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,0), sigmaPoints(1,0), sigmaPoints(2,0));
+    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,1), sigmaPoints(1,1), sigmaPoints(2,1));
+    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,2), sigmaPoints(1,2), sigmaPoints(2,2));
+    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,3), sigmaPoints(1,3), sigmaPoints(2,3));
+    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,4), sigmaPoints(1,4), sigmaPoints(2,4));
+    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,5), sigmaPoints(1,5), sigmaPoints(2,5));
+    fprintf(sigmaPointsFile, "%f,%f,%f\n", sigmaPoints(0,6), sigmaPoints(1,6), sigmaPoints(2,6));
+
+    fclose(file);
+    fclose(sigmaPointsFile);
+
 
     std::cout << "\nafter predict sPoints: \n" << sigmaPoints << std::endl;
 
@@ -539,6 +608,19 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     nearestVectors.push_back(currentVector2);
     nearestVectors.push_back(futureVector2);
 
+    FILE* file = fopen("predictedValues.txt", "a+");
+    if (!file) {
+        fprintf(stderr, "Error opening predictedValues.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(file, "%f,%f,%f,%f,", currentVector1[0], currentVector1[1], currentVector1[2], currentVector1[3]);
+    fprintf(file, "%f,%f,%f,%f,", futureVector1[0], futureVector1[1], futureVector1[2], futureVector1[3]);
+    fprintf(file, "%f,%f,%f,%f,", currentVector2[0], currentVector2[1], currentVector2[2], currentVector2[3]);
+    fprintf(file, "%f,%f,%f,%f\n", futureVector2[0], futureVector2[1], futureVector2[2], futureVector2[3]);
+
+    fclose(file);
+
     return nearestVectors;
 }
 
@@ -669,6 +751,17 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     }
 
     if(firstTimeForPoint = 1){
+        FILE* file = fopen("log.txt", "a+");
+
+        if (!file) {
+            fprintf(stderr, "Error opening log.txt...exiting\n");
+            exit(1);
+        }
+
+        fprintf(file, "First time for point (%f, %f, %f)\n", X_in(0), X_in(1), X_in(2));
+
+        fclose(file);
+
         printf("first time\n");
         this->prevGain1 = gainV1;
         this->prevGain2 = gainV2;
@@ -677,6 +770,17 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
 
     printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
     printf("prevGain1 (%f,%f,%f), gainV2 (%f,%f,%f)\n", this->prevGain2[0], this->prevGain2[1], this->prevGain2[2], gainV2[0], gainV2[1], gainV2[2]);
+
+    FILE* file = fopen("gains.txt", "a+");
+    if (!file) {
+        fprintf(stderr, "Error opening gains.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(file, "%f, %f, %f,", gainV1[0], gainV1[1], gainV1[2]);
+    fprintf(file, "%f, %f, %f", gainV2[0], gainV2[1], gainV2[2]);
+
+    fclose(file);
 
     // interpolate between the two scenarios to get predicted values0
     float predicted_interpolated_alt  = this->prevGain1[0] * vector1Future[0] + this->prevGain2[0] * vector2Future[0];
@@ -699,6 +803,15 @@ bool HALO::isBeforeApogee(float acceleration, float velocity, float altitude, fl
 
     if(acceleration < -9.81 || velocity < 0.5 || altitude < lastAltitude){
         printf("Apogee at %f\n", altitude);
+
+        FILE* file = fopen("log.txt", "a+");
+        if (!file) {
+            fprintf(stderr, "Error opening log.txt...exiting\n");
+            exit(1);
+        }
+
+        fprintf(file, "Apogee at %f\n", altitude);
+
         return false;
     }
 
@@ -728,6 +841,16 @@ void HALO::overrideStateWithGPS(float GPS){
     if(GPS > (this->X[0] - 300) && GPS < (this->X[0] + 300)){
         this->X[0] = GPS;
         printf("Override GPS (%f, %f, %f)", this->X[0], this->X[1], this->X[2]);
+
+        FILE* file = fopen("log.txt", "a+");
+        if (!file) {
+            fprintf(stderr, "Error opening log.txt...exiting\n");
+            exit(1);
+        }
+
+        fclose(file);
+        
+        fprintf(file, "Override GPS (%f, %f, %f)\n", this->X[0], this->X[1], this->X[2]);
     }
 }
 
@@ -750,6 +873,11 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     // }
 
     if(std::isnan(X(0)) || std::isnan(X(1)) || std::isnan(X(2))){
+        FILE* file = fopen("log.txt", "a+");
+        fprintf(file, "At %f X is nan, defaulting to static integration\n", this->time);
+        fclose(file);
+
+
         printf("X is nan, defaulting to static integration\n");
 
         double finalVelocity = X(1) + X(0) * deltaTime;
