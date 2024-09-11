@@ -569,13 +569,13 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
         distances[i].second.second.name);
     }
 
-    float lowestDistance = distances[0].first;
+    float lowestDistance = std::numeric_limits<int>::max();
     int lowestDistanceIndex = 0;
-    float secondLowestDistance = distances[1].first;
-    int secondLowestDistanceIndex = 1;
+    float secondLowestDistance = std::numeric_limits<int>::max();
+    int secondLowestDistanceIndex = 0;
 
     for(int i = 0; i < 6; i++){
-        if(distances[i].first <= lowestDistance){
+        if(distances[i].first < lowestDistance){
             printf("new lowest distance %f\n", distances[i].first);
 
             secondLowestDistance = lowestDistance;
@@ -583,6 +583,10 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
             lowestDistance = distances[i].first;
             lowestDistanceIndex = i;
+        } else if (distances[i].first < secondLowestDistance){
+            printf("new second lowest distance %f\n", distances[i].first);
+            secondLowestDistance = distances[i].first;
+            secondLowestDistanceIndex = i;
         }
     }
 
@@ -607,6 +611,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     fprintf(file2, "For Meas(%f,%f,%f) V1(%f) lowest(%f),secondL(%f),", measurement[0], measurement[1], measurement[2], lowestDistance, secondLowestDistance);
     fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
     fprintf(file2, "lowestName(%d),secondLN(%d)\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+    fprintf(file2, "list: %f,%f,%f,%f,%f,%f\n", distances[0].first, distances[1].first, distances[2].first, 
+                        distances[3].first, distances[4].first, distances[5].first, distances[6].first);
 
     fclose(file);
     fclose(file2);
