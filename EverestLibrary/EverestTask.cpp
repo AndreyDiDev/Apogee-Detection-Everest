@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 
+#define printf(...) ;
 
 // task specific defines
 // #include "main.h"
@@ -1167,6 +1168,143 @@ int main()
         std::perror("Error deleting file");
     }
 
+    if (remove("sigmaPoints.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints1.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints1.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints2.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints2.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints3.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints3.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints4.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints4.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints5.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints5.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    if (remove("sigmaPoints6.txt") == 0) {
+        std::cout << "File deleted successfully: " << "sigmaPoints6.txt" << std::endl;
+    } else {
+        std::perror("Error deleting file");
+    }
+
+    FILE* predictedValues = fopen("predictedValues.txt", "a+");
+
+    if(!predictedValues){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(predictedValues, "s1_alt,s1_velo,s1_acc,s2_alt,s2_velo,s2_acc,s3_alt,s3_velo,s3_acc,s4_alt,s4_velo,s4_acc,s5_alt,s5_velo,s5_acc,s6_alt,s6_velo,s6_acc\n");
+
+    fclose(predictedValues);
+
+    FILE* gains = fopen("gains.txt", "a+");
+    if(!gains){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(gains, "gain_IMU,gain_Baro1,gain_Baro2\n");
+
+    fclose(gains);
+
+    FILE* sigmaPoints = fopen("sigmaPoints.txt", "a+");
+    if(!sigmaPoints){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints, "alt,velo,acc\n");
+
+    fclose(sigmaPoints);
+
+    FILE* sigmaPoints1 = fopen("sigmaPoints1.txt", "a+");
+    if(!sigmaPoints1){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints1, "alt,velo,acc\n");
+
+    fclose(sigmaPoints1);
+
+    FILE* sigmaPoints2 = fopen("sigmaPoints2.txt", "a+");
+
+    if(!sigmaPoints2){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints2, "alt,velo,acc\n");
+
+    fclose(sigmaPoints2);
+
+    FILE* sigmaPoints3 = fopen("sigmaPoints3.txt", "a+");
+
+    if(!sigmaPoints3){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints3, "alt,velo,acc\n");
+
+    fclose(sigmaPoints3);
+
+    FILE* sigmaPoints4 = fopen("sigmaPoints4.txt", "a+");
+
+    if(!sigmaPoints4){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints4, "alt,velo,acc\n");
+
+    fclose(sigmaPoints4);
+
+    FILE* sigmaPoints5 = fopen("sigmaPoints5.txt", "a+");
+
+    if(!sigmaPoints5){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints5, "alt,velo,acc\n");
+
+    fclose(sigmaPoints5);
+
+    FILE* sigmaPoints6 = fopen("sigmaPoints6.txt", "a+");
+
+    if(!sigmaPoints6){
+        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        exit(1);
+    }
+
+    fprintf(sigmaPoints6, "alt,velo,acc\n");
+
+    fclose(sigmaPoints6);
 
     // test purposes
     FILE* file = fopen("HALO.txt", "w+"); // Open the file for appending or create it if it doesn't exist
@@ -1196,9 +1334,9 @@ int main()
 
     FILE *file1         = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/Imu_Baro.csv", "r");
 
-    FILE *simsFile      = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+    FILE *simsFile      = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2_Short.csv", "r");
 
-    FILE *simsAfterFile = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2.csv", "r");
+    FILE *simsAfterFile = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/beforeSimsF2_Short.csv", "r");
     
     FILE *taberFile     = fopen("C:/Users/Andrey/Documents/UKFRepo/UnscentedKalmanFilter/EverestLibrary_HALO/EverestL/EverestLibrary/taber_launch_formattedF.csv", "r");
 

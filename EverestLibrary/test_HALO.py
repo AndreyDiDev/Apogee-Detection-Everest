@@ -7,6 +7,12 @@ sims = pd.read_csv('beforeSimsF2_Short.csv')
 predictedValues = pd.read_csv('predictedValues.txt')
 gains = pd.read_csv('gains.txt')
 sigmaPoints = pd.read_csv('sigmaPoints.txt')
+sigmaPoints1 = pd.read_csv('sigmaPoints1.txt')
+sigmaPoints2 = pd.read_csv('sigmaPoints2.txt')
+sigmaPoints3 = pd.read_csv('sigmaPoints3.txt')
+sigmaPoints4 = pd.read_csv('sigmaPoints4.txt')
+sigmaPoints5 = pd.read_csv('sigmaPoints5.txt')
+sigmaPoints6 = pd.read_csv('sigmaPoints6.txt')
 
 # plot Madgwick
 
@@ -71,6 +77,100 @@ plt.title('Time vs Acc')
 plt.legend()
 plt.grid(True)
 
+# # plot sPoints w/ final HALO and Truth alt ----------------------------------------------------
+plt.figure(figsize=(10, 6))
+theTime = df['Time']
+theTime = [0, 0.33, 0.66, 1, 1.33, 1.66, 2] + theTime.tolist()
+
+# print(theTime)
+# print(sigmaPoints['alt'])
+
+alt1 = sigmaPoints['alt']
+alt1 = alt1[8:]
+
+alt2 = sigmaPoints1['alt']
+alt2 = alt2[8:]
+
+alt3 = sigmaPoints2['alt']
+alt3 = alt3[8:]
+
+alt4 = sigmaPoints3['alt']
+alt4 = alt4[8:]
+
+alt5 = sigmaPoints4['alt']
+alt5 = alt5[8:]
+
+alt6 = sigmaPoints5['alt']
+alt6 = alt6[8:]
+
+alt7 = sigmaPoints6['alt']
+alt7 = alt7[8:]
+
+plt.plot(theTime, alt1, label='s1_alt')
+plt.plot(theTime, alt2, label='s2_alt')
+plt.plot(theTime, alt3, label='s3_alt')
+plt.plot(theTime, alt4, label='s4_alt')
+plt.plot(theTime, alt5, label='s5_alt')
+plt.plot(theTime, alt6, label='s6_alt')
+plt.plot(theTime, alt7, label='s7_alt')
+plt.plot(df['Time'], df['Everest_Alt'], label='Everest/IMU Alt', marker = "o", markevery=5)
+plt.plot(df['Time'], df['Halo_ALt'], label='HALO Alt', marker = "x", markevery=5)
+plt.plot(sims['time_6'], sims['alt_6'], label='Altimeter', marker = "s", markevery=5)
+plt.plot()
+plt.xlabel('Time')
+plt.ylabel('Alt')
+plt.title('Time vs Alt')
+plt.legend()
+plt.grid(True)
+
+# # plot sPoints w/ final HALO and Truth velo ----------------------------------------------------
+plt.figure(figsize=(10, 6))
+
+vel1 = sigmaPoints['velo']
+vel1 = vel1[8:]
+
+vel2 = sigmaPoints1['velo']
+vel2 = vel2[8:]
+
+vel3 = sigmaPoints2['velo']
+vel3 = vel3[8:]
+
+vel4 = sigmaPoints3['velo']
+vel4 = vel4[8:]
+
+vel5 = sigmaPoints4['velo']
+vel5 = vel5[8:]
+
+vel6 = sigmaPoints5['velo']
+vel6 = vel6[8:]
+
+vel7 = sigmaPoints6['velo']
+vel7 = vel7[8:]
+
+plt.plot(theTime, vel1, label='s1_vel')
+plt.plot(theTime, vel2, label='s2_vel')
+plt.plot(theTime, vel3, label='s3_vel')
+plt.plot(theTime, vel4, label='s4_vel')
+plt.plot(theTime, vel5, label='s5_vel')
+plt.plot(theTime, vel6, label='s6_vel')
+plt.plot(theTime, vel7, label='s7_vel')
+plt.plot(df['Time'], df['Everest_Velo'], label='Everest/IMU Velo', marker = "o")
+plt.plot(sims['time_6'], sims['velo_6'], label='Altimeter', marker = "s", markevery=5)
+plt.plot(df['Time'], df[' Halo_Velo'], label='HALO Velo', marker = "x")
+plt.xlabel('Time')
+plt.ylabel('Velo')
+plt.title('Time vs Velo')
+plt.legend()
+plt.grid(True)
+
+residual_halo = sims['alt_6'] - df['Halo_ALt']
+residual_everest = sims['alt_6'] - df['Everest_Alt']
+
+plt.figure(figsize=(10, 6))
+plt.plot(df['Time'], residual_halo, label='residual_halo')
+plt.plot(df['Time'], residual_everest, label='residual_everest')
+plt.legend()
+plt.grid(True)
 
 plt.show()
 

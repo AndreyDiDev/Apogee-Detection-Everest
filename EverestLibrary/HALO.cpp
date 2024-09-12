@@ -377,6 +377,42 @@ void HALO::calculateSigmaPoints() {
         exit(1);
     }
 
+    FILE* sigmaPointsFile1 = fopen("sigmaPoints1.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* sigmaPointsFile2 = fopen("sigmaPoints2.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* sigmaPointsFile3 = fopen("sigmaPoints3.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* sigmaPointsFile4 = fopen("sigmaPoints4.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* sigmaPointsFile5 = fopen("sigmaPoints5.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
+    FILE* sigmaPointsFile6 = fopen("sigmaPoints6.txt", "a+");
+    if (!sigmaPointsFile) {
+        fprintf(stderr, "Error opening sigmaPoints.txt...exiting\n");
+        exit(1);
+    }
+
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         // load variables
@@ -404,16 +440,22 @@ void HALO::calculateSigmaPoints() {
 
     fprintf(file, "\n");
 
-    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,0), sigmaPoints(1,0), sigmaPoints(2,0));
-    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,1), sigmaPoints(1,1), sigmaPoints(2,1));
-    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,2), sigmaPoints(1,2), sigmaPoints(2,2));
-    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,3), sigmaPoints(1,3), sigmaPoints(2,3));
-    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,4), sigmaPoints(1,4), sigmaPoints(2,4));
-    fprintf(sigmaPointsFile, "%f,%f,%f,", sigmaPoints(0,5), sigmaPoints(1,5), sigmaPoints(2,5));
-    fprintf(sigmaPointsFile, "%f,%f,%f\n",sigmaPoints(0,6), sigmaPoints(1,6), sigmaPoints(2,6));
+    fprintf(sigmaPointsFile,  "%f,%f,%f\n", sigmaPoints(0,0), sigmaPoints(1,0), sigmaPoints(2,0));
+    fprintf(sigmaPointsFile1, "%f,%f,%f\n", sigmaPoints(0,1), sigmaPoints(1,1), sigmaPoints(2,1));
+    fprintf(sigmaPointsFile2, "%f,%f,%f\n", sigmaPoints(0,2), sigmaPoints(1,2), sigmaPoints(2,2));
+    fprintf(sigmaPointsFile3, "%f,%f,%f\n", sigmaPoints(0,3), sigmaPoints(1,3), sigmaPoints(2,3));
+    fprintf(sigmaPointsFile4, "%f,%f,%f\n", sigmaPoints(0,4), sigmaPoints(1,4), sigmaPoints(2,4));
+    fprintf(sigmaPointsFile5, "%f,%f,%f\n", sigmaPoints(0,5), sigmaPoints(1,5), sigmaPoints(2,5));
+    fprintf(sigmaPointsFile6, "%f,%f,%f\n",sigmaPoints(0,6), sigmaPoints(1,6), sigmaPoints(2,6));
 
     fclose(file);
     fclose(sigmaPointsFile);
+    fclose(sigmaPointsFile1);
+    fclose(sigmaPointsFile2);
+    fclose(sigmaPointsFile3);
+    fclose(sigmaPointsFile4);
+    fclose(sigmaPointsFile5);
+    fclose(sigmaPointsFile6);
 
 
     std::cout << "\nafter predict sPoints: \n" << sigmaPoints << std::endl;
@@ -606,7 +648,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     fprintf(file, "%f,%f,", lowestDistance, secondLowestDistance);
     fprintf(file, "%d,%d,", lowestDistanceIndex, secondLowestDistanceIndex);
-    fprintf(file, "%d,%d\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+    fprintf(file, "%d,%d", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+    fprintf(file, "%f,%f\n", distances[lowestDistanceIndex].first, distances[secondLowestDistanceIndex].first);
 
     fprintf(file2, "For Meas(%f,%f,%f) V1(%f) lowest(%f),secondL(%f),", measurement[0], measurement[1], measurement[2], lowestDistance, secondLowestDistance);
     fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
