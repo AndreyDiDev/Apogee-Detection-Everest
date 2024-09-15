@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 
+#include "KDTree.hpp"
+
 // home
 #ifdef HOME
     #include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Cholesky"
@@ -51,15 +53,43 @@ struct Scenario {
     std::vector<std::vector<float>> BeforeList;
     std::vector<std::vector<float>> AfterList;
 
+    KDTree treeBefore;
+    KDTree treeAfter;
+
     int name;
 
     std::vector<float> measurement;
     bool isBeforeApogeeBool = true;
 
-    Scenario(std::vector<std::vector<float>> beforelList, std::vector<std::vector<float>> afterList, int Name)
-        :BeforeList(beforelList), AfterList(afterList), name(Name){
+    Scenario(std::vector<std::vector<float>> beforeList, std::vector<std::vector<float>> afterList, int Name)
+        :BeforeList(beforeList), AfterList(afterList), name(Name){
 
         // auto [firstPart, secondPart] = findAndSplitVector(list);
+        std::vector<std::vector<float>> beforeVectorofVectors;
+        std::vector<std::vector<float>> afterVectorofVectors;
+
+        // std::vector<float> vector = {BeforeList[0][0], BeforeList[0][1], BeforeList[0][2], BeforeList[0][3]};
+        std::vector<float> vector = beforeList[0];
+        std::cout << "vector: " << vector[0] << " " << vector[1] << " " << vector[2] << " " << vector[3] << std::endl;
+
+        std::cout << "BeforeList: " << BeforeList.size() << std::endl;
+        // std::cout << "beforeList: " << BeforeList[0](0) << " " << BeforeList[0][1] << " " << BeforeList[0][2] << " " << BeforeList[0][3] << std::endl;
+
+        for(int i= 0; i < BeforeList.size(); i++){
+            std::cout << "here" << std::endl;
+            std::cout << "BeforeList: " << BeforeList[i][0] << " " << BeforeList[i][1] << " " << BeforeList[i][2] << " " << BeforeList[i][3] << std::endl;
+            std::vector<float> vect = {BeforeList[i][0], BeforeList[i][1], BeforeList[i][2], BeforeList[i][3]};
+            std::cout << "vect" << vect[0] << " " << vect[1] << " " << vect[2] << " " << vect[3] << std::endl;
+            beforeVectorofVectors.push_back(vect);
+            std::cout << "BeforeList: " << BeforeList[i][0] << " " << BeforeList[i][1] << " " << BeforeList[i][2] << " " << BeforeList[i][3] << std::endl;
+        }
+
+        for(const auto& vec : AfterList){
+            afterVectorofVectors.push_back(vec);
+        }
+
+        treeBefore = KDTree(beforeVectorofVectors);
+        treeAfter  = KDTree(afterVectorofVectors);
 
 
         // FILE *file = fopen("Sims.txt", "w+"); // Open the file for appending or create it if it doesn't exist
@@ -127,6 +157,18 @@ struct Scenario {
 
     void setIsBeforeApogee(bool isBeforeApogee){
         isBeforeApogeeBool = isBeforeApogee;
+    }
+
+    /**
+     * Returns the nearest vector to the measurement vector
+     */
+    std::pair<std::vector<float>, size_t> nearestKDTree(std::vector<float> measurement){
+        if(isBeforeApogeeBool){
+            return treeBefore.nearest_pointIndex(measurement);
+        }
+        else{
+            return treeAfter.nearest_pointIndex(measurement);
+        }
     }
 
     /**

@@ -7,6 +7,11 @@
 
 #include "infusion.hpp"
 
+#include "KDTree.hpp"
+#include "HALO.hpp"
+
+// #include <filesystem>
+
 #include <stdio.h>
 #include <ctime>
 #include <string.h>

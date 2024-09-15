@@ -576,28 +576,38 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
         std::vector<float> lowestVector = scenario.getLists()[0];
         minDistance = std::numeric_limits<float>::max();
 
-        for(std::vector<float> vec : scenario.getLists()){
-            std::vector<float> vect = {0,0,0,0};
-            int valueIndex = 0;
+        std::pair<std::vector<float>, size_t> vect = {{0,0,0}, 0};
 
-            for(float value : vec){
-                vect[valueIndex] = value;
-                valueIndex++;
-            }
+        std::vector<float> measurementVec = {measurement(0), measurement(1), measurement(2)};
 
-            // printf(" NS vec: %f, %f, %f\n", vect[0], vect[1], vect[2]);
+        vect = scenario.nearestKDTree(measurementVec);
+
+        minDistance = euclideanDistance(vect.first, measurement);
+
+        lowestDistanceIndex = vect.second;
+
+        // for(std::vector<float> vec : scenario.getLists()){
+        //     int valueIndex = 0;
+
+        //     for(float value : vec){
+        //         vect[valueIndex] = value;
+        //         valueIndex++;
+        //     }
+
+        //     // printf(" NS vec: %f, %f, %f\n", vect[0], vect[1], vect[2]);
             
-            float distance = euclideanDistance(vect, measurement);
-            // printf("eucledian distance %f\n", distance);
+        //     float distance = euclideanDistance(vect, measurement);
+        //     // printf("eucledian distance %f\n", distance);
 
-            if (distance < minDistance) {
-                minDistance = distance;
-                lowestDistanceIndex = i;
-                lowestVector = scenario.getLists()[i];
-            }
+        //     if (distance < minDistance) {
+        //         minDistance = distance;
+        //         lowestDistanceIndex = i;
+        //         lowestVector = scenario.getLists()[i];
+        //     }
 
-            i++;
-        }
+        //     i++;
+        // }
+
         // minDistance to order the list and get lowest 2
         // index go evaluate scenario at n+1
         std::pair<float, std::pair<float, Scenario>> vector = {minDistance, {lowestDistanceIndex, scenario}};
@@ -909,7 +919,20 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
 }
 
 void HALO::overrideStateWithGPS(float GPS){
-    if(GPS > (this->X[0] - 200) && GPS < (this->X[0] + 200)){
+    float lowest = std::numeric_limits<float>::max();
+    float highest = std::numeric_limits<float>::min();
+
+    for(int i = 0; i <= 7; i++){
+        if(this->sigmaPoints(0, i) < lowest){
+            lowest = this->sigmaPoints(0, i);
+        }
+
+        if(this->sigmaPoints(0, i) > highest){
+            highest = this->sigmaPoints(0, i);
+        }
+    }
+
+    if(GPS > (lowest) && GPS < highest){
         this->X[0] = GPS;
         printf("Override GPS (%f, %f, %f)", this->X[0], this->X[1], this->X[2]);
 
@@ -918,10 +941,10 @@ void HALO::overrideStateWithGPS(float GPS){
             fprintf(stderr, "Error opening log.txt...exiting\n");
             exit(1);
         }
+        
+        fprintf(file, "Override GPS (%f, %f, %f), where GPS(\n", this->X[0], this->X[1], this->X[2]);
 
         fclose(file);
-        
-        fprintf(file, "Override GPS (%f, %f, %f)\n", this->X[0], this->X[1], this->X[2]);
     }
 }
 

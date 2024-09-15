@@ -9,7 +9,7 @@
 #include <iostream>
 #include <sstream>
 
-#define printf(...) ;
+// #define printf(...) ;
 
 // task specific defines
 // #include "main.h"
@@ -1100,7 +1100,46 @@ void setIsTare(bool isTare){
 }
 
 // --------------------------------------------------- END OF EVEREST ---------------------------------------------------//
+void monteCarloSims(){
+    // Monte Carlo simulations
+    // 1. Generate random scenarios
+    // 2. Run the simulations
+    // 3. Find the nearest scenarios
+    // 4. Run the simulations for the nearest scenarios
+    // 5. Find the nearest scenarios
+    // 6. Repeat until convergence
 
+    // 1. Generate random scenarios
+    // 2. Run the simulations
+    // 3. Find the nearest scenarios
+    // 4. Run the simulations for the nearest scenarios
+    // 5. Find the nearest scenarios
+    // 6. Repeat until convergence
+
+    // everest.MadgwickSetup();
+
+    // HALO halo = HALO();
+
+    // MatrixXf Q(3,3);
+    // Q <<    0, 0, 0,
+    //         0, 0, 0,
+    //         0, 0, 0;
+
+    // // everest covariance matrix
+    // MatrixXf R0(3,3);
+    // R0 <<   0, 0, 0,
+    //         0, 0, 0,
+    //         0, 0, 0;
+
+    // MatrixXf P0(3,3);
+    // P0 <<   0, 0, 0,
+    //         0, 0, 0,
+    //         0, 0, 0;
+
+    
+
+
+}
 
 #define MAX_LINE_LENGTH 1024
 
@@ -1116,14 +1155,15 @@ int main()
     HALO halo = HALO();
 
     MatrixXf Q(3,3);
-    Q <<    0.5, 0, 0,
-            0, 0.5, 0,
-            0, 0, 0.5;
+    Q <<    100, 0, 0,
+            0, 40, 0,
+            0, 0, 8;
 
+    // everest covariance matrix
     MatrixXf R0(3,3);
-    R0 <<   0.25, 0.5, 0.5,
-            0.5, 1, 1,
-            0.5, 1, 1;
+    R0 <<   200, 0.5, 0.5,
+            0.5, 100, 1,
+            0.5, 1, 10;
 
     MatrixXf P0(3,3);
     P0 <<   50, 0, 0,
@@ -1140,12 +1180,6 @@ int main()
 
     if (remove("predictedValues.txt") == 0) {
         std::cout << "File deleted successfully: " << "predictedValues.txt" << std::endl;
-    } else {
-        std::perror("Error deleting file");
-    }
-
-    if (remove("sigmaPoints.txt") == 0) {
-        std::cout << "File deleted successfully: " << "sigmaPoints.txt" << std::endl;
     } else {
         std::perror("Error deleting file");
     }
@@ -1656,7 +1690,7 @@ int main()
         }
     // }
 
-   printf("Overall for %d samples: %f", howMany, totalTime/CLOCKS_PER_SEC);
+    printf("Overall for %d samples: %f", howMany, totalTime/CLOCKS_PER_SEC);
 
     fclose(file1);
     fclose(file);

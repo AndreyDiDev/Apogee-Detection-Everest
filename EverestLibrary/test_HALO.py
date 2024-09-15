@@ -86,33 +86,33 @@ theTime = [0, 0.33, 0.66, 1, 1.33, 1.66, 2] + theTime.tolist()
 # print(sigmaPoints['alt'])
 
 alt1 = sigmaPoints['alt']
-alt1 = alt1[8:]
+alt1 = alt1[1:]
 
 alt2 = sigmaPoints1['alt']
-alt2 = alt2[8:]
+alt2 = alt2[1:]
 
 alt3 = sigmaPoints2['alt']
-alt3 = alt3[8:]
+alt3 = alt3[1:]
 
 alt4 = sigmaPoints3['alt']
-alt4 = alt4[8:]
+alt4 = alt4[1:]
 
 alt5 = sigmaPoints4['alt']
-alt5 = alt5[8:]
+alt5 = alt5[1:]
 
 alt6 = sigmaPoints5['alt']
-alt6 = alt6[8:]
+alt6 = alt6[1:]
 
 alt7 = sigmaPoints6['alt']
-alt7 = alt7[8:]
+alt7 = alt7[1:]
 
-plt.plot(theTime, alt1, label='s1_alt')
-plt.plot(theTime, alt2, label='s2_alt')
-plt.plot(theTime, alt3, label='s3_alt')
-plt.plot(theTime, alt4, label='s4_alt')
-plt.plot(theTime, alt5, label='s5_alt')
-plt.plot(theTime, alt6, label='s6_alt')
-plt.plot(theTime, alt7, label='s7_alt')
+plt.plot(df['Time'], alt1, label='s1_alt')
+plt.plot(df['Time'], alt2, label='s2_alt')
+plt.plot(df['Time'], alt3, label='s3_alt')
+plt.plot(df['Time'], alt4, label='s4_alt')
+plt.plot(df['Time'], alt5, label='s5_alt')
+plt.plot(df['Time'], alt6, label='s6_alt')
+plt.plot(df['Time'], alt7, label='s7_alt')
 plt.plot(df['Time'], df['Everest_Alt'], label='Everest/IMU Alt', marker = "o", markevery=5)
 plt.plot(df['Time'], df['Halo_ALt'], label='HALO Alt', marker = "x", markevery=5)
 plt.plot(sims['time_6'], sims['alt_6'], label='Altimeter', marker = "s", markevery=5)
@@ -127,33 +127,33 @@ plt.grid(True)
 plt.figure(figsize=(10, 6))
 
 vel1 = sigmaPoints['velo']
-vel1 = vel1[8:]
+vel1 = vel1[1:]
 
 vel2 = sigmaPoints1['velo']
-vel2 = vel2[8:]
+vel2 = vel2[1:]
 
 vel3 = sigmaPoints2['velo']
-vel3 = vel3[8:]
+vel3 = vel3[1:]
 
 vel4 = sigmaPoints3['velo']
-vel4 = vel4[8:]
+vel4 = vel4[1:]
 
 vel5 = sigmaPoints4['velo']
-vel5 = vel5[8:]
+vel5 = vel5[1:]
 
 vel6 = sigmaPoints5['velo']
-vel6 = vel6[8:]
+vel6 = vel6[1:]
 
 vel7 = sigmaPoints6['velo']
-vel7 = vel7[8:]
+vel7 = vel7[1:]
 
-plt.plot(theTime, vel1, label='s1_vel')
-plt.plot(theTime, vel2, label='s2_vel')
-plt.plot(theTime, vel3, label='s3_vel')
-plt.plot(theTime, vel4, label='s4_vel')
-plt.plot(theTime, vel5, label='s5_vel')
-plt.plot(theTime, vel6, label='s6_vel')
-plt.plot(theTime, vel7, label='s7_vel')
+plt.plot(df['Time'], vel1, label='s1_vel')
+plt.plot(df['Time'], vel2, label='s2_vel')
+plt.plot(df['Time'], vel3, label='s3_vel')
+plt.plot(df['Time'], vel4, label='s4_vel')
+plt.plot(df['Time'], vel5, label='s5_vel')
+plt.plot(df['Time'], vel6, label='s6_vel')
+plt.plot(df['Time'], vel7, label='s7_vel')
 plt.plot(df['Time'], df['Everest_Velo'], label='Everest/IMU Velo', marker = "o")
 plt.plot(sims['time_6'], sims['velo_6'], label='Altimeter', marker = "s", markevery=5)
 plt.plot(df['Time'], df[' Halo_Velo'], label='HALO Velo', marker = "x")
