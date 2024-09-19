@@ -9,7 +9,7 @@
 #include <iostream>
 #include <sstream>
 
-// #define printf(...) ;
+#define printf(...) ;
 
 // task specific defines
 // #include "main.h"
@@ -1435,7 +1435,9 @@ int main()
 
             temp = {alt, velo, acc, time1};
             // printf("temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
-            scenarioListofVectorsBefore[i].push_back(temp);
+            if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
+                scenarioListofVectorsBefore[i].push_back(temp);
+            }
 
         }
 
@@ -1444,6 +1446,9 @@ int main()
     }
 
     std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
+
+    // skip header
+    fgets(line, sizeof(line), simsAfterFile);
 
     while (fgets(line, sizeof(line), simsAfterFile)) {
         char *token = strtok(line, ",");
@@ -1460,20 +1465,43 @@ int main()
 
             std::vector<float> temp = {alt, velo, acc, time1};
             // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
-            scenarioListofVectorsAfter[i].push_back(temp);
+            if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
+                scenarioListofVectorsAfter[i].push_back(temp);
+            }
 
         }
 
         // printf("\n");
     }
 
+    scenarioListofVectorsBefore[0].erase(scenarioListofVectorsBefore[0].begin());
+    scenarioListofVectorsBefore[1].erase(scenarioListofVectorsBefore[1].begin());
+    scenarioListofVectorsBefore[2].erase(scenarioListofVectorsBefore[2].begin());
+    scenarioListofVectorsBefore[3].erase(scenarioListofVectorsBefore[3].begin());
+    scenarioListofVectorsBefore[4].erase(scenarioListofVectorsBefore[4].begin());
+    scenarioListofVectorsBefore[5].erase(scenarioListofVectorsBefore[5].begin());
+
+    scenarioListofVectorsAfter[0].erase(scenarioListofVectorsAfter[0].begin());
+    scenarioListofVectorsAfter[1].erase(scenarioListofVectorsAfter[1].begin());
+    scenarioListofVectorsAfter[2].erase(scenarioListofVectorsAfter[2].begin());
+    scenarioListofVectorsAfter[3].erase(scenarioListofVectorsAfter[3].begin());
+    scenarioListofVectorsAfter[4].erase(scenarioListofVectorsAfter[4].begin());
+    scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
+
+
     // create scenarios with before and after lists
     Scenario scenario1 = Scenario{scenarioListofVectorsBefore[0], scenarioListofVectorsAfter[0], 1};
+    scenario1.createTree();
     Scenario scenario2 = Scenario{scenarioListofVectorsBefore[1], scenarioListofVectorsAfter[1], 2};
+    scenario2.createTree();
     Scenario scenario3 = Scenario{scenarioListofVectorsBefore[2], scenarioListofVectorsAfter[2], 3};
+    scenario3.createTree();
     Scenario scenario4 = Scenario{scenarioListofVectorsBefore[3], scenarioListofVectorsAfter[3], 4};
+    scenario4.createTree();
     Scenario scenario5 = Scenario{scenarioListofVectorsBefore[4], scenarioListofVectorsAfter[4], 5};
+    scenario5.createTree();
     Scenario scenario6 = Scenario{scenarioListofVectorsBefore[5], scenarioListofVectorsAfter[5], 6};
+    scenario6.createTree();
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
 
@@ -1690,7 +1718,9 @@ int main()
         }
     // }
 
-    printf("Overall for %d samples: %f", howMany, totalTime/CLOCKS_PER_SEC);
+    // printf("Overall for %d samples: %f", howMany, totalTime/CLOCKS_PER_SEC);
+
+    std::cout << "Overall for " << howMany << " samples: " << totalTime/CLOCKS_PER_SEC << std::endl;
 
     fclose(file1);
     fclose(file);

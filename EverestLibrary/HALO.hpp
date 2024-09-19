@@ -64,34 +64,6 @@ struct Scenario {
     Scenario(std::vector<std::vector<float>> beforeList, std::vector<std::vector<float>> afterList, int Name)
         :BeforeList(beforeList), AfterList(afterList), name(Name){
 
-        // auto [firstPart, secondPart] = findAndSplitVector(list);
-        std::vector<std::vector<float>> beforeVectorofVectors;
-        std::vector<std::vector<float>> afterVectorofVectors;
-
-        // std::vector<float> vector = {BeforeList[0][0], BeforeList[0][1], BeforeList[0][2], BeforeList[0][3]};
-        std::vector<float> vector = beforeList[0];
-        std::cout << "vector: " << vector[0] << " " << vector[1] << " " << vector[2] << " " << vector[3] << std::endl;
-
-        std::cout << "BeforeList: " << BeforeList.size() << std::endl;
-        // std::cout << "beforeList: " << BeforeList[0](0) << " " << BeforeList[0][1] << " " << BeforeList[0][2] << " " << BeforeList[0][3] << std::endl;
-
-        for(int i= 0; i < BeforeList.size(); i++){
-            std::cout << "here" << std::endl;
-            std::cout << "BeforeList: " << BeforeList[i][0] << " " << BeforeList[i][1] << " " << BeforeList[i][2] << " " << BeforeList[i][3] << std::endl;
-            std::vector<float> vect = {BeforeList[i][0], BeforeList[i][1], BeforeList[i][2], BeforeList[i][3]};
-            std::cout << "vect" << vect[0] << " " << vect[1] << " " << vect[2] << " " << vect[3] << std::endl;
-            beforeVectorofVectors.push_back(vect);
-            std::cout << "BeforeList: " << BeforeList[i][0] << " " << BeforeList[i][1] << " " << BeforeList[i][2] << " " << BeforeList[i][3] << std::endl;
-        }
-
-        for(const auto& vec : AfterList){
-            afterVectorofVectors.push_back(vec);
-        }
-
-        treeBefore = KDTree(beforeVectorofVectors);
-        treeAfter  = KDTree(afterVectorofVectors);
-
-
         // FILE *file = fopen("Sims.txt", "w+"); // Open the file for appending or create it if it doesn't exist
         // if (!file) {
         //     fprintf(stderr, "Error opening Sims.txt...exiting\n");
@@ -100,27 +72,29 @@ struct Scenario {
 
         printf("%d\n", name);
 
-        // // Print the first part
-        // // std::cout << "First Part:" << std::endl;
+        // Print the first part
+        // std::cout << "First Part:" << std::endl;
         // fprintf(file, "%s\n", "First Part:");
-        // for (const auto& vec : firstPart) {
-        //     for (float value : vec) {
-        //         // std::cout << value << " ";
-        //         fprintf(file, "%f,%f,%f,%f\n", value);
-        //     }
-        //     // std::cout << std::endl;
-        // }
+        for (const auto& vec : BeforeList) {
+            for (float value : vec) {
+                //std::cout << value << " ";
+                // printf("%f", value);
+            }
+            // std::cout << std::endl;
+        }
 
-        // // Print the second part
-        // // std::cout << "Second Part:" << std::endl;
+        // Print the second part
+        // std::cout << "Second Part:" << std::endl;
         // fprintf(file, "%s\n", "Second Part:");
-        // for (const auto& vec : secondPart) {
-        //     for (float value : vec) {
-        //         // std::cout << value << " ";
-        //         fprintf(file, "%f,%f,%f,%f\n", value);
-        //     }
-        //     // std::cout << std::endl;
-        // }
+        for (const auto& vec : AfterList) {
+            for (float value : vec) {
+                //std::cout << value << " ";
+                // fprintf(file, "%f,%f,%f,%f\n", value);
+            }
+            // std::cout << std::endl;
+        }
+
+
 
     }
 
@@ -171,6 +145,44 @@ struct Scenario {
         }
     }
 
+    void createTree(){
+        // auto [firstPart, secondPart] = findAndSplitVector(list);
+        std::vector<std::vector<float>> beforeVectorofVectors;
+        std::vector<std::vector<float>> afterVectorofVectors;
+
+        // //std::vector<float> vector = {BeforeList[0][0], BeforeList[0][1], BeforeList[0][2], BeforeList[0][3]};
+        // std::vector<float> vector = BeforeList[0];
+        // std::cout << "BeforeList: " << BeforeList.size() << std::endl;
+        // std::cout << "vector: " << vector[0] << " " << vector[1] << " " << vector[2] << " " << vector[3] << std::endl;
+
+        
+        // // std::cout << "beforeList: " << BeforeList[0](0) << " " << BeforeList[0][1] << " " << BeforeList[0][2] << " " << BeforeList[0][3] << std::endl;
+
+        for(int i= 0; i < BeforeList.size(); i++){
+        //     std::cout << "BeforeList: " << BeforeList[i][0] << " " << BeforeList[i][1] << " " << BeforeList[i][2] << " " << BeforeList[i][3] << std::endl;
+            std::vector<float> vect = {BeforeList[i][0], BeforeList[i][1], BeforeList[i][2]};
+        //     std::cout << "vect" << vect[0] << " " << vect[1] << " " << vect[2] << " " << vect[3] << std::endl;
+            beforeVectorofVectors.push_back(vect);
+        //     std::cout << "BeforeList: " << BeforeList[i][0] << " " << BeforeList[i][1] << " " << BeforeList[i][2] << " " << BeforeList[i][3] << std::endl;
+        }
+
+        for(int i= 0; i < AfterList.size(); i++){
+            std::vector<float> vect = {AfterList[i][0], AfterList[i][1], AfterList[i][2]};
+            afterVectorofVectors.push_back(vect);
+        }
+
+        // for(const auto& vec : AfterList){
+        //     for(float value : vec){
+        //         printf("%f ", value);
+        //     }
+        //     printf("\n");
+        // }
+
+        treeBefore = KDTree(beforeVectorofVectors);
+        treeAfter  = KDTree(afterVectorofVectors);
+
+    }
+
     /**
      * Returns list of vectors of scenario {Altitude, Velocity, Acceleration} before or after apogee
      */
@@ -205,7 +217,7 @@ struct Scenario {
     std::vector<float> evaluateVectorAtTime(float time){
         std::vector<std::vector<float>> list = getLists();
         int index = 0;
-        printf("starting to evaluate vector at time %f\n", time);
+        // printf("starting to evaluate vector at time %f\n", time);
         std::vector<float> vect = {0,0,0,0};
 
         for(std::vector<float> vec : list){

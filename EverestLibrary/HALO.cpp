@@ -19,6 +19,8 @@
 
 #define REFRESH_RATE 20
 
+#define printf(...) ;
+
 // Constants for the UKF
 #define N 6
 #define dim 6
@@ -42,9 +44,9 @@ void HALO::init(VectorXf &X0, MatrixXf &P0, MatrixXf Q_input, MatrixXf &R0){
     this->Q = Q_input;
     this->R = R0;
 
-    std::cout << "X0: \n" << X0 << std::endl;
-    std::cout << "P0: \n" << P0 << std::endl;
-    std::cout << "Q: \n" << Q_input << std::endl;
+    // std::cout << "X0: \n" << X0 << std::endl;
+    // std::cout << "P0: \n" << P0 << std::endl;
+    // std::cout << "Q: \n" << Q_input << std::endl;
 
     // F is for state to next state transition
     // P0 = initial guess of state covariance matrix
@@ -136,7 +138,7 @@ void HALO::unscentedTransform(){
 
 void HALO::stateUpdate(){
     // Xn = Xn-1 + K (Zn - EstZn)
-    std::cout << "\n---- State Update ---- \n" << std::endl;
+    // std::cout << "\n---- State Update ---- \n" << std::endl;
 
     MatrixXf observedValues(3, 7);
     observedValues.setZero(3, 7);
@@ -153,7 +155,7 @@ void HALO::stateUpdate(){
     zMean.setZero(3);
     zMean = observedValues * WeightsForSigmaPoints;
 
-    std::cout << "\nZ mean:\n " << zMean << std::endl;
+    // std::cout << "\nZ mean:\n " << zMean << std::endl;
     this->Z = zMean;
 
     // calculate covariance of Z
@@ -165,7 +167,7 @@ void HALO::stateUpdate(){
         zCovar.row(i) = (observedValues.row(i).array() - zMean.row(i).value()).matrix();
     }
 
-    std::cout << "\nZ Covar:\n " << zCovar << std::endl;
+    // std::cout << "\nZ Covar:\n " << zCovar << std::endl;
     // std::cout << "R: " << this->R << std::endl;
 
     // calculate the innovation covariance, measurement covariance
@@ -174,17 +176,17 @@ void HALO::stateUpdate(){
 
     Pz = (zCovar * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose()) + this->R;
 
-    std::cout << "\nPz:\n " << Pz << std::endl;
+    // std::cout << "\nPz:\n " << Pz << std::endl;
 
     // calculate the cross covariance
     MatrixXf Pxz(3,2);
     Pxz.setZero();
 
-    std::cout << "\nprojectError: \n" << projectError << std::endl;
+    // std::cout << "\nprojectError: \n" << projectError << std::endl;
 
     Pxz = projectError * WeightsForSigmaPoints.asDiagonal() * zCovar.transpose(); 
 
-    std::cout << "\nPxz:\n " << Pxz << std::endl;
+    // std::cout << "\nPxz:\n " << Pxz << std::endl;
 
     // calculate the Kalman gain
     MatrixXf K(3, 3);
@@ -193,14 +195,14 @@ void HALO::stateUpdate(){
     K = Pxz * Pz.inverse();
 
     // std::cout << "X: \n" << this->X << std::endl;
-    std::cout << "\nKalman Gain: \n" << K << std::endl;
+    // std::cout << "\nKalman Gain: \n" << K << std::endl;
 
     // update the state vector
     printf("\nthis->Xprediction + K * (this->X - zMean)\n\n");
 
-    std::cout << "Xprediction\n" <<  this->Xprediction << std::endl;
-    std::cout << "\nthis->X\n" << this->X;
-    std::cout << "\n\nzMean\n\n" << zMean;
+    // std::cout << "Xprediction\n" <<  this->Xprediction << std::endl;
+    // std::cout << "\nthis->X\n" << this->X;
+    // std::cout << "\n\nzMean\n\n" << zMean;
 
     bool kZero = false;
 
@@ -240,13 +242,13 @@ void HALO::stateUpdate(){
         fclose(log);
     }
 
-    std::cout << "\n\nK\n" << K;
+    // std::cout << "\n\nK\n" << K;
 
     VectorXf difference(3,1);
     difference.setZero();
     difference << this->X[2] - zMean(0), this->X[1] - zMean(1), this->X[0] - zMean(2);
 
-    std::cout << "\n\n difference\n" << difference << std::endl;
+    // std::cout << "\n\n difference\n" << difference << std::endl;
 
     X0 = this->Xprediction + K * difference;
 
@@ -281,7 +283,7 @@ void HALO::stateUpdate(){
         fclose(log);
     }
 
-    std::cout << "\nEstimated X (HALO): \n" << X0 << std::endl;
+    // std::cout << "\nEstimated X (HALO): \n" << X0 << std::endl;
 
     this->KinematicsHalo.altitudeStore = X0(0);
 
@@ -298,9 +300,9 @@ void HALO::stateUpdate(){
 
     this->P = P1;
 
-    std::cout << "\nP(1,1):\n " << P << std::endl;
+    // std::cout << "\nP(1,1):\n " << P << std::endl;
 
-    std::cout << "\n end of state Update\n " << std::endl;
+    // std::cout << "\n end of state Update\n " << std::endl;
 
     calculateSigmaPoints();
 
@@ -331,7 +333,7 @@ void HALO::prediction(){
 void HALO::calculateSigmaPoints() {
 
     // std::cout << "X0: " << X0 << std::endl;
-    std::cout << " ---- Predict Step ---- \n" << std::endl;
+    // std::cout << " ---- Predict Step ---- \n" << std::endl;
 
     // std::cout << "Q: " << Q << std::endl;
 
@@ -363,7 +365,7 @@ void HALO::calculateSigmaPoints() {
     }
 
     // before dynamics
-    std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
+    // std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
 
     FILE* file = fopen("gains.txt", "a+");
     if (!file) {
@@ -458,7 +460,7 @@ void HALO::calculateSigmaPoints() {
     fclose(sigmaPointsFile6);
 
 
-    std::cout << "\nafter predict sPoints: \n" << sigmaPoints << std::endl;
+    // std::cout << "\nafter predict sPoints: \n" << sigmaPoints << std::endl;
 
     // std::cout << "Sigma Points row: " << sigmaPoints.rows() << " col: " << sigmaPoints.cols() << std::endl;
     // std::cout << "Sigma Points row 0 \n" << sigmaPoints.row(0) << std::endl;
@@ -479,7 +481,7 @@ void HALO::calculateSigmaPoints() {
         // std::cout << "XpreMean: \n" << xPreMean << std::endl;
     }
 
-    std::cout << "\nXprediction: \n" << xPreMean << std::endl;
+    // std::cout << "\nXprediction: \n" << xPreMean << std::endl;
     // std::cout << "Xprediction: \n" << Xprediction << std::endl;
     this->Xprediction = xPreMean;
 
@@ -495,7 +497,7 @@ void HALO::calculateSigmaPoints() {
         projError.row(i) = (sigmaPoints.row(i).array() - (this->Xprediction).row(i).value()).matrix();
     }
 
-    std::cout << "\nProject Error: \n" << projError << std::endl;
+    // std::cout << "\nProject Error: \n" << projError << std::endl;
 
     this->projectError = projError;
 
@@ -504,13 +506,13 @@ void HALO::calculateSigmaPoints() {
 
     Pprediction = projError * WeightsForSigmaPoints.asDiagonal() * projError.transpose() + this->Q;
 
-    std::cout << "\nPprediction: \n" << Pprediction << std::endl;
+    // std::cout << "\nPprediction: \n" << Pprediction << std::endl;
 
     this->Pprediction = Pprediction;
 
     this->sigPoints =  sigmaPoints;
 
-    std::cout << " ---- End Predict Step ---- \n" << std::endl;
+    // std::cout << " ---- End Predict Step ---- \n" << std::endl;
 }
 
 // Function to interpolate between two nearest scenarios
@@ -579,6 +581,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
         std::pair<std::vector<float>, size_t> vect = {{0,0,0}, 0};
 
         std::vector<float> measurementVec = {measurement(0), measurement(1), measurement(2)};
+
+        printf("Asking tree for measurementVec: %f, %f, %f\n", measurementVec[0], measurementVec[1], measurementVec[2]);
 
         vect = scenario.nearestKDTree(measurementVec);
 
@@ -913,7 +917,7 @@ void HALO::setStateVector(float filteredAcc, float filteredVelo, float filteredA
     /** X_in = [acceleration, velocity, altitude] */
     this->X = X_in;
 
-    std::cout << "X from Everest: \n" << this->X << std::endl;
+    // std::cout << "X from Everest: \n" << this->X << std::endl;
 
     this->stateUpdate();
 }
