@@ -2,7 +2,8 @@
 // #include "everestTaskHPP.hpp"
 #include <fstream>
 
-// #define LOGON
+#define LOGON
+#define TIMERON
 
 // home
 #ifdef HOME
@@ -139,6 +140,14 @@ void HALO::unscentedTransform(){
 }
 
 void HALO::stateUpdate(){
+
+    std::chrono::high_resolution_clock::time_point stateUpdateTime;
+
+    #ifdef TIMERON
+
+    stateUpdateTime = std::chrono::high_resolution_clock::now();
+
+    #endif
     // Xn = Xn-1 + K (Zn - EstZn)
     // std::cout << "\n---- State Update ---- \n" << std::endl;
 
@@ -306,7 +315,36 @@ void HALO::stateUpdate(){
 
     // std::cout << "\n end of state Update\n " << std::endl;
 
+    std::chrono::high_resolution_clock::time_point predictTimer;
+    std::chrono::high_resolution_clock::time_point endUpdateTime;
+
+    #ifdef TIMERON
+
+    // endUpdateTime = std::clock();
+    endUpdateTime = std::chrono::high_resolution_clock::now();
+
+    // this->updateTime += (endUpdateTime - stateUpdateTime);
+    this->updateTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()
+                                - stateUpdateTime);
+
+    predictTimer = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     calculateSigmaPoints();
+
+    // clock_t endPredictTime;
+
+    #ifdef TIMERON
+
+    // endPredictTime = std::clock();
+
+    // this->predictTime += (endPredictTime - predictTimer);
+    this->predictTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()
+                                - predictTimer);
+
+
+    #endif
 
 }
 // ------------------------------------------------
@@ -343,7 +381,22 @@ void HALO::calculateSigmaPoints() {
 
     // std::cout << "Multiplier: " << mutliplier << std::endl;
 
+    std::chrono::high_resolution_clock::time_point tTime;
+
+    #ifdef TIMERON
+
+    tTime = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     MatrixXf L( ((mutliplier) *P).llt().matrixL());
+
+    #ifdef TIMERON
+
+    this->triangulationTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()
+                                - tTime);
+
+    #endif
     // std::cout << L.col(0) << std::endl;
 
     // std::cout << "N " << this->N1 << std::endl;
@@ -432,7 +485,24 @@ void HALO::calculateSigmaPoints() {
         printf("\nsPoint[%d]: \n", i);
 
         // update
+        // clock_t dynamicTime;
+        std::chrono::high_resolution_clock::time_point t1;
+
+        #ifdef TIMERON
+
+        // dynamicTime = std::clock();
+        t1 = std::chrono::high_resolution_clock::now();
+
+        #endif
+
         sigmaPoints.col(i) = dynamicModel(column);
+
+        #ifdef TIMERON
+
+        this->dynamicModelTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1);
+
+        #endif
+
         this->listOfGainsSigmaPoints[i] = {this->prevGain1, this->prevGain2};
         this->firstTime[i] = this->firstTimeForPoint;
         #ifdef LOGON
@@ -579,62 +649,151 @@ float HALO::euclideanDistance(const std::vector<float>& vec1, const VectorXf& ve
  */
 std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>& scenarios, VectorXf &measurement) {
     // printf("findNearestScenarios\n");
-    std::vector<std::pair<float, std::pair<float, Scenario>>> distances;
+    std::vector<std::pair<float, std::pair<float, int>>> distances;
+    distances.reserve(7);
     float minDistance = std::numeric_limits<float>::max();
     int i = 0;
 
-    for(Scenario scenario : scenarios){
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point loopScenariosStart = std::chrono::high_resolution_clock::now();
+
+    #endif
+
+    for(size_t s=0; s<scenarios.size(); s++){
+            #ifdef TIMERON
+
+            std::chrono::high_resolution_clock::time_point getListsStart = std::chrono::high_resolution_clock::now();
+
+            #endif
+        
         i = 0;
         int lowestDistanceIndex = 0;
-        std::vector<float> lowestVector = scenario.getLists()[0];
+
+        // std::vector<float> lowestVector = scenarios[s].getLists()[0];
+
+            #ifdef TIMERON
+
+            this->getListsTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - getListsStart);
+
+            #endif
+
+            #ifdef TIMERON
+
+            std::chrono::high_resolution_clock::time_point othersTimeStart = std::chrono::high_resolution_clock::now();
+
+            #endif
+
         minDistance = std::numeric_limits<float>::max();
 
         std::pair<std::vector<float>, size_t> vect = {{0,0,0}, 0};
 
         std::vector<float> measurementVec = {measurement(0), measurement(1), measurement(2)};
 
-        printf("Asking tree for measurementVec: %f, %f, %f\n", measurementVec[0], measurementVec[1], measurementVec[2]);
+            #ifdef TIMERON
 
-        vect = scenario.nearestKDTree(measurementVec);
+            this->othersTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - othersTimeStart);
+
+            #endif
+
+        // printf("Asking tree for measurementVec: %f, %f, %f\n", measurementVec[0], measurementVec[1], measurementVec[2]);
+
+            #ifdef TIMERON
+
+            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+            #endif
+
+        vect = scenarios[s].nearestKDTree(measurementVec);
+
+            #ifdef TIMERON
+
+            this->KDTreeTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - t1);
+
+            #endif
+
+            #ifdef TIMERON
+
+            std::chrono::high_resolution_clock::time_point euclideanStart = std::chrono::high_resolution_clock::now();
+
+            #endif
 
         minDistance = euclideanDistance(vect.first, measurement);
 
         lowestDistanceIndex = vect.second;
 
+            #ifdef TIMERON
+
+            this->euclideanTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - euclideanStart);
+
+            #endif
+
         // for(std::vector<float> vec : scenario.getLists()){
         //     int valueIndex = 0;
-
+        //
         //     for(float value : vec){
         //         vect[valueIndex] = value;
         //         valueIndex++;
         //     }
-
+        //
         //     // printf(" NS vec: %f, %f, %f\n", vect[0], vect[1], vect[2]);
-            
+        //
         //     float distance = euclideanDistance(vect, measurement);
         //     // printf("eucledian distance %f\n", distance);
-
+        //
         //     if (distance < minDistance) {
         //         minDistance = distance;
         //         lowestDistanceIndex = i;
         //         lowestVector = scenario.getLists()[i];
         //     }
-
+        //
         //     i++;
         // }
 
         // minDistance to order the list and get lowest 2
         // index go evaluate scenario at n+1
-        std::pair<float, std::pair<float, Scenario>> vector = {minDistance, {lowestDistanceIndex, scenario}};
-        distances.emplace_back(vector);
+
+            #ifdef TIMERON
+
+            std::chrono::high_resolution_clock::time_point emplace_BackStart = std::chrono::high_resolution_clock::now();
+
+            #endif
+
+        // pass index of scenario / struct
+        std::pair<float, std::pair<float, int>> vector = {minDistance, {lowestDistanceIndex, (((&scenarios[s])->name)-1)}};
+        distances.push_back(vector);
+
+            #ifdef TIMERON
+
+            this->emplaceBackTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - emplace_BackStart);
+
+            #endif
         
     }
 
+        #ifdef TIMERON
+
+        this->loopScenariosTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - loopScenariosStart);
+
+        #endif
+
     // print distances list
-    for(int i = 0; i < 6; i++){
-        printf("minDistance: %f, lowestIndex: %d, scenario %d\n", distances[i].first, distances[i].second.first, 
-        distances[i].second.second.name);
-    }
+    // for(int i = 0; i < 6; i++){
+    //     printf("minDistance: %f, lowestIndex: %d, scenario %d\n", distances[i].first, distances[i].second.first, 
+    //     distances[i].second.second.name);
+    // }
+
+        #ifdef TIMERON
+
+        std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
+
+        #endif
 
     float lowestDistance = std::numeric_limits<int>::max();
     int lowestDistanceIndex = 0;
@@ -643,7 +802,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     for(int i = 0; i < 6; i++){
         if(distances[i].first < lowestDistance){
-            printf("new lowest distance %f\n", distances[i].first);
+            // printf("new lowest distance %f\n", distances[i].first);
 
             secondLowestDistance = lowestDistance;
             secondLowestDistanceIndex = lowestDistanceIndex;
@@ -651,13 +810,20 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
             lowestDistance = distances[i].first;
             lowestDistanceIndex = i;
         } else if (distances[i].first < secondLowestDistance){
-            printf("new second lowest distance %f\n", distances[i].first);
+            // printf("new second lowest distance %f\n", distances[i].first);
             secondLowestDistance = distances[i].first;
             secondLowestDistanceIndex = i;
         }
     }
 
-    printf("lowest distance(%d) = %f, second lowest distance(%d) = %f\n", lowestDistanceIndex, lowestDistance, secondLowestDistanceIndex, secondLowestDistance);
+        #ifdef TIMERON
+
+        this->twoDistancesTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - startTime);
+
+        #endif
+
+    // printf("lowest distance(%d) = %f, second lowest distance(%d) = %f\n", lowestDistanceIndex, lowestDistance, secondLowestDistanceIndex, secondLowestDistance);
 
     #ifdef LOGON
 
@@ -675,12 +841,12 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     fprintf(file, "%f,%f,", lowestDistance, secondLowestDistance);
     fprintf(file, "%d,%d,", lowestDistanceIndex, secondLowestDistanceIndex);
-    fprintf(file, "%d,%d", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+    fprintf(file, "%d,%d", distances[lowestDistanceIndex].second.second, distances[secondLowestDistanceIndex].second.second);
     fprintf(file, "%f,%f\n", distances[lowestDistanceIndex].first, distances[secondLowestDistanceIndex].first);
 
     fprintf(file2, "For Meas(%f,%f,%f) V1(%f) lowest(%f),secondL(%f),", measurement[0], measurement[1], measurement[2], lowestDistance, secondLowestDistance);
     fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
-    fprintf(file2, "lowestName(%d),secondLN(%d)\n", distances[lowestDistanceIndex].second.second.name, distances[secondLowestDistanceIndex].second.second.name);
+    fprintf(file2, "lowestName(%d),secondLN(%d)\n", distances[lowestDistanceIndex].second.second, distances[secondLowestDistanceIndex].second.second);
     fprintf(file2, "list: %f,%f,%f,%f,%f,%f\n", distances[0].first, distances[1].first, distances[2].first, 
                         distances[3].first, distances[4].first, distances[5].first, distances[6].first);
 
@@ -689,25 +855,53 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     #endif
 
+        #ifdef TIMERON
+
+        std::chrono::high_resolution_clock::time_point startVectors = std::chrono::high_resolution_clock::now();
+
+        #endif
+
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
     printf("indexFirst: %d\n", indexFirst);
-    std::vector<float> currentVector1 = distances[lowestDistanceIndex].second.second.evaluateVectorAt(indexFirst);
+    Scenario* scenario1 = &scenarios[distances[lowestDistanceIndex].second.second];
+    std::vector<float> currentVector1 = scenario1->evaluateVectorAt(indexFirst);
     float deltaTime = 0.333333;
     float nextTimeStep = currentVector1[3] + deltaTime;
     printf("time %f, delta %f\n", currentVector1[3], deltaTime);
-    std::vector<float> futureVector1 = distances[lowestDistanceIndex].second.second.evaluateVectorAtTime(nextTimeStep);
+    std::vector<float> futureVector1 = scenario1->evaluateVectorAtTime(nextTimeStep);
 
     int indexSecond = distances[secondLowestDistanceIndex].second.first;
-    std::vector<float> currentVector2 = distances[secondLowestDistanceIndex].second.second.evaluateVectorAt(indexSecond);
+    Scenario* scenario2 = &scenarios[distances[secondLowestDistanceIndex].second.second];
+    std::vector<float> currentVector2 = scenario2->evaluateVectorAt(indexSecond);
     float nextTimeStep2 = currentVector2[3] + deltaTime;
-    std::vector<float> futureVector2 = distances[secondLowestDistanceIndex].second.second.evaluateVectorAtTime(nextTimeStep2);
+    std::vector<float> futureVector2 = scenario2->evaluateVectorAtTime(nextTimeStep2);
+
+        #ifdef TIMERON
+
+        this->vectorsTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - startVectors);
+
+        #endif
+
+        #ifdef TIMERON
+
+        std::chrono::high_resolution_clock::time_point push_backStart = std::chrono::high_resolution_clock::now();
+
+        #endif
 
     std::vector<std::vector<float>> nearestVectors;
     nearestVectors.push_back(currentVector1);
     nearestVectors.push_back(futureVector1);
     nearestVectors.push_back(currentVector2);
     nearestVectors.push_back(futureVector2);
+
+        #ifdef TIMERON
+
+        this->push_backTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
+                                        - push_backStart);
+
+        #endif
 
     #ifdef LOGON
 
@@ -1011,7 +1205,20 @@ VectorXf HALO::dynamicModel(VectorXf &X){
         return Xprediction;
     }
 
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     std::vector<std::vector<float>> nearestVectors = this->findNearestScenarios(scenarios, X);
+
+    #ifdef TIMERON
+
+    this->nearestScenariosTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()
+                            - t1);
+
+    #endif
 
     std::vector<float> vector1 = nearestVectors[0];
     std::vector<float> vector2 = nearestVectors[1];

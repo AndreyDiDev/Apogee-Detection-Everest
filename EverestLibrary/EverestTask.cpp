@@ -9,7 +9,8 @@
 #include <iostream>
 #include <sstream>
 
-// #define LOGON
+#define LOGON
+#define TIMERON
 
 #define printf(...) ;
 
@@ -1726,7 +1727,24 @@ int main()
 
     // printf("Overall for %d samples: %f", howMany, totalTime/CLOCKS_PER_SEC);
 
-    std::cout << "Overall for " << howMany << " samples: " << totalTime/CLOCKS_PER_SEC << std::endl;
+    std::cout << "Overall for " << howMany << " samples:\t\t\t\t\t\t\t\t\t" << totalTime/ (double) CLOCKS_PER_SEC << std::endl;
+
+    #ifdef TIMERON
+    std::cout << "Update time:\t\t\t\t\t\t\t\t\t\t" << halo.updateTime.count() << std::endl;
+    std::cout << "Predict time:\t\t\t\t\t\t\t\t\t\t" << halo.predictTime.count() << std::endl;
+    std::cout << "\tTriangulationTime:\t\t\t\t\t\t\t" << halo.triangulationTime.count() << std::endl;
+    std::cout << "\tdModeltime:\t\t\t\t\t\t\t\t" << halo.dynamicModelTime.count() << std::endl;
+    std::cout << "\t\tnearestScenariosTime:\t\t\t\t\t\t" << halo.nearestScenariosTime.count() << std::endl;
+    std::cout << "\t\t\t->loopScenariosTime:\t\t\t\t" << halo.loopScenariosTime.count() << std::endl;
+    std::cout << "\t\t\t\t->getListsTime:\t\t\t" << halo.getListsTime.count() << std::endl;
+    std::cout << "\t\t\t\t->othersTime:\t\t\t" << halo.othersTime.count() << std::endl;
+    std::cout << "\t\t\t\t->KDTreeTime:\t\t\t" << halo.KDTreeTime.count() << std::endl;
+    std::cout << "\t\t\t\t->twoDistancesTime:\t\t" << halo.twoDistancesTime.count() << std::endl;
+    std::cout << "\t\t\t\t->emplaceBackTime:\t\t" << halo.emplaceBackTime.count() << std::endl;
+
+    std::cout << "\t\t\t->vectorsTime:\t\t\t\t\t" << halo.vectorsTime.count() << std::endl;
+    std::cout << "\t\t\t->push_backTime:\t\t\t\t" << halo.push_backTime.count() << std::endl;
+    #endif
 
     fclose(file1);
 

@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <ctime>
+#include <chrono>
+
 
 #include "KDTree.hpp"
 
@@ -185,8 +188,9 @@ struct Scenario {
 
     /**
      * Returns list of vectors of scenario {Altitude, Velocity, Acceleration} before or after apogee
+     * pass index instead 
      */
-    std::vector<std::vector<float>> getLists(){
+    std::vector<std::vector<float>>* getLists(){
         if(isBeforeApogeeBool){
             // for(std::vector<float> vec : BeforeList){
             //     for(float value : vec){
@@ -194,7 +198,7 @@ struct Scenario {
             //     }
             //     printf("\n");
             // }
-            return BeforeList;
+            return &BeforeList;
         }
         else{
             // for(std::vector<float> vec : AfterList){
@@ -203,40 +207,66 @@ struct Scenario {
             //     }
             //     printf("after\n");
             // }
-            return AfterList;
+            return &AfterList;
         }
 
+    }
+
+    // Binary search function to find the index of the closest time
+    int binarySearch(const std::vector<std::vector<float>>& list, float time) {
+    int left = 0;
+    int right = list.size() - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+
+        if (list[mid][3] == time) {
+            return mid;
+        } else if (list[mid][3] < time) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    // If the exact time is not found, return the closest index
+    return (left < list.size()) ? left : right;
     }
 
     /** finds vector at specified index **/
     std::vector<float> evaluateVectorAt(int index){
-        return getLists()[index];
+
+        // tree!!!!!!!!
+        return (*getLists())[index];
     }
 
     /** finds vector at specified time **/
+    // binary search
     std::vector<float> evaluateVectorAtTime(float time){
-        std::vector<std::vector<float>> list = getLists();
+        std::vector<std::vector<float>>* list = getLists();
         int index = 0;
         // printf("starting to evaluate vector at time %f\n", time);
         std::vector<float> vect = {0,0,0,0};
 
-        for(std::vector<float> vec : list){
-            // std::vector<float> vect = {0,0,0,0};
-            int valueIndex = 0;
+        vect = list->at(binarySearch((*list), time));
 
-            for(float value : vec){
-                vect[valueIndex] = value;
-                valueIndex++;
-            }
+        // for(size_t i = 0; i < list->size(); i++){
+        //     // std::vector<float> vect = {0,0,0,0};
+        //     int valueIndex = 0;
 
-            if(time < vect[3]){
-                break;
-            }
+        //     for(float value : list->at(i)){
+        //         vect[valueIndex] = value;
+        //         valueIndex++;
+        //     }
 
-            index++;
+        //     if(time < vect[3]){
+        //         break;
+        //     }
 
-            // printf("Considered: (%f)", vect[3]);
-        }
+        //     index++;
+
+        //     // printf("Considered: (%f)", vect[3]);
+        // }
 
 
         // while(time > list[index][2]){
@@ -248,44 +278,44 @@ struct Scenario {
     }
 
     // state machine on apogee
-    float evaluateAcceleration(float time) {
-        float measuredAcceleration = measurement[0];
+    // float evaluateAcceleration(float time) {
+    //     float measuredAcceleration = measurement[0];
 
-        if(isBeforeApogeeBool){
-            // evaluate acceleration at timestep before apogee by using the coefficients at 3rd degree polynomial
-            return beforeApogeeAccel[0] * pow(time, 3) + beforeApogeeAccel[1] * pow(time, 2) 
-            + beforeApogeeAccel[2] * time + beforeApogeeAccel[3];
-        }
-        else{
-            // evaluate acceleration at timestep after apogee by using the coefficients at 3rd degree polynomial
-            return afterApogeeAccel[0] * pow(time, 3) + afterApogeeAccel[1] * pow(time, 2) 
-            + afterApogeeAccel[2] * time + afterApogeeAccel[3];
-        } 
-    }
+    //     if(isBeforeApogeeBool){
+    //         // evaluate acceleration at timestep before apogee by using the coefficients at 3rd degree polynomial
+    //         return beforeApogeeAccel[0] * pow(time, 3) + beforeApogeeAccel[1] * pow(time, 2) 
+    //         + beforeApogeeAccel[2] * time + beforeApogeeAccel[3];
+    //     }
+    //     else{
+    //         // evaluate acceleration at timestep after apogee by using the coefficients at 3rd degree polynomial
+    //         return afterApogeeAccel[0] * pow(time, 3) + afterApogeeAccel[1] * pow(time, 2) 
+    //         + afterApogeeAccel[2] * time + afterApogeeAccel[3];
+    //     } 
+    // }
 
-    float evaluateVelocity(float time){
-        if(isBeforeApogeeBool){
-            // evaluate velocity at timestep before apogee by using the coefficients at 3rd degree polynomial
-            return beforeApogeeVelo[0] * pow(time, 3) + beforeApogeeVelo[1] * pow(time, 2)
-            + beforeApogeeVelo[2] * time + beforeApogeeVelo[3];
-        }
-        else{
-            // evaluate velocity at timestep after apogee by using the coefficients at 3rd degree polynomial
-            return afterApogeeVelo[0] * pow(time, 3) + afterApogeeVelo[1] * pow(time, 2) 
-            + afterApogeeVelo[2] * time + afterApogeeVelo[3];
-        }
-    }
+    // float evaluateVelocity(float time){
+    //     if(isBeforeApogeeBool){
+    //         // evaluate velocity at timestep before apogee by using the coefficients at 3rd degree polynomial
+    //         return beforeApogeeVelo[0] * pow(time, 3) + beforeApogeeVelo[1] * pow(time, 2)
+    //         + beforeApogeeVelo[2] * time + beforeApogeeVelo[3];
+    //     }
+    //     else{
+    //         // evaluate velocity at timestep after apogee by using the coefficients at 3rd degree polynomial
+    //         return afterApogeeVelo[0] * pow(time, 3) + afterApogeeVelo[1] * pow(time, 2) 
+    //         + afterApogeeVelo[2] * time + afterApogeeVelo[3];
+    //     }
+    // }
 
-    float evaluateAltitude(float time){
-        if(isBeforeApogeeBool){
-            // evaluate altitude at timestep before apogee by using the coefficients at 3rd degree polynomial
-            return beforeApogeeAlt[0] * pow(time, 3) + beforeApogeeAlt[1] * pow(time, 2) + beforeApogeeAlt[2] * time + beforeApogeeAlt[3];
-        }
-        else{
-            // evaluate altitude at timestep after apogee by using the coefficients at 3rd degree polynomial
-            return afterApogeeAlt[0] * pow(time, 3) + afterApogeeAlt[1] * pow(time, 2) + afterApogeeAlt[2] * time + afterApogeeAlt[3];
-        }
-    }
+    // float evaluateAltitude(float time){
+    //     if(isBeforeApogeeBool){
+    //         // evaluate altitude at timestep before apogee by using the coefficients at 3rd degree polynomial
+    //         return beforeApogeeAlt[0] * pow(time, 3) + beforeApogeeAlt[1] * pow(time, 2) + beforeApogeeAlt[2] * time + beforeApogeeAlt[3];
+    //     }
+    //     else{
+    //         // evaluate altitude at timestep after apogee by using the coefficients at 3rd degree polynomial
+    //         return afterApogeeAlt[0] * pow(time, 3) + afterApogeeAlt[1] * pow(time, 2) + afterApogeeAlt[2] * time + afterApogeeAlt[3];
+    //     }
+    // }
     
 };
 
@@ -404,6 +434,23 @@ class HALO{
         int firstTimeForPoint = 1;
 
         FILE* file;
+
+        int scenarioIndex = 0;
+
+        std::chrono::duration<double> updateTime;
+        std::chrono::duration<double> predictTime;
+        std::chrono::duration<double> triangulationTime;
+        std::chrono::duration<double> dynamicModelTime;
+        std::chrono::duration<double> nearestScenariosTime;
+        std::chrono::duration<double> KDTreeTime;
+        std::chrono::duration<double> euclideanTime;
+        std::chrono::duration<double> twoDistancesTime;
+        std::chrono::duration<double> vectorsTime;
+        std::chrono::duration<double> push_backTime;
+        std::chrono::duration<double> loopScenariosTime;
+        std::chrono::duration<double> emplaceBackTime;
+        std::chrono::duration<double> getListsTime;
+        std::chrono::duration<double> othersTime;
 
     private:
 
