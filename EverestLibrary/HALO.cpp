@@ -2,7 +2,7 @@
 // #include "everestTaskHPP.hpp"
 #include <fstream>
 
-#define logON
+// #define LOGON
 
 // home
 #ifdef HOME
@@ -369,6 +369,7 @@ void HALO::calculateSigmaPoints() {
     // before dynamics
     // std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
 
+    #ifdef LOGON
     FILE* file = fopen("gains.txt", "a+");
     if (!file) {
         fprintf(stderr, "Error opening gains.txt...exiting\n");
@@ -417,6 +418,8 @@ void HALO::calculateSigmaPoints() {
         exit(1);
     }
 
+    #endif
+
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         // load variables
@@ -432,7 +435,9 @@ void HALO::calculateSigmaPoints() {
         sigmaPoints.col(i) = dynamicModel(column);
         this->listOfGainsSigmaPoints[i] = {this->prevGain1, this->prevGain2};
         this->firstTime[i] = this->firstTimeForPoint;
+        #ifdef LOGON
         fprintf(file, " ");
+        #endif
         printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
         listOfGainsSigmaPoints[0].first[0], listOfGainsSigmaPoints[0].first[1], listOfGainsSigmaPoints[0].first[2], listOfGainsSigmaPoints[0].second[0], listOfGainsSigmaPoints[0].second[1], listOfGainsSigmaPoints[0].second[2],
         listOfGainsSigmaPoints[1].first[0], listOfGainsSigmaPoints[1].first[1], listOfGainsSigmaPoints[1].first[2], listOfGainsSigmaPoints[1].second[0], listOfGainsSigmaPoints[1].second[1], listOfGainsSigmaPoints[1].second[2],
@@ -441,6 +446,8 @@ void HALO::calculateSigmaPoints() {
         listOfGainsSigmaPoints[4].first[0], listOfGainsSigmaPoints[4].first[1], listOfGainsSigmaPoints[4].first[2], listOfGainsSigmaPoints[4].second[0], listOfGainsSigmaPoints[4].second[1], listOfGainsSigmaPoints[4].second[2],
         listOfGainsSigmaPoints[5].first[0], listOfGainsSigmaPoints[5].first[1], listOfGainsSigmaPoints[5].first[2], listOfGainsSigmaPoints[5].second[0], listOfGainsSigmaPoints[5].second[1], listOfGainsSigmaPoints[5].second[2]);
     }
+
+    #ifdef LOGON
 
     fprintf(file, "\n");
 
@@ -460,6 +467,8 @@ void HALO::calculateSigmaPoints() {
     fclose(sigmaPointsFile4);
     fclose(sigmaPointsFile5);
     fclose(sigmaPointsFile6);
+
+    #endif
 
 
     // std::cout << "\nafter predict sPoints: \n" << sigmaPoints << std::endl;
@@ -650,6 +659,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     printf("lowest distance(%d) = %f, second lowest distance(%d) = %f\n", lowestDistanceIndex, lowestDistance, secondLowestDistanceIndex, secondLowestDistance);
 
+    #ifdef LOGON
+
     FILE* file = fopen("nearestScenarios.txt", "a+");
     if (!file) {
         fprintf(stderr, "Error opening nearestScenarios.txt...exiting\n");
@@ -676,6 +687,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     fclose(file);
     fclose(file2);
 
+    #endif
+
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
     printf("indexFirst: %d\n", indexFirst);
@@ -696,6 +709,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     nearestVectors.push_back(currentVector2);
     nearestVectors.push_back(futureVector2);
 
+    #ifdef LOGON
+
     FILE* file3 = fopen("predictedValues.txt", "a+");
     if (!file3) {
         fprintf(stderr, "Error opening predictedValues.txt...exiting\n");
@@ -708,6 +723,8 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     fprintf(file3, "%f,%f,%f,%f\n", futureVector2[0], futureVector2[1], futureVector2[2], futureVector2[3]);
 
     fclose(file3);
+
+    #endif
 
     return nearestVectors;
 }
@@ -858,6 +875,8 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
     printf("prevGain1 (%f,%f,%f), gainV2 (%f,%f,%f)\n", this->prevGain2[0], this->prevGain2[1], this->prevGain2[2], gainV2[0], gainV2[1], gainV2[2]);
 
+    #ifdef LOGON
+
     FILE* file = fopen("gains.txt", "a+");
     if (!file) {
         fprintf(stderr, "Error opening gains.txt...exiting\n");
@@ -868,6 +887,8 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     fprintf(file, "%f, %f, %f", gainV2[0], gainV2[1], gainV2[2]);
 
     fclose(file);
+
+    #endif
 
     // interpolate between the two scenarios to get predicted values0
     float predicted_interpolated_alt  = this->prevGain1[0] * vector1Future[0] + this->prevGain2[0] * vector2Future[0];

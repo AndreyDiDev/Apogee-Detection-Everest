@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sstream>
 
+// #define LOGON
+
 #define printf(...) ;
 
 // task specific defines
@@ -1171,7 +1173,7 @@ int main()
             0, 0, 0;
 
     // clear log files
-
+    #ifdef LOGON
     if (remove("gains.txt") == 0) {
         std::cout << "File deleted successfully: " << "gains.txt" << std::endl;
     } else {
@@ -1349,6 +1351,8 @@ int main()
     }
 
     fprintf(file, "Time,Everest_Alt,Everest_Velo,Everest_Accel,Halo_ALt, Halo_Velo, Halo_accel\n");
+
+    #endif
 
     /////// home
     #ifdef HOME
@@ -1701,7 +1705,9 @@ int main()
 
                 printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
-                fprintf(file, "%f,%f,%f,%f,%f,%f,%f\n", time, eAltitude, eVelocity, eAccelerationZ, unitedStates[0], unitedStates[1], unitedStates[2]);
+                #ifdef LOGON
+                    fprintf(file, "%f,%f,%f,%f,%f,%f,%f\n", time, eAltitude, eVelocity, eAccelerationZ, unitedStates[0], unitedStates[1], unitedStates[2]);
+                #endif
             }
             
             // update Kinematics 
@@ -1723,7 +1729,10 @@ int main()
     std::cout << "Overall for " << howMany << " samples: " << totalTime/CLOCKS_PER_SEC << std::endl;
 
     fclose(file1);
+
+    #ifdef LOGON
     fclose(file);
+    #endif
 
     return 0;
 }

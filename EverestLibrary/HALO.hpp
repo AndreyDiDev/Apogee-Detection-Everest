@@ -70,7 +70,7 @@ struct Scenario {
         //     exit(1);
         // }
 
-        printf("%d\n", name);
+        // printf("%d\n", name);
 
         // Print the first part
         // std::cout << "First Part:" << std::endl;
