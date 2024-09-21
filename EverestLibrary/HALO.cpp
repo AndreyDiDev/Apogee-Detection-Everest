@@ -2,6 +2,8 @@
 // #include "everestTaskHPP.hpp"
 #include <fstream>
 
+#define logON
+
 // home
 #ifdef HOME
     #include "C:\Users\andin\OneDrive\Documents\AllRepos\UnscentedKalmanFilter\eigen-3.4.0\Eigen\Dense"
