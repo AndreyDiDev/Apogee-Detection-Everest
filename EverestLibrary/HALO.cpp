@@ -2,7 +2,7 @@
 // #include "everestTaskHPP.hpp"
 #include <fstream>
 
-#define LOGON
+// #define LOGON
 #define TIMERON
 
 // home
@@ -209,7 +209,7 @@ void HALO::stateUpdate(){
     // std::cout << "\nKalman Gain: \n" << K << std::endl;
 
     // update the state vector
-    printf("\nthis->Xprediction + K * (this->X - zMean)\n\n");
+    // printf("\nthis->Xprediction + K * (this->X - zMean)\n\n");
 
     // std::cout << "Xprediction\n" <<  this->Xprediction << std::endl;
     // std::cout << "\nthis->X\n" << this->X;
@@ -503,8 +503,8 @@ void HALO::calculateSigmaPoints() {
         this->prevGain1 = this->listOfGainsSigmaPoints[i].first;
         this->prevGain2 = this->listOfGainsSigmaPoints[i].second;
 
-        printf("\nprevGain1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2]);
-        printf("\nsPoint[%d]: \n", i);
+        // printf("\nprevGain1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2]);
+        // printf("\nsPoint[%d]: \n", i);
 
         #ifdef TIMERON
 
@@ -941,12 +941,12 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
-    printf("indexFirst: %d\n", indexFirst);
+    // printf("indexFirst: %d\n", indexFirst);
     Scenario* scenario1 = &scenarios->at(distances[lowestDistanceIndex].second.second);
     std::vector<float> currentVector1 = scenario1->evaluateVectorAt(indexFirst);
     float deltaTime = 0.333333;
     float nextTimeStep = currentVector1[3] + deltaTime;
-    printf("time %f, delta %f\n", currentVector1[3], deltaTime);
+    // printf("time %f, delta %f\n", currentVector1[3], deltaTime);
     std::vector<float> futureVector1 = scenario1->evaluateVectorAtTime(nextTimeStep);
 
     int indexSecond = distances[secondLowestDistanceIndex].second.first;
@@ -1048,46 +1048,46 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
     bool vector1Further = false;
     
     for(int i = 0; i < 3; i++){
-        printf("[%d], v1 (%f), v2 (%f)\n", i, vector1[i], vector2[i]);
+        // printf("[%d], v1 (%f), v2 (%f)\n", i, vector1[i], vector2[i]);
 
         float distance = std::abs(vector1[i] - vector2[i]);
 
         if(distance < 1){
             gainV1[i] = 0.5;
             gainV2[i] = 0.5;
-            printf("similar vectors gains default");
+            // printf("similar vectors gains default");
         }else{
             if(vector1[i] > X_in(i)){
-                printf("---below v1----\n");
+                // printf("---below v1----\n");
                 // below vector1
                 if(vector2[i] > X_in(i)){
                     // point below both lines
                     both = true;
                     if(vector1[i] > vector2[i]){
                         // vector1 on top
-                        printf("point below both, v1 on top\n\n");
+                        // printf("point below both, v1 on top\n\n");
                         vector1Further = true;
                     }else{
                         vector1Further = false;
-                        printf("point below both, v2 on top\n\n");
+                        // printf("point below both, v2 on top\n\n");
                     }
                 }else{
                     // point between lines
-                    printf("point between lines\n\n");
+                    // printf("point between lines\n\n");
 
                 }
             }else{
                 if(vector2[i] > X_in(i)){
                     // point between lines
-                    printf("point between\n");
+                    // printf("point between\n");
                 }else{
                     // point above both lines
                     if(vector1[i] < vector2[i]){
                         vector1Further = true;
-                        printf("point above both lines, vector1 further\n\n");
+                        // printf("point above both lines, vector1 further\n\n");
                     }else{
                         vector1Further = false;
-                        printf("point above both lines, vector2 further\n\n");
+                        // printf("point above both lines, vector2 further\n\n");
                     }
                     both = true;
                 }
@@ -1114,11 +1114,11 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
                     gainV1[i] = 1 - (relativeFactor / (relativeFactor + 1));
                 }
 
-                printf("gainV1[%d]: %f\n", i, gainV1[i]);
+                // printf("gainV1[%d]: %f\n", i, gainV1[i]);
                 gainV2[i] = 1 - gainV1[i];
             }else{
                 // point between lines ------------------------------------------------------------
-                printf("distance: %f\n", distance);
+                // printf("distance: %f\n", distance);
                 gainV1[i] = 1 - (std::abs(vector1[i] - X_in(i))/distance);  // get distance between vector1 and current state
                 // printf("gainV1[%d]: %f\n", i, gainV1[i]);
                 gainV2[i] = 1 - gainV1[i];
@@ -1144,8 +1144,8 @@ VectorXf HALO::predictNextValues(std::vector<std::vector<float>> &vectors, Vecto
         this->firstTimeForPoint = 0;
     }
 
-    printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
-    printf("prevGain1 (%f,%f,%f), gainV2 (%f,%f,%f)\n", this->prevGain2[0], this->prevGain2[1], this->prevGain2[2], gainV2[0], gainV2[1], gainV2[2]);
+    // printf("prevGain1 (%f,%f,%f), gainV1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2], gainV1[0], gainV1[1], gainV1[2]);
+    // printf("prevGain1 (%f,%f,%f), gainV2 (%f,%f,%f)\n", this->prevGain2[0], this->prevGain2[1], this->prevGain2[2], gainV2[0], gainV2[1], gainV2[2]);
 
     #ifdef LOGON
 
@@ -1315,16 +1315,16 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     std::vector<float> vector3 = nearestVectors[2];
     std::vector<float> vector4 = nearestVectors[3];
 
-    printf("vector1 (%f,%f,%f)\n", vector1[0], vector1[1], vector1[2]);
-    printf("futureV1 (%f,%f,%f)\n", vector2[0], vector2[1], vector2[2]);
-    printf("vector2 (%f,%f,%f)\n", vector3[0], vector3[1], vector3[2]);
-    printf("futureV2 (%f,%f,%f)\n", vector4[0], vector4[1], vector4[2]);
+    // printf("vector1 (%f,%f,%f)\n", vector1[0], vector1[1], vector1[2]);
+    // printf("futureV1 (%f,%f,%f)\n", vector2[0], vector2[1], vector2[2]);
+    // printf("vector2 (%f,%f,%f)\n", vector3[0], vector3[1], vector3[2]);
+    // printf("futureV2 (%f,%f,%f)\n", vector4[0], vector4[1], vector4[2]);
 
-    printf("Spoint being propagated X (%f,%f,%f)\n", X(0), X(1), X(2));
+    // printf("Spoint being propagated X (%f,%f,%f)\n", X(0), X(1), X(2));
 
     Xprediction = predictNextValues(nearestVectors, X);
 
-    printf("\nXPrediction of Model: (%f,%f,%f)\n\n", Xprediction(0), Xprediction(1), Xprediction(2));
+    // printf("\nXPrediction of Model: (%f,%f,%f)\n\n", Xprediction(0), Xprediction(1), Xprediction(2));
 
     return Xprediction;
 }

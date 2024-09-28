@@ -9,7 +9,7 @@
 #include <iostream>
 #include <sstream>
 
-#define LOGON
+// #define LOGON
 #define TIMERON
 
 #define printf(...) ;
@@ -364,25 +364,25 @@ void EverestTask::IMU_Update(const IMUData& imu1, const IMUData& imu2)
         this->internalIMU_1.magZ = 0;
     }else{
         // Apply calibration
-        printf("uncalibrated: %f, %f, %f ", this->internalIMU_1.accelX, this->internalIMU_1.accelY, this->internalIMU_1.accelZ);
+        // printf("uncalibrated: %f, %f, %f ", this->internalIMU_1.accelX, this->internalIMU_1.accelY, this->internalIMU_1.accelZ);
 
         this->internalIMU_1.accelX = this->internalIMU_1.accelX - this->zeroOffsetAccel[0];
         this->internalIMU_1.accelY = this->internalIMU_1.accelY - this->zeroOffsetAccel[1];
         this->internalIMU_1.accelZ = this->internalIMU_1.accelZ - this->zeroOffsetAccel[2];
 
-        printf("-> offset (%f, %f, %f) = calibrated accel (%f, %f, %f)\n", 
-        this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2],
-        this->internalIMU_1.accelX, this->internalIMU_1.accelY, this->internalIMU_1.accelZ);
+        // printf("-> offset (%f, %f, %f) = calibrated accel (%f, %f, %f)\n", 
+        // this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2],
+        // this->internalIMU_1.accelX, this->internalIMU_1.accelY, this->internalIMU_1.accelZ);
 
-        printf("uncalibrated: %f, %f, %f ", this->internalIMU_1.gyroX, this->internalIMU_1.gyroY, this->internalIMU_1.gyroZ);
+        // printf("uncalibrated: %f, %f, %f ", this->internalIMU_1.gyroX, this->internalIMU_1.gyroY, this->internalIMU_1.gyroZ);
 
         this->internalIMU_1.gyroX = this->internalIMU_1.gyroX - this->zeroOffsetGyro[0];
         this->internalIMU_1.gyroY = this->internalIMU_1.gyroY - this->zeroOffsetGyro[1];
         this->internalIMU_1.gyroZ = this->internalIMU_1.gyroZ - this->zeroOffsetGyro[2];
 
-        printf("-> offset (%f, %f, %f) = calibrated gyro (%f, %f, %f)\n", 
-        this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
-        this->internalIMU_1.gyroX, this->internalIMU_1.gyroY, this->internalIMU_1.gyroZ);
+        // printf("-> offset (%f, %f, %f) = calibrated gyro (%f, %f, %f)\n", 
+        // this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
+        // this->internalIMU_1.gyroX, this->internalIMU_1.gyroY, this->internalIMU_1.gyroZ);
     }
 
     if (isinf(internalIMU_2.accelX)){
@@ -401,25 +401,25 @@ void EverestTask::IMU_Update(const IMUData& imu1, const IMUData& imu2)
         this->internalIMU_2.magZ = 0;
     }else{
         // Apply calibration
-        printf("uncalibrated: %f, %f, %f ", this->internalIMU_2.accelX, this->internalIMU_2.accelY, this->internalIMU_2.accelZ);
+        // printf("uncalibrated: %f, %f, %f ", this->internalIMU_2.accelX, this->internalIMU_2.accelY, this->internalIMU_2.accelZ);
 
         this->internalIMU_2.accelX = this->internalIMU_2.accelX - this->zeroOffsetAccel2[0];
         this->internalIMU_2.accelY = this->internalIMU_2.accelY - this->zeroOffsetAccel2[1];
         this->internalIMU_2.accelZ = this->internalIMU_2.accelZ - this->zeroOffsetAccel2[2];
 
-        printf("-> offset (%f, %f, %f) = calibrated accel2 (%f, %f, %f)\n", 
-        this->zeroOffsetAccel2[0], this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2],
-        this->internalIMU_2.accelX, this->internalIMU_2.accelY, this->internalIMU_2.accelZ);
+        // printf("-> offset (%f, %f, %f) = calibrated accel2 (%f, %f, %f)\n", 
+        // this->zeroOffsetAccel2[0], this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2],
+        // this->internalIMU_2.accelX, this->internalIMU_2.accelY, this->internalIMU_2.accelZ);
 
-        printf("uncalibrated: %f, %f, %f ", this->internalIMU_2.gyroX, this->internalIMU_2.gyroY, this->internalIMU_2.gyroZ);
+        // printf("uncalibrated: %f, %f, %f ", this->internalIMU_2.gyroX, this->internalIMU_2.gyroY, this->internalIMU_2.gyroZ);
 
         this->internalIMU_2.gyroX = this->internalIMU_2.gyroX - this->zeroOffsetGyro2[0];
         this->internalIMU_2.gyroY = this->internalIMU_2.gyroY - this->zeroOffsetGyro2[1];
         this->internalIMU_2.gyroZ = this->internalIMU_2.gyroZ - this->zeroOffsetGyro2[2];
 
-        printf("-> offset (%f, %f, %f) = calibrated gyro2 (%f, %f, %f)\n", 
-        this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
-        this->internalIMU_2.gyroX, this->internalIMU_2.gyroY, this->internalIMU_2.gyroZ);
+        // printf("-> offset (%f, %f, %f) = calibrated gyro2 (%f, %f, %f)\n", 
+        // this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
+        // this->internalIMU_2.gyroX, this->internalIMU_2.gyroY, this->internalIMU_2.gyroZ);
     }
 
     // Calculate average of IMU parameters
@@ -486,7 +486,7 @@ void EverestTask::Baro_Update(const BarosData& Baro1, const BarosData& Baro2)
 */
 double EverestTask::ExternalUpdate(IMUData imu1, IMUData imu2, BarosData baro1, BarosData baro2){
     if(!isTared){
-        printf("Taring in progress\n");
+        // printf("Taring in progress\n");
         everest.tare(imu1, imu2, baro1, baro2);
         return 0;
     }
@@ -917,11 +917,11 @@ void EverestTask::tare(IMUData &imu1, IMUData &imu2, BarosData baro1, BarosData 
     this->zeroOffsetAccel = {this->zeroOffsetAccel[0] + imu1.accelX, this->zeroOffsetAccel[1] + imu1.accelY, this->zeroOffsetAccel[2] + imu1.accelZ};
     this->zeroOffsetGyro = {this->zeroOffsetGyro[0] + imu1.gyroX, this->zeroOffsetGyro[1] + imu1.gyroY, this->zeroOffsetGyro[2] + imu1.gyroZ};
     
-    printf("zeroOffsetAccel[0]: %f, zeroOffsetAccel[1]: %f, zeroOffsetAccel[2]: %f \n", 
-    this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2]);
+    // printf("zeroOffsetAccel[0]: %f, zeroOffsetAccel[1]: %f, zeroOffsetAccel[2]: %f \n", 
+    // this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2]);
 
-    printf("zeroOffsetGyro[0]: %f, zeroOffsetGyro[1]: %f, zeroOffsetGyro[2]: %f \n", 
-    this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2]);
+    // printf("zeroOffsetGyro[0]: %f, zeroOffsetGyro[1]: %f, zeroOffsetGyro[2]: %f \n", 
+    // this->zeroOffsetGyro[0], this->zeroOffsetGyro[1], this->zeroOffsetGyro[2]);
 
     if(debug == Secondary || debug == ALL){
         // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
@@ -933,11 +933,11 @@ void EverestTask::tare(IMUData &imu1, IMUData &imu2, BarosData baro1, BarosData 
     this->zeroOffsetAccel2 = {this->zeroOffsetAccel2[0] + imu2.accelX, this->zeroOffsetAccel2[1] + imu2.accelY, this->zeroOffsetAccel2[2] + imu2.accelZ};
     this->zeroOffsetGyro2 = {this->zeroOffsetGyro2[0] + imu2.gyroX, this->zeroOffsetGyro2[1] + imu2.gyroY, this->zeroOffsetGyro2[2] + imu2.gyroZ};
 
-    printf("zeroOffsetAccel2[0]: %f, zeroOffsetAccel2[1]: %f, zeroOffsetAccel2[2]: %f \n", 
-    this->zeroOffsetAccel2[0], this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2]);
+    // printf("zeroOffsetAccel2[0]: %f, zeroOffsetAccel2[1]: %f, zeroOffsetAccel2[2]: %f \n", 
+    // this->zeroOffsetAccel2[0], this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2]);
 
-    printf("zeroOffsetGyro2[0]: %f, zeroOffsetGyro2[1]: %f, zeroOffsetGyro2[2]: %f \n", 
-    this->zeroOffsetGyro2[0], this->zeroOffsetGyro2[1], this->zeroOffsetGyro2[2]);
+    // printf("zeroOffsetGyro2[0]: %f, zeroOffsetGyro2[1]: %f, zeroOffsetGyro2[2]: %f \n", 
+    // this->zeroOffsetGyro2[0], this->zeroOffsetGyro2[1], this->zeroOffsetGyro2[2]);
 
     if(debug == Secondary || debug == ALL){
         // SOAR_PRINT("average: %f number: %d \n", average, numberOfSamples);
@@ -968,12 +968,12 @@ void EverestTask::tare(IMUData &imu1, IMUData &imu2, BarosData baro1, BarosData 
         // SOAR_PRINT("Tare Initial Altitude: %f\n", this->Kinematics.initialAlt);
         isTared = true;
 
-        printf("\nCalibration offsets:\n  accel1(%f,%f,%f),\n  accel2(%f,%f,%f),\n  gyro(%f,%f,%f),\n  gyro2(%f,%f,%f)\n\n", 
-        this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2],
-        this->zeroOffsetGyro[0],  this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
-        this->zeroOffsetAccel2[0],this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2],
-        this->zeroOffsetGyro2[0], this->zeroOffsetGyro2[1], this->zeroOffsetGyro2[2]
-        );
+        // printf("\nCalibration offsets:\n  accel1(%f,%f,%f),\n  accel2(%f,%f,%f),\n  gyro(%f,%f,%f),\n  gyro2(%f,%f,%f)\n\n", 
+        // this->zeroOffsetAccel[0], this->zeroOffsetAccel[1], this->zeroOffsetAccel[2],
+        // this->zeroOffsetGyro[0],  this->zeroOffsetGyro[1], this->zeroOffsetGyro[2],
+        // this->zeroOffsetAccel2[0],this->zeroOffsetAccel2[1], this->zeroOffsetAccel2[2],
+        // this->zeroOffsetGyro2[0], this->zeroOffsetGyro2[1], this->zeroOffsetGyro2[2]
+        // );
         
         // ExternalUpdate(imu1, imu2, baro1, baro2, baro3, realBaro);
     }
@@ -1717,7 +1717,7 @@ int main()
                                     halo.X0[1], 
                                     halo.X0[2]};
 
-                printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
+                // printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
                 #ifdef LOGON
                     fprintf(file, "%f,%f,%f,%f,%f,%f,%f\n", time, eAltitude, eVelocity, eAccelerationZ, unitedStates[0], unitedStates[1], unitedStates[2]);
