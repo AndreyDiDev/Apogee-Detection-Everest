@@ -10,6 +10,7 @@
 
 
 #include "KDTree.hpp"
+#include "Data.cpp"
 
 // home
 #ifdef HOME
@@ -53,7 +54,7 @@ struct Scenario {
     std::vector<float> beforeApogeeAlt;
     std::vector<float> afterApogeeAlt;
 
-    std::vector<std::vector<float>> BeforeList;
+    SensorData beforeList[];
     std::vector<std::vector<float>> AfterList;
 
     KDTree treeBefore;
