@@ -13,6 +13,7 @@ sigmaPoints3 = pd.read_csv('sigmaPoints3.txt')
 sigmaPoints4 = pd.read_csv('sigmaPoints4.txt')
 sigmaPoints5 = pd.read_csv('sigmaPoints5.txt')
 sigmaPoints6 = pd.read_csv('sigmaPoints6.txt')
+nearestScenarios = pd.read_csv('nearestScenarios.txt')
 
 # plot Madgwick
 
@@ -169,6 +170,22 @@ residual_everest = sims['alt_6'] - df['Everest_Alt']
 plt.figure(figsize=(10, 6))
 plt.plot(df['Time'], residual_halo, label='residual_halo')
 plt.plot(df['Time'], residual_everest, label='residual_everest')
+plt.legend()
+plt.grid(True)
+
+# -------------------------------------------------------------------------------
+
+# plot scenario choices
+plt.figure(figsize=(10, 6))
+plt.plot(nearestScenarios['firstScenario'], 'ok', label='Scenario 1', )
+plt.plot(nearestScenarios['SecondScenario'], 'o', label='Scenario 2')
+plt.legend()
+plt.grid(True)
+
+# plot distances
+plt.figure(figsize=(10, 6))
+plt.plot(nearestScenarios['lowestDistance'], label='lowestDistance 1')
+plt.plot(nearestScenarios['secondLowestDistance'], label='secondLowestDistance 2')
 plt.legend()
 plt.grid(True)
 

@@ -235,8 +235,6 @@ struct Scenario {
 
     /** finds vector at specified index **/
     std::vector<float> evaluateVectorAt(int index){
-
-        // tree!!!!!!!!
         return (*getLists())[index];
     }
 
@@ -361,7 +359,7 @@ class HALO{
 
         float interpolate(float x, float scenario1Distance, float scenario2Distance);
 
-        std::vector<std::vector<float>> findNearestScenarios(std::vector<Scenario>& scenarios, VectorXf &measurement);
+        std::vector<std::vector<float>> findNearestScenarios(std::vector<Scenario>* scenarios, VectorXf &measurement);
 
         float interpolateScenarios(VectorXf &X_in, std::vector<Scenario> &scenarios);
 
@@ -389,8 +387,9 @@ class HALO{
             this->scenarios = scenarios;
         };
 
-        std::vector<Scenario> getScenarios(){
-            return this->scenarios;
+        // TO DO: change to pass by reference
+        std::vector<Scenario>* getScenarios(){
+            return &this->scenarios;
         };
 
         std::vector<Scenario> scenarios;
@@ -399,7 +398,7 @@ class HALO{
 
         bool isBeforeApogee(float acceleration, float velocity, float altitude, float lastAltitude);
 
-        float deltaTime = 1/3;
+        float deltaTime = 1.0/3;
 
         void setDeltaTime(float deltaTime){
             this->deltaTime;
@@ -451,6 +450,13 @@ class HALO{
         std::chrono::duration<double> emplaceBackTime;
         std::chrono::duration<double> getListsTime;
         std::chrono::duration<double> othersTime;
+        std::chrono::duration<double> PpredictionTime;
+        std::chrono::duration<double> projErrorTime;
+        std::chrono::duration<double> sPointTime;
+        std::chrono::duration<double> preMeanTime;
+        std::chrono::duration<double> predictLoopTime;
+        std::chrono::duration<double> endPredictLoopTime;
+        std::chrono::duration<double> getScenarioTime;
 
     private:
 

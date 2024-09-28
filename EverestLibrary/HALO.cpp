@@ -265,11 +265,13 @@ void HALO::stateUpdate(){
 
     // check and update before apogee bool
     if(!this->isBeforeApogeeBoolHALO){
-        std::vector<Scenario> scenarios = this->getScenarios();
+        std::vector<Scenario>* scenarios = this->getScenarios();
 
-        for(Scenario scenario : scenarios){
-            scenario.setIsBeforeApogee(false);
+        for(int i = 0; i < scenarios->size(); i++){
+            scenarios->at(i).setIsBeforeApogee(false);
         }
+
+        printf("Apogee!!!!!!\n");
 
     }else{
         // check if the rocket is before apogee
@@ -403,6 +405,12 @@ void HALO::calculateSigmaPoints() {
 
     // std::cout << "L: \n" << L << std::endl;
 
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point startSPoint = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     // Initialize sigma points matrix
     MatrixXf sigmaPoints(3, 7);
     sigmaPoints.setZero();
@@ -418,6 +426,13 @@ void HALO::calculateSigmaPoints() {
     for(int j = this->N1 + 1; j < (2 * this->N1) + 1; j++){
         sigmaPoints.col(j) = X0 - L.col(j - this->N1 - 1);
     }
+
+    #ifdef TIMERON
+
+    this->sPointTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()
+                                - startSPoint);
+
+    #endif
 
     // before dynamics
     // std::cout << "before dynamics sPoints: \n" << sigmaPoints << std::endl;
@@ -476,6 +491,13 @@ void HALO::calculateSigmaPoints() {
     // propagate sigma points through the dynamic model
     for (int i = 0; i < (2 * this->N1) + 1; i++){
         // load variables
+
+        #ifdef TIMERON
+
+        std::chrono::high_resolution_clock::time_point startPredictLoop = std::chrono::high_resolution_clock::now();
+
+        #endif
+
         VectorXf column = sigmaPoints.col(i);
         this->firstTimeForPoint = firstTime[i];
         this->prevGain1 = this->listOfGainsSigmaPoints[i].first;
@@ -484,14 +506,20 @@ void HALO::calculateSigmaPoints() {
         printf("\nprevGain1 (%f,%f,%f)\n", this->prevGain1[0], this->prevGain1[1], this->prevGain1[2]);
         printf("\nsPoint[%d]: \n", i);
 
+        #ifdef TIMERON
+
+        this->predictLoopTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - startPredictLoop);
+
+        #endif
+
         // update
         // clock_t dynamicTime;
-        std::chrono::high_resolution_clock::time_point t1;
+        std::chrono::high_resolution_clock::time_point dynamicTime;
 
         #ifdef TIMERON
 
         // dynamicTime = std::clock();
-        t1 = std::chrono::high_resolution_clock::now();
+        dynamicTime = std::chrono::high_resolution_clock::now();
 
         #endif
 
@@ -499,7 +527,13 @@ void HALO::calculateSigmaPoints() {
 
         #ifdef TIMERON
 
-        this->dynamicModelTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1);
+        this->dynamicModelTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - dynamicTime);
+
+        #endif
+
+        #ifdef TIMERON
+
+        std::chrono::high_resolution_clock::time_point endPredictLoop = std::chrono::high_resolution_clock::now();
 
         #endif
 
@@ -508,13 +542,19 @@ void HALO::calculateSigmaPoints() {
         #ifdef LOGON
         fprintf(file, " ");
         #endif
-        printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
-        listOfGainsSigmaPoints[0].first[0], listOfGainsSigmaPoints[0].first[1], listOfGainsSigmaPoints[0].first[2], listOfGainsSigmaPoints[0].second[0], listOfGainsSigmaPoints[0].second[1], listOfGainsSigmaPoints[0].second[2],
-        listOfGainsSigmaPoints[1].first[0], listOfGainsSigmaPoints[1].first[1], listOfGainsSigmaPoints[1].first[2], listOfGainsSigmaPoints[1].second[0], listOfGainsSigmaPoints[1].second[1], listOfGainsSigmaPoints[1].second[2],
-        listOfGainsSigmaPoints[2].first[0], listOfGainsSigmaPoints[2].first[1], listOfGainsSigmaPoints[2].first[2], listOfGainsSigmaPoints[2].second[0], listOfGainsSigmaPoints[2].second[1], listOfGainsSigmaPoints[2].second[2],
-        listOfGainsSigmaPoints[3].first[0], listOfGainsSigmaPoints[3].first[1], listOfGainsSigmaPoints[3].first[2], listOfGainsSigmaPoints[3].second[0], listOfGainsSigmaPoints[3].second[1], listOfGainsSigmaPoints[3].second[2],
-        listOfGainsSigmaPoints[4].first[0], listOfGainsSigmaPoints[4].first[1], listOfGainsSigmaPoints[4].first[2], listOfGainsSigmaPoints[4].second[0], listOfGainsSigmaPoints[4].second[1], listOfGainsSigmaPoints[4].second[2],
-        listOfGainsSigmaPoints[5].first[0], listOfGainsSigmaPoints[5].first[1], listOfGainsSigmaPoints[5].first[2], listOfGainsSigmaPoints[5].second[0], listOfGainsSigmaPoints[5].second[1], listOfGainsSigmaPoints[5].second[2]);
+        // printf("List of Gains\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)},\n {(%f, %f, %f), (%f, %f, %f)}\n",
+        // listOfGainsSigmaPoints[0].first[0], listOfGainsSigmaPoints[0].first[1], listOfGainsSigmaPoints[0].first[2], listOfGainsSigmaPoints[0].second[0], listOfGainsSigmaPoints[0].second[1], listOfGainsSigmaPoints[0].second[2],
+        // listOfGainsSigmaPoints[1].first[0], listOfGainsSigmaPoints[1].first[1], listOfGainsSigmaPoints[1].first[2], listOfGainsSigmaPoints[1].second[0], listOfGainsSigmaPoints[1].second[1], listOfGainsSigmaPoints[1].second[2],
+        // listOfGainsSigmaPoints[2].first[0], listOfGainsSigmaPoints[2].first[1], listOfGainsSigmaPoints[2].first[2], listOfGainsSigmaPoints[2].second[0], listOfGainsSigmaPoints[2].second[1], listOfGainsSigmaPoints[2].second[2],
+        // listOfGainsSigmaPoints[3].first[0], listOfGainsSigmaPoints[3].first[1], listOfGainsSigmaPoints[3].first[2], listOfGainsSigmaPoints[3].second[0], listOfGainsSigmaPoints[3].second[1], listOfGainsSigmaPoints[3].second[2],
+        // listOfGainsSigmaPoints[4].first[0], listOfGainsSigmaPoints[4].first[1], listOfGainsSigmaPoints[4].first[2], listOfGainsSigmaPoints[4].second[0], listOfGainsSigmaPoints[4].second[1], listOfGainsSigmaPoints[4].second[2],
+        // listOfGainsSigmaPoints[5].first[0], listOfGainsSigmaPoints[5].first[1], listOfGainsSigmaPoints[5].first[2], listOfGainsSigmaPoints[5].second[0], listOfGainsSigmaPoints[5].second[1], listOfGainsSigmaPoints[5].second[2]);
+
+        #ifdef TIMERON
+
+        this->endPredictLoopTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - endPredictLoop);
+
+        #endif
     }
 
     #ifdef LOGON
@@ -550,6 +590,12 @@ void HALO::calculateSigmaPoints() {
     // std::cout << "WeightsForSigmaPoints row: " << WeightsForSigmaPoints.rows() 
     // << " col: " << WeightsForSigmaPoints.cols() << std::endl;
 
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point preMeanStart = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     // calculate the mean and covariance of the sigma points
     VectorXf xPreMean(3,1);
     for(int row = 0; row < this->N1; row++){
@@ -562,9 +608,21 @@ void HALO::calculateSigmaPoints() {
         // std::cout << "XpreMean: \n" << xPreMean << std::endl;
     }
 
+    #ifdef TIMERON
+
+    this->preMeanTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - preMeanStart);
+
+    #endif
+
     // std::cout << "\nXprediction: \n" << xPreMean << std::endl;
     // std::cout << "Xprediction: \n" << Xprediction << std::endl;
     this->Xprediction = xPreMean;
+
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point projErrorStart = std::chrono::high_resolution_clock::now();
+
+    #endif
 
     MatrixXf projError(3, 7);
     projError.setZero(3, 7);
@@ -582,8 +640,20 @@ void HALO::calculateSigmaPoints() {
 
     this->projectError = projError;
 
+    #ifdef TIMERON
+
+    this->projErrorTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - projErrorStart);
+
+    #endif
+
     MatrixXf Pprediction(3,3);
     Pprediction.setZero(3,3);
+
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point pPredictionStart = std::chrono::high_resolution_clock::now();
+
+    #endif
 
     Pprediction = projError * WeightsForSigmaPoints.asDiagonal() * projError.transpose() + this->Q;
 
@@ -591,7 +661,15 @@ void HALO::calculateSigmaPoints() {
 
     this->Pprediction = Pprediction;
 
+    #ifdef TIMERON
+
+    this->PpredictionTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - pPredictionStart);
+
+    #endif
+
     this->sigPoints =  sigmaPoints;
+
+
 
     // std::cout << " ---- End Predict Step ---- \n" << std::endl;
 }
@@ -647,7 +725,7 @@ float HALO::euclideanDistance(const std::vector<float>& vec1, const VectorXf& ve
 /**
  * @brief Given a list of scenarios, find the nearest 2 scenarios and returns the vectors of the nearest scenarios
  */
-std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>& scenarios, VectorXf &measurement) {
+std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>* scenarios, VectorXf &measurement) {
     // printf("findNearestScenarios\n");
     std::vector<std::pair<float, std::pair<float, int>>> distances;
     distances.reserve(7);
@@ -660,7 +738,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
     #endif
 
-    for(size_t s=0; s<scenarios.size(); s++){
+    for(size_t s=0; s<scenarios->size(); s++){
             #ifdef TIMERON
 
             std::chrono::high_resolution_clock::time_point getListsStart = std::chrono::high_resolution_clock::now();
@@ -702,16 +780,16 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
 
             #ifdef TIMERON
 
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point KDTreeTimeStart = std::chrono::high_resolution_clock::now();
 
             #endif
 
-        vect = scenarios[s].nearestKDTree(measurementVec);
+        vect = (scenarios->at(s)).nearestKDTree(measurementVec);
 
             #ifdef TIMERON
 
             this->KDTreeTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() 
-                                        - t1);
+                                        - KDTreeTimeStart);
 
             #endif
 
@@ -764,7 +842,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
             #endif
 
         // pass index of scenario / struct
-        std::pair<float, std::pair<float, int>> vector = {minDistance, {lowestDistanceIndex, (((&scenarios[s])->name)-1)}};
+        std::pair<float, std::pair<float, int>> vector = {minDistance, {lowestDistanceIndex, (((scenarios->at(s)).name)-1)}};
         distances.push_back(vector);
 
             #ifdef TIMERON
@@ -840,12 +918,12 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     }
 
     fprintf(file, "%f,%f,", lowestDistance, secondLowestDistance);
-    fprintf(file, "%d,%d,", lowestDistanceIndex, secondLowestDistanceIndex);
-    fprintf(file, "%d,%d", distances[lowestDistanceIndex].second.second, distances[secondLowestDistanceIndex].second.second);
-    fprintf(file, "%f,%f\n", distances[lowestDistanceIndex].first, distances[secondLowestDistanceIndex].first);
+    fprintf(file, "%d,%d\n", lowestDistanceIndex, secondLowestDistanceIndex);
+    // fprintf(file, "%d,%d,", distances[lowestDistanceIndex].second.second, distances[secondLowestDistanceIndex].second.second);
+    // fprintf(file, "%f,%f\n", distances[lowestDistanceIndex].first, distances[secondLowestDistanceIndex].first);
 
     fprintf(file2, "For Meas(%f,%f,%f) V1(%f) lowest(%f),secondL(%f),", measurement[0], measurement[1], measurement[2], lowestDistance, secondLowestDistance);
-    fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
+    // fprintf(file2, "lowestIndex(%d),secondLI(%d),", lowestDistanceIndex, secondLowestDistanceIndex);
     fprintf(file2, "lowestName(%d),secondLN(%d)\n", distances[lowestDistanceIndex].second.second, distances[secondLowestDistanceIndex].second.second);
     fprintf(file2, "list: %f,%f,%f,%f,%f,%f\n", distances[0].first, distances[1].first, distances[2].first, 
                         distances[3].first, distances[4].first, distances[5].first, distances[6].first);
@@ -864,7 +942,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     // find current vector (by index) and future vector (by time)
     int indexFirst = distances[lowestDistanceIndex].second.first;
     printf("indexFirst: %d\n", indexFirst);
-    Scenario* scenario1 = &scenarios[distances[lowestDistanceIndex].second.second];
+    Scenario* scenario1 = &scenarios->at(distances[lowestDistanceIndex].second.second);
     std::vector<float> currentVector1 = scenario1->evaluateVectorAt(indexFirst);
     float deltaTime = 0.333333;
     float nextTimeStep = currentVector1[3] + deltaTime;
@@ -872,7 +950,7 @@ std::vector<std::vector<float>> HALO::findNearestScenarios(std::vector<Scenario>
     std::vector<float> futureVector1 = scenario1->evaluateVectorAtTime(nextTimeStep);
 
     int indexSecond = distances[secondLowestDistanceIndex].second.first;
-    Scenario* scenario2 = &scenarios[distances[secondLowestDistanceIndex].second.second];
+    Scenario* scenario2 = &scenarios->at(distances[secondLowestDistanceIndex].second.second);
     std::vector<float> currentVector2 = scenario2->evaluateVectorAt(indexSecond);
     float nextTimeStep2 = currentVector2[3] + deltaTime;
     std::vector<float> futureVector2 = scenario2->evaluateVectorAtTime(nextTimeStep2);
@@ -1174,8 +1252,20 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     // X = [acceleration, velocity, altitude]
     VectorXf Xprediction(3, 1);
 
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point getScenario = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     // for every scenario get lists and find nearest 2 vectors to the current state
-    std::vector<Scenario> scenarios = this->getScenarios();
+    std::vector<Scenario>* scenarios = this->getScenarios();
+
+    #ifdef TIMERON
+
+    this->getScenarioTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - getScenario);
+
+    #endif
 
     // for(Scenario scenario : scenarios){
     //     printf("Scenario\n");
@@ -1195,8 +1285,8 @@ VectorXf HALO::dynamicModel(VectorXf &X){
 
         printf("X is nan, defaulting to static integration\n");
 
-        double finalVelocity = X(1) + X(0) * deltaTime;
-        double altitude = X(2) + (X(1) + finalVelocity) * deltaTime / 2.0;
+        double finalVelocity = X(1) + X(0) * ((float) 1.0/3);
+        double altitude = X(2) + (X(1) + finalVelocity) * (1.0/3) / 2.0;
 
         Xprediction(0) = altitude;
         Xprediction(1) = finalVelocity;
@@ -1207,7 +1297,7 @@ VectorXf HALO::dynamicModel(VectorXf &X){
 
     #ifdef TIMERON
 
-    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::time_point nearestVectorsStart = std::chrono::high_resolution_clock::now();
 
     #endif
 
@@ -1216,7 +1306,7 @@ VectorXf HALO::dynamicModel(VectorXf &X){
     #ifdef TIMERON
 
     this->nearestScenariosTime += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()
-                            - t1);
+                            - nearestVectorsStart);
 
     #endif
 
