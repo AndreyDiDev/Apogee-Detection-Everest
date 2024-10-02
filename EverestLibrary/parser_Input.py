@@ -33,12 +33,17 @@ current_time = 0
 # Generate the IMUData and BarosData arrays
 cpp_code += "\nIMUData imuData[] = {\n"
 for data in input_data:
-    cpp_code += f"    {{{current_time}, {data[3]}, {data[4]}, {data[5]}, {data[0]}, {data[1]}, {data[2]}, {data[6]}, {data[7]}, {data[8]}, {data[10]}}},\n"
+    if data[4] == '':
+        break
+    cpp_code += f"    {{{current_time}, {float(data[3])/1000}, {float(data[4])/1000}, {float(data[5])/1000}, {float(data[0])/1000}, {float(data[1])/1000}, {float(data[2])/1000}, {float(data[6])/1000}, {float(data[7])/1000}, {float(data[8])/1000}}},\n"
     current_time += time_increment
 cpp_code += "};\n"
 
+current_time = 0
 cpp_code += "\nBarosData baroData[] = {\n"
 for data in input_data:
+    if data[10] == '':
+        break
     cpp_code += f"    {{{current_time}, {data[10]}, 0, 0}},\n"
     current_time += time_increment
 cpp_code += "};\n"
