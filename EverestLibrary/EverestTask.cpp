@@ -9,6 +9,9 @@
 #include <iostream>
 #include <sstream>
 
+#include "Data.cpp"
+#include "input_data.cpp"
+
 // #define LOGON
 #define TIMERON
 

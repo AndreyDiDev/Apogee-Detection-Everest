@@ -54,8 +54,8 @@ struct Scenario {
     std::vector<float> beforeApogeeAlt;
     std::vector<float> afterApogeeAlt;
 
-    SensorData beforeList[];
-    std::vector<std::vector<float>> AfterList;
+    SensorData beforeApogeeList[5];
+    SensorData afterApogeeList[5];
 
     KDTree treeBefore;
     KDTree treeAfter;
@@ -65,8 +65,8 @@ struct Scenario {
     std::vector<float> measurement;
     bool isBeforeApogeeBool = true;
 
-    Scenario(std::vector<std::vector<float>> beforeList, std::vector<std::vector<float>> afterList, int Name)
-        :BeforeList(beforeList), AfterList(afterList), name(Name){
+    Scenario(SensorData beforeList[], SensorData afterList[], int Name)
+        :beforeApogeeList(beforeList), afterApogeeList(afterList), name(Name){
 
         // FILE *file = fopen("Sims.txt", "w+"); // Open the file for appending or create it if it doesn't exist
         // if (!file) {
@@ -79,7 +79,7 @@ struct Scenario {
         // Print the first part
         // std::cout << "First Part:" << std::endl;
         // fprintf(file, "%s\n", "First Part:");
-        for (const auto& vec : BeforeList) {
+        for (const auto& vec : beforeApogeeList) {
             for (float value : vec) {
                 //std::cout << value << " ";
                 // printf("%f", value);
@@ -90,7 +90,7 @@ struct Scenario {
         // Print the second part
         // std::cout << "Second Part:" << std::endl;
         // fprintf(file, "%s\n", "Second Part:");
-        for (const auto& vec : AfterList) {
+        for (const auto& vec : afterApogeeList) {
             for (float value : vec) {
                 //std::cout << value << " ";
                 // fprintf(file, "%f,%f,%f,%f\n", value);
