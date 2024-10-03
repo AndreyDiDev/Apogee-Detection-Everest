@@ -10,7 +10,7 @@ with open('beforeSimsF2_Short.csv', 'r') as file:
 
 # Generate the C++ code
 cpp_code = """
-struct SensorData {
+struct SensorData_file {
     float alt;
     float velo;
     float accel;
@@ -33,7 +33,7 @@ for scenario_id, data in scenario_data.items():
     # check if the data is not all NUL
     
     # Scenario 1
-    cpp_code += f"\nSensorData sensorData{1}[] = {{\n"
+    cpp_code += f"\nSensorData_file sensorData{1}[] = {{\n"
     for entry in data:
         if entry[1] == '':
             break
@@ -41,7 +41,7 @@ for scenario_id, data in scenario_data.items():
     cpp_code += "};\n"
     
     # Scenario 2
-    cpp_code += f"\nSensorData sensorData{2}[] = {{\n"
+    cpp_code += f"\nSensorData_file sensorData{2}[] = {{\n"
     for entry in data:
         
         if entry[4] == '':
@@ -51,7 +51,7 @@ for scenario_id, data in scenario_data.items():
     cpp_code += "};\n"
     
     # Scenario 3
-    cpp_code += f"\nSensorData sensorData{3}[] = {{\n"
+    cpp_code += f"\nSensorData_file sensorData{3}[] = {{\n"
     for entry in data:
         
         if entry[8] == '':
@@ -61,7 +61,7 @@ for scenario_id, data in scenario_data.items():
     cpp_code += "};\n"
     
     # Scenario 4
-    cpp_code += f"\nSensorData sensorData{4}[] = {{\n"
+    cpp_code += f"\nSensorData_file sensorData{4}[] = {{\n"
     for entry in data:
         if entry[12] == '':
             break
@@ -70,7 +70,7 @@ for scenario_id, data in scenario_data.items():
     cpp_code += "};\n"
     
     # Scenario 5
-    cpp_code += f"\nSensorData sensorData{5}[] = {{\n"
+    cpp_code += f"\nSensorData_file sensorData{5}[] = {{\n"
     for entry in data:
         if entry[16] == '':
             break
@@ -78,7 +78,7 @@ for scenario_id, data in scenario_data.items():
     cpp_code += "};\n"
     
     # Scenario 6
-    cpp_code += f"\nSensorData sensorData{6}[] = {{\n"
+    cpp_code += f"\nSensorData_file sensorData{6}[] = {{\n"
     for entry in data:
         if entry[20] == '':
             break
