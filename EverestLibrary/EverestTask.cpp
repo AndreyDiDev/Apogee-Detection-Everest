@@ -1437,89 +1437,88 @@ int main()
     std::vector<float> temp = {0,0,0,0};
 
     // skip header
-    fgets(line, sizeof(line), simsFile);
+    // fgets(line, sizeof(line), simsFile);
 
-    while (fgets(line, sizeof(line), simsFile)) {
-        char *token = strtok(line, ",");
+    // while (fgets(line, sizeof(line), simsFile)) {
+    //     char *token = strtok(line, ",");
 
-        for(int i = 0; i < numberOfScenarios; i++){
-            alt = atof(token); // Convert the time value to float
-            token = strtok(NULL, ",");
-            velo = atof(token);
-            token = strtok(NULL, ",");
-            acc = atof(token);
-            token = strtok(NULL, ",");
-            time1 = atof(token);
-            token = strtok(NULL, ",");
+    //     for(int i = 0; i < numberOfScenarios; i++){
+    //         alt = atof(token); // Convert the time value to float
+    //         token = strtok(NULL, ",");
+    //         velo = atof(token);
+    //         token = strtok(NULL, ",");
+    //         acc = atof(token);
+    //         token = strtok(NULL, ",");
+    //         time1 = atof(token);
+    //         token = strtok(NULL, ",");
 
-            temp = {alt, velo, acc, time1};
-            // printf("temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
-            if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
-                scenarioListofVectorsBefore[i].push_back(temp);
-            }
+    //         temp = {alt, velo, acc, time1};
+    //         // printf("temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
+    //         if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
+    //             scenarioListofVectorsBefore[i].push_back(temp);
+    //         }
 
-        }
+    //     }
 
-        // printf("\n");
+    //     // printf("\n");
         
-    }
+    // }
 
-    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
+    // std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
 
-    // skip header
-    fgets(line, sizeof(line), simsAfterFile);
+    // // skip header
+    // fgets(line, sizeof(line), simsAfterFile);
 
-    while (fgets(line, sizeof(line), simsAfterFile)) {
-        char *token = strtok(line, ",");
+    // while (fgets(line, sizeof(line), simsAfterFile)) {
+    //     char *token = strtok(line, ",");
 
-        for(int i = 0; i < numberOfScenarios; i++){
-            alt = atof(token); // Convert the time value to float
-            token = strtok(NULL, ",");
-            velo = atof(token);
-            token = strtok(NULL, ",");
-            acc = atof(token);
-            token = strtok(NULL, ",");
-            time1 = atof(token);
-            token = strtok(NULL, ",");
+    //     for(int i = 0; i < numberOfScenarios; i++){
+    //         alt = atof(token); // Convert the time value to float
+    //         token = strtok(NULL, ",");
+    //         velo = atof(token);
+    //         token = strtok(NULL, ",");
+    //         acc = atof(token);
+    //         token = strtok(NULL, ",");
+    //         time1 = atof(token);
+    //         token = strtok(NULL, ",");
 
-            std::vector<float> temp = {alt, velo, acc, time1};
-            // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
-            if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
-                scenarioListofVectorsAfter[i].push_back(temp);
-            }
+    //         std::vector<float> temp = {alt, velo, acc, time1};
+    //         // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
+    //         if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
+    //             scenarioListofVectorsAfter[i].push_back(temp);
+    //         }
 
-        }
+    //     }
 
-        // printf("\n");
-    }
+    //     // printf("\n");
+    // }
 
-    scenarioListofVectorsBefore[0].erase(scenarioListofVectorsBefore[0].begin());
-    scenarioListofVectorsBefore[1].erase(scenarioListofVectorsBefore[1].begin());
-    scenarioListofVectorsBefore[2].erase(scenarioListofVectorsBefore[2].begin());
-    scenarioListofVectorsBefore[3].erase(scenarioListofVectorsBefore[3].begin());
-    scenarioListofVectorsBefore[4].erase(scenarioListofVectorsBefore[4].begin());
-    scenarioListofVectorsBefore[5].erase(scenarioListofVectorsBefore[5].begin());
+    // scenarioListofVectorsBefore[0].erase(scenarioListofVectorsBefore[0].begin());
+    // scenarioListofVectorsBefore[1].erase(scenarioListofVectorsBefore[1].begin());
+    // scenarioListofVectorsBefore[2].erase(scenarioListofVectorsBefore[2].begin());
+    // scenarioListofVectorsBefore[3].erase(scenarioListofVectorsBefore[3].begin());
+    // scenarioListofVectorsBefore[4].erase(scenarioListofVectorsBefore[4].begin());
+    // scenarioListofVectorsBefore[5].erase(scenarioListofVectorsBefore[5].begin());
 
-    scenarioListofVectorsAfter[0].erase(scenarioListofVectorsAfter[0].begin());
-    scenarioListofVectorsAfter[1].erase(scenarioListofVectorsAfter[1].begin());
-    scenarioListofVectorsAfter[2].erase(scenarioListofVectorsAfter[2].begin());
-    scenarioListofVectorsAfter[3].erase(scenarioListofVectorsAfter[3].begin());
-    scenarioListofVectorsAfter[4].erase(scenarioListofVectorsAfter[4].begin());
-    scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
-
+    // scenarioListofVectorsAfter[0].erase(scenarioListofVectorsAfter[0].begin());
+    // scenarioListofVectorsAfter[1].erase(scenarioListofVectorsAfter[1].begin());
+    // scenarioListofVectorsAfter[2].erase(scenarioListofVectorsAfter[2].begin());
+    // scenarioListofVectorsAfter[3].erase(scenarioListofVectorsAfter[3].begin());
+    // scenarioListofVectorsAfter[4].erase(scenarioListofVectorsAfter[4].begin());
+    // scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
 
     // create scenarios with before and after lists
-    Scenario scenario1 = Scenario{scenarioListofVectorsBefore[0], scenarioListofVectorsAfter[0], 1};
+    Scenario scenario1 = Scenario{sim1, sim1, 1};
     scenario1.createTree();
-    Scenario scenario2 = Scenario{scenarioListofVectorsBefore[1], scenarioListofVectorsAfter[1], 2};
+    Scenario scenario2 = Scenario{sim2, sim2, 2};
     scenario2.createTree();
-    Scenario scenario3 = Scenario{scenarioListofVectorsBefore[2], scenarioListofVectorsAfter[2], 3};
+    Scenario scenario3 = Scenario{sim3, sim3, 3};
     scenario3.createTree();
-    Scenario scenario4 = Scenario{scenarioListofVectorsBefore[3], scenarioListofVectorsAfter[3], 4};
+    Scenario scenario4 = Scenario{sim4, sim4, 4};
     scenario4.createTree();
-    Scenario scenario5 = Scenario{scenarioListofVectorsBefore[4], scenarioListofVectorsAfter[4], 5};
+    Scenario scenario5 = Scenario{sim5, sim5, 5};
     scenario5.createTree();
-    Scenario scenario6 = Scenario{scenarioListofVectorsBefore[5], scenarioListofVectorsAfter[5], 6};
+    Scenario scenario6 = Scenario{sim6, sim6, 6};
     scenario6.createTree();
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
@@ -1535,66 +1534,51 @@ int main()
     halo.setScenarios(scenarios);
     halo.deltaTime = 1/3;
 
-    while (fgets(line, sizeof(line), file1)) {
+    for(int i = 0; i < taberLaunch.size(); i++){
         // Tokenize the line using strtok
         // Parse accelerometer readings (X, Y, Z)
-        char *token = strtok(line, ",");
-        float accelX = atof(token); // Convert the time value to float
-        token = strtok(NULL, ",");
-        float accelY = atof(token);
-        token = strtok(NULL, ",");
-        float accelZ = atof(token);
+        float time = taberLaunch[i][0];
+        float accelX = taberLaunch[i][1];
+        float accelY = taberLaunch[i][2];
+        float accelZ = taberLaunch[i][3];
 
         // Parse gyroscope readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float gyroX = atof(token);
-        token = strtok(NULL, ",");
-        float gyroY = atof(token);
-        token = strtok(NULL, ",");
-        float gyroZ = atof(token);
+        float gyroX = taberLaunch[i][4];
+        float gyroY = taberLaunch[i][5];
+        float gyroZ = taberLaunch[i][6];
 
         // Parse magnetometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float magX = atof(token);
-        token = strtok(NULL, ",");
-        float magY = atof(token);
-        token = strtok(NULL, ",");
-        float magZ = atof(token);
+        float magX = taberLaunch[i][7];
+        float magY = taberLaunch[i][8];
+        float magZ = taberLaunch[i][9];
 
-        token = strtok(NULL, ",");
-        float time = atof(token); // Convert the time value to float
-
-        token = strtok(NULL, ",");
-        float pressure = atof(token);
-
-        time = i * DELTA_TIME;
-
-        i++;
+        // Parse pressure readings
+        float pressure = taberLaunch[i][10];
 
         IMUData sensorData = {
             time,
-            gyroX/1000,
-            gyroY/1000,
-            gyroZ/1000,
-            accelX/1000,
-            accelY/1000,
-            accelZ/1000,
-            magX/1000,
-            magY/1000,
-            magZ/1000,
+            gyroX,
+            gyroY,
+            gyroZ,
+            accelX,
+            accelY,
+            accelZ,
+            magX,
+            magY,
+            magZ,
         };
 
         IMUData sensorData2 = {
             time,
-            gyroX/1000,
-            gyroY/1000,
-            gyroZ/1000,
-            accelX/1000,
-            accelY/1000,
-            accelZ/1000,
-            magX/1000,
-            magY/1000,
-            magZ/1000,
+            gyroX,
+            gyroY,
+            gyroZ,
+            accelX,
+            accelY,
+            accelZ,
+            magX,
+            magY,
+            magZ,
         };
 
         start = std::clock();
