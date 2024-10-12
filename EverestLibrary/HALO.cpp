@@ -2,7 +2,7 @@
 // #include "everestTaskHPP.hpp"
 #include <fstream>
 
-// #define LOGON
+#define LOGON
 #define TIMERON
 
 // home

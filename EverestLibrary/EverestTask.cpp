@@ -9,7 +9,10 @@
 #include <iostream>
 #include <sstream>
 
-// #define LOGON
+#include "Data.cpp"
+#include "input_data.cpp"
+
+#define LOGON
 #define TIMERON
 
 #define printf(...) ;
@@ -1506,17 +1509,17 @@ int main()
 
 
     // create scenarios with before and after lists
-    Scenario scenario1 = Scenario{scenarioListofVectorsBefore[0], scenarioListofVectorsAfter[0], 1};
+    Scenario scenario1 = Scenario{sim1, sim1, 1};
     scenario1.createTree();
-    Scenario scenario2 = Scenario{scenarioListofVectorsBefore[1], scenarioListofVectorsAfter[1], 2};
+    Scenario scenario2 = Scenario{sim2, sim2, 2};
     scenario2.createTree();
-    Scenario scenario3 = Scenario{scenarioListofVectorsBefore[2], scenarioListofVectorsAfter[2], 3};
+    Scenario scenario3 = Scenario{sim3, sim3, 3};
     scenario3.createTree();
-    Scenario scenario4 = Scenario{scenarioListofVectorsBefore[3], scenarioListofVectorsAfter[3], 4};
+    Scenario scenario4 = Scenario{sim4, sim4, 4};
     scenario4.createTree();
-    Scenario scenario5 = Scenario{scenarioListofVectorsBefore[4], scenarioListofVectorsAfter[4], 5};
+    Scenario scenario5 = Scenario{sim5, sim5, 5};
     scenario5.createTree();
-    Scenario scenario6 = Scenario{scenarioListofVectorsBefore[5], scenarioListofVectorsAfter[5], 6};
+    Scenario scenario6 = Scenario{sim6, sim6, 6};
     scenario6.createTree();
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
@@ -1532,66 +1535,54 @@ int main()
     halo.setScenarios(scenarios);
     halo.deltaTime = 1/3;
 
-    while (fgets(line, sizeof(line), file1)) {
+    for(int i = 0; i < 545; i++){
         // Tokenize the line using strtok
         // Parse accelerometer readings (X, Y, Z)
-        char *token = strtok(line, ",");
-        float accelX = atof(token); // Convert the time value to float
-        token = strtok(NULL, ",");
-        float accelY = atof(token);
-        token = strtok(NULL, ",");
-        float accelZ = atof(token);
+        float time = taberLaunch.at(i).at(0);
+        printf("time: %f\n", time);
+        float accelX = taberLaunch[i][1];
+        float accelY = taberLaunch[i][2];
+        float accelZ = taberLaunch[i][3];
 
         // Parse gyroscope readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float gyroX = atof(token);
-        token = strtok(NULL, ",");
-        float gyroY = atof(token);
-        token = strtok(NULL, ",");
-        float gyroZ = atof(token);
+        float gyroX = taberLaunch[i][4];
+        float gyroY = taberLaunch[i][5];
+        float gyroZ = taberLaunch[i][6];
 
         // Parse magnetometer readings (X, Y, Z)
-        token = strtok(NULL, ",");
-        float magX = atof(token);
-        token = strtok(NULL, ",");
-        float magY = atof(token);
-        token = strtok(NULL, ",");
-        float magZ = atof(token);
+        float magX = taberLaunch[i][7];
+        float magY = taberLaunch[i][8];
+        float magZ = taberLaunch[i][9];
 
-        token = strtok(NULL, ",");
-        float time = atof(token); // Convert the time value to float
+        printf("magX: %f, magY: %f, magZ: %f\n", magX, magY, magZ);
 
-        token = strtok(NULL, ",");
-        float pressure = atof(token);
-
-        time = i * DELTA_TIME;
-
-        i++;
+        // Parse pressure readings
+        float pressure = baroData[i][1];
 
         IMUData sensorData = {
             time,
-            gyroX/1000,
-            gyroY/1000,
-            gyroZ/1000,
-            accelX/1000,
-            accelY/1000,
-            accelZ/1000,
-            magX/1000,
-            magY/1000,
-            magZ/1000,
+            gyroX,
+            gyroY,
+            gyroZ,
+            accelX,
+            accelY,
+            accelZ,
+            magX,
+            magY,
+            magZ,
         };
 
         IMUData sensorData2 = {
             time,
-            gyroX/1000,
-            gyroY/1000,
-            gyroZ/1000,
-            accelX/1000,
-            accelY/1000,
-            accelZ/1000,
-            magX/1000,
-            magY/1000,
-            magZ/1000,
+            gyroX,
+            gyroY,
+            gyroZ,
+            accelX,
+            accelY,
+            accelZ,
+            magX,
+            magY,
+            magZ,
         };
 
         start = std::clock();
