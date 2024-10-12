@@ -12,7 +12,7 @@
 #include "Data.cpp"
 #include "input_data.cpp"
 
-// #define LOGON
+#define LOGON
 #define TIMERON
 
 #define printf(...) ;
@@ -1508,6 +1508,12 @@ int main()
     // scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
 
     // create scenarios with before and after lists
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point treeCreation = std::chrono::high_resolution_clock::now();
+
+    #endif
+
     Scenario scenario1 = Scenario{sim1, sim1, 1};
     scenario1.createTree();
     Scenario scenario2 = Scenario{sim2, sim2, 2};
@@ -1522,6 +1528,14 @@ int main()
     scenario6.createTree();
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
+
+    #ifdef TIMERON
+
+    std::chrono::high_resolution_clock::time_point treeCreationEnd = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> treeCreationTime = std::chrono::duration_cast<std::chrono::duration<double>>(treeCreationEnd - treeCreation);
+
+    #endif
 
     float totalTime = 0;
 
@@ -1755,6 +1769,8 @@ int main()
 
     std::cout << "\t\t\t->vectorsTime:\t\t\t\t" << halo.vectorsTime.count() << std::endl;
     std::cout << "\t\t\t->push_backTime:\t\t\t" << halo.push_backTime.count() << std::endl;
+
+    std::cout << "\t\t\t->->treeCreationTime:\t\t\t\t" << treeCreationTime.count() << std::endl;
     #endif
 
     fclose(file1);

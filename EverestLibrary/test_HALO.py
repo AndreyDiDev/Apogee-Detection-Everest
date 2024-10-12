@@ -14,6 +14,7 @@ sigmaPoints4 = pd.read_csv('sigmaPoints4.txt')
 sigmaPoints5 = pd.read_csv('sigmaPoints5.txt')
 sigmaPoints6 = pd.read_csv('sigmaPoints6.txt')
 nearestScenarios = pd.read_csv('nearestScenarios.txt')
+launch = pd.read_csv('taber_launch_formattedF.csv')
 
 # plot Madgwick
 
@@ -186,6 +187,33 @@ plt.grid(True)
 plt.figure(figsize=(10, 6))
 plt.plot(nearestScenarios['lowestDistance'], label='lowestDistance 1')
 plt.plot(nearestScenarios['secondLowestDistance'], label='secondLowestDistance 2')
+plt.legend()
+plt.grid(True)
+
+# plot altimeter altitude, velocity, and acceleration
+plt.figure(figsize=(10, 6))
+plt.plot(launch['time'], launch['altitude'], label='Altimeter Alt')
+plt.xlabel('Time')
+plt.ylabel('Altitude')
+plt.title('Time vs Alt')
+plt.legend()
+plt.grid(True)
+
+# plot velo
+plt.figure(figsize=(10, 6))
+plt.plot(launch['time'], launch['speed'], label='Altimeter speed')
+plt.xlabel('Time')
+plt.ylabel('speed')
+plt.title('Time vs speed')
+plt.legend()
+plt.grid(True)
+
+# plot accel
+plt.figure(figsize=(10, 6))
+plt.plot(launch['time'], launch['acceleration'], label='Altimeter Acc')
+plt.xlabel('Time')
+plt.ylabel('Acc')
+plt.title('Time vs Acc')
 plt.legend()
 plt.grid(True)
 
