@@ -87,25 +87,25 @@ theTime = [0, 0.33, 0.66, 1, 1.33, 1.66, 2] + theTime.tolist()
 # print(sigmaPoints['alt'])
 
 alt1 = sigmaPoints['alt']
-alt1 = alt1[1:]
+alt1 = alt1[2:]
 
 alt2 = sigmaPoints1['alt']
-alt2 = alt2[1:]
+alt2 = alt2[2:]
 
 alt3 = sigmaPoints2['alt']
-alt3 = alt3[1:]
+alt3 = alt3[2:]
 
 alt4 = sigmaPoints3['alt']
-alt4 = alt4[1:]
+alt4 = alt4[2:]
 
 alt5 = sigmaPoints4['alt']
-alt5 = alt5[1:]
+alt5 = alt5[2:]
 
 alt6 = sigmaPoints5['alt']
-alt6 = alt6[1:]
+alt6 = alt6[2:]
 
 alt7 = sigmaPoints6['alt']
-alt7 = alt7[1:]
+alt7 = alt7[2:]
 
 plt.plot(df['Time'], alt1, label='s1_alt')
 plt.plot(df['Time'], alt2, label='s2_alt')
@@ -128,25 +128,25 @@ plt.grid(True)
 plt.figure(figsize=(10, 6))
 
 vel1 = sigmaPoints['velo']
-vel1 = vel1[1:]
+vel1 = vel1[2:]
 
 vel2 = sigmaPoints1['velo']
-vel2 = vel2[1:]
+vel2 = vel2[2:]
 
 vel3 = sigmaPoints2['velo']
-vel3 = vel3[1:]
+vel3 = vel3[2:]
 
 vel4 = sigmaPoints3['velo']
-vel4 = vel4[1:]
+vel4 = vel4[2:]
 
 vel5 = sigmaPoints4['velo']
-vel5 = vel5[1:]
+vel5 = vel5[2:]
 
 vel6 = sigmaPoints5['velo']
-vel6 = vel6[1:]
+vel6 = vel6[2:]
 
 vel7 = sigmaPoints6['velo']
-vel7 = vel7[1:]
+vel7 = vel7[2:]
 
 plt.plot(df['Time'], vel1, label='s1_vel')
 plt.plot(df['Time'], vel2, label='s2_vel')

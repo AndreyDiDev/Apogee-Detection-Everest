@@ -15,7 +15,7 @@
 #define LOGON
 #define TIMERON
 
-#define printf(...) ;
+// #define printf(...) ;
 
 // task specific defines
 // #include "main.h"
@@ -1535,7 +1535,9 @@ int main()
     halo.setScenarios(scenarios);
     halo.deltaTime = 1/3;
 
-    for(int i = 0; i < 545; i++){
+    printf("size of vector: %d\n", taberLaunch.size());
+
+    for(int i = 0; i < 555; i++){
         // Tokenize the line using strtok
         // Parse accelerometer readings (X, Y, Z)
         float time = taberLaunch.at(i).at(0);
@@ -1555,9 +1557,13 @@ int main()
         float magZ = taberLaunch[i][9];
 
         printf("magX: %f, magY: %f, magZ: %f\n", magX, magY, magZ);
+        printf("gyroX: %f, gyroY: %f, gyroZ: %f\n", gyroX, gyroY, gyroZ);
+        printf("accelX: %f, accelY: %f, accelZ: %f\n", accelX, accelY, accelZ);
 
         // Parse pressure readings
         float pressure = baroData[i][1];
+
+        printf("pressure: %f\n", pressure);
 
         IMUData sensorData = {
             time,
@@ -1708,7 +1714,7 @@ int main()
                                     halo.X0[1], 
                                     halo.X0[2]};
 
-                // printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
+                printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
                 #ifdef LOGON
                     fprintf(file, "%f,%f,%f,%f,%f,%f,%f\n", time, eAltitude, eVelocity, eAccelerationZ, unitedStates[0], unitedStates[1], unitedStates[2]);
