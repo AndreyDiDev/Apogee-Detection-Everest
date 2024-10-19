@@ -18,11 +18,12 @@
 #include <vector>
 
 #include "KDTree.hpp"
+#include <iostream>
 
 KDNode::KDNode() = default;
 
 KDNode::KDNode(std::vector<float> const& pt, size_t const& idx_, KDNodePtr const& left_,
-               KDNodePtr const& right_) {
+            KDNodePtr const& right_) {
     x = pt;
     index = idx_;
     left = left_;
@@ -30,7 +31,7 @@ KDNode::KDNode(std::vector<float> const& pt, size_t const& idx_, KDNodePtr const
 }
 
 KDNode::KDNode(pointIndex const& pi, KDNodePtr const& left_,
-               KDNodePtr const& right_) {
+            KDNodePtr const& right_) {
     x = pi.first;
     index = pi.second;
     left = left_;
@@ -55,9 +56,10 @@ inline float dist2(std::vector<float> const& a, std::vector<float> const& b) {
     // printf("a.size() = %d, b.size() =%d\n", a.size(), b.size());
     assert(a.size() == b.size());
     float distc = 0;
-    for (size_t i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size()-1; i++) {
         float di = a.at(i) - b.at(i);
         distc += di * di;
+        // printf("distc = %f\n", distc);
     }
     return distc;
 }
@@ -81,12 +83,12 @@ inline void sort_on_idx(pointIndexArr::iterator const& begin,
     using std::placeholders::_2;
 
     std::nth_element(begin, begin + std::distance(begin, end) / 2, end,
-                     std::bind(&comparer::compare_idx, comp, _1, _2));
+                    std::bind(&comparer::compare_idx, comp, _1, _2));
 }
 
 namespace detail {
 inline bool compare_node_distance(std::pair<KDNodePtr, float> a,
-                                  std::pair<KDNodePtr, float> b) {
+                                std::pair<KDNodePtr, float> b) {
     return a.second < b.second;
 }
 } // namespace detail
@@ -120,6 +122,7 @@ KDTree::KDTree(std::vector<std::vector<float>> point_array) : leaf_{std::make_sh
         arr.emplace_back(point_array.at(i), i);
     }
     root_ = KDTree::make_tree(arr.begin(), arr.end(), 0 /* level */);
+    printTheTree();
 }
 
 void KDTree::node_query_(
@@ -135,7 +138,7 @@ void KDTree::node_query_(
     auto const node_distance = std::make_pair(branch, dl);
     auto const insert_it =
         std::upper_bound(k_nearest_buffer.begin(), k_nearest_buffer.end(),
-                         node_distance, detail::compare_node_distance);
+                        node_distance, detail::compare_node_distance);
     if (insert_it != k_nearest_buffer.end() ||
         k_nearest_buffer.size() < num_nearest) {
         k_nearest_buffer.insert(insert_it, node_distance);
@@ -173,6 +176,7 @@ void KDTree::knearest_(
         k_nearest_buffer.size() < num_nearest) {
         node_query_(far_branch, pt, next_level, num_nearest, k_nearest_buffer);
     }
+
 };
 
 // default caller

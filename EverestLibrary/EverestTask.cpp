@@ -274,7 +274,7 @@ void EverestTask::MadgwickWrapper(IMUData data){
     if(debug == Secondary || debug == ALL){
         // SOAR_PRINT("Averaged: (%.6f, %.6f, %.6f) deg/s, Accel: (%.6f, %.6f, %.6f) g Time: %f\n",
         //     data.gyroX, data.gyroY, data.gyroZ, data.accelX, data.accelY, data.accelZ, deltaTime);
-        printf("Mag: (%.6f, %.6f, %.6f) uT\n", mag.axis.x, mag.axis.y, mag.axis.z);
+        // printf("Mag: (%.6f, %.6f, %.6f) uT\n", mag.axis.x, mag.axis.y, mag.axis.z);
     }
 
     // Update gyroscope AHRS algorithm
@@ -1426,7 +1426,7 @@ int main()
     int i = 0;
     int numberOfScenarios = 6;
 
-    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsBefore = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
+    // std::vector<std::vector<std::vector<float>>> scenarioListofVectorsBefore = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
     // for(int i = 0; i < numberOfScenarios; i++){
     //     scenarioListofVectorsBefore. = howMany;
     // }
@@ -1436,76 +1436,76 @@ int main()
     float time1;
     std::vector<float> temp = {0,0,0,0};
 
-    // skip header
-    fgets(line, sizeof(line), simsFile);
+    // // skip header
+    // fgets(line, sizeof(line), simsFile);
 
-    while (fgets(line, sizeof(line), simsFile)) {
-        char *token = strtok(line, ",");
+    // while (fgets(line, sizeof(line), simsFile)) {
+    //     char *token = strtok(line, ",");
 
-        for(int i = 0; i < numberOfScenarios; i++){
-            alt = atof(token); // Convert the time value to float
-            token = strtok(NULL, ",");
-            velo = atof(token);
-            token = strtok(NULL, ",");
-            acc = atof(token);
-            token = strtok(NULL, ",");
-            time1 = atof(token);
-            token = strtok(NULL, ",");
+    //     for(int i = 0; i < numberOfScenarios; i++){
+    //         alt = atof(token); // Convert the time value to float
+    //         token = strtok(NULL, ",");
+    //         velo = atof(token);
+    //         token = strtok(NULL, ",");
+    //         acc = atof(token);
+    //         token = strtok(NULL, ",");
+    //         time1 = atof(token);
+    //         token = strtok(NULL, ",");
 
-            temp = {alt, velo, acc, time1};
-            // printf("temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
-            if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
-                scenarioListofVectorsBefore[i].push_back(temp);
-            }
+    //         temp = {alt, velo, acc, time1};
+    //         // printf("temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
+    //         if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
+    //             scenarioListofVectorsBefore[i].push_back(temp);
+    //         }
 
-        }
+    //     }
 
-        // printf("\n");
+    //     // printf("\n");
         
-    }
+    // }
 
-    std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
+    // std::vector<std::vector<std::vector<float>>> scenarioListofVectorsAfter = {{{}}, {{}}, {{}}, {{}}, {{}}, {{}}};
 
-    // skip header
-    fgets(line, sizeof(line), simsAfterFile);
+    // // skip header
+    // fgets(line, sizeof(line), simsAfterFile);
 
-    while (fgets(line, sizeof(line), simsAfterFile)) {
-        char *token = strtok(line, ",");
+    // while (fgets(line, sizeof(line), simsAfterFile)) {
+    //     char *token = strtok(line, ",");
 
-        for(int i = 0; i < numberOfScenarios; i++){
-            alt = atof(token); // Convert the time value to float
-            token = strtok(NULL, ",");
-            velo = atof(token);
-            token = strtok(NULL, ",");
-            acc = atof(token);
-            token = strtok(NULL, ",");
-            time1 = atof(token);
-            token = strtok(NULL, ",");
+    //     for(int i = 0; i < numberOfScenarios; i++){
+    //         alt = atof(token); // Convert the time value to float
+    //         token = strtok(NULL, ",");
+    //         velo = atof(token);
+    //         token = strtok(NULL, ",");
+    //         acc = atof(token);
+    //         token = strtok(NULL, ",");
+    //         time1 = atof(token);
+    //         token = strtok(NULL, ",");
 
-            std::vector<float> temp = {alt, velo, acc, time1};
-            // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
-            if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
-                scenarioListofVectorsAfter[i].push_back(temp);
-            }
+    //         std::vector<float> temp = {alt, velo, acc, time1};
+    //         // printf("after temp[%d] = (%f,%f,%f,%f)\n", i, temp[0], temp[1], temp[2], temp[3]);
+    //         if(temp[0] != 0 && temp[1] != 0 && temp[2] != 0 && temp[3] != 0){
+    //             scenarioListofVectorsAfter[i].push_back(temp);
+    //         }
 
-        }
+    //     }
 
-        // printf("\n");
-    }
+    //     // printf("\n");
+    // }
 
-    scenarioListofVectorsBefore[0].erase(scenarioListofVectorsBefore[0].begin());
-    scenarioListofVectorsBefore[1].erase(scenarioListofVectorsBefore[1].begin());
-    scenarioListofVectorsBefore[2].erase(scenarioListofVectorsBefore[2].begin());
-    scenarioListofVectorsBefore[3].erase(scenarioListofVectorsBefore[3].begin());
-    scenarioListofVectorsBefore[4].erase(scenarioListofVectorsBefore[4].begin());
-    scenarioListofVectorsBefore[5].erase(scenarioListofVectorsBefore[5].begin());
+    // scenarioListofVectorsBefore[0].erase(scenarioListofVectorsBefore[0].begin());
+    // scenarioListofVectorsBefore[1].erase(scenarioListofVectorsBefore[1].begin());
+    // scenarioListofVectorsBefore[2].erase(scenarioListofVectorsBefore[2].begin());
+    // scenarioListofVectorsBefore[3].erase(scenarioListofVectorsBefore[3].begin());
+    // scenarioListofVectorsBefore[4].erase(scenarioListofVectorsBefore[4].begin());
+    // scenarioListofVectorsBefore[5].erase(scenarioListofVectorsBefore[5].begin());
 
-    scenarioListofVectorsAfter[0].erase(scenarioListofVectorsAfter[0].begin());
-    scenarioListofVectorsAfter[1].erase(scenarioListofVectorsAfter[1].begin());
-    scenarioListofVectorsAfter[2].erase(scenarioListofVectorsAfter[2].begin());
-    scenarioListofVectorsAfter[3].erase(scenarioListofVectorsAfter[3].begin());
-    scenarioListofVectorsAfter[4].erase(scenarioListofVectorsAfter[4].begin());
-    scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
+    // scenarioListofVectorsAfter[0].erase(scenarioListofVectorsAfter[0].begin());
+    // scenarioListofVectorsAfter[1].erase(scenarioListofVectorsAfter[1].begin());
+    // scenarioListofVectorsAfter[2].erase(scenarioListofVectorsAfter[2].begin());
+    // scenarioListofVectorsAfter[3].erase(scenarioListofVectorsAfter[3].begin());
+    // scenarioListofVectorsAfter[4].erase(scenarioListofVectorsAfter[4].begin());
+    // scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
 
 
     // create scenarios with before and after lists
@@ -1535,13 +1535,13 @@ int main()
     halo.setScenarios(scenarios);
     halo.deltaTime = 1/3;
 
-    printf("size of vector: %d\n", taberLaunch.size());
+    // printf("size of vector: %d\n", taberLaunch.size());
 
     for(int i = 0; i < 555; i++){
         // Tokenize the line using strtok
         // Parse accelerometer readings (X, Y, Z)
         float time = taberLaunch.at(i).at(0);
-        printf("time: %f\n", time);
+        // printf("time: %f\n", time);
         float accelX = taberLaunch[i][1];
         float accelY = taberLaunch[i][2];
         float accelZ = taberLaunch[i][3];
@@ -1556,14 +1556,14 @@ int main()
         float magY = taberLaunch[i][8];
         float magZ = taberLaunch[i][9];
 
-        printf("magX: %f, magY: %f, magZ: %f\n", magX, magY, magZ);
-        printf("gyroX: %f, gyroY: %f, gyroZ: %f\n", gyroX, gyroY, gyroZ);
-        printf("accelX: %f, accelY: %f, accelZ: %f\n", accelX, accelY, accelZ);
+        // printf("magX: %f, magY: %f, magZ: %f\n", magX, magY, magZ);
+        // printf("gyroX: %f, gyroY: %f, gyroZ: %f\n", gyroX, gyroY, gyroZ);
+        // printf("accelX: %f, accelY: %f, accelZ: %f\n", accelX, accelY, accelZ);
 
         // Parse pressure readings
         float pressure = baroData[i][1];
 
-        printf("pressure: %f\n", pressure);
+        // printf("pressure: %f\n", pressure);
 
         IMUData sensorData = {
             time,
@@ -1609,7 +1609,7 @@ int main()
 
         // if(howMany <= 13){
 
-            printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
+            // printf("\n#%d Sample--------------------------------------------------------------------------\n\n", howMany);
 
         // // Example: Print all sensor readings
         // if(debug == RAW || debug == ALL){
@@ -1714,7 +1714,7 @@ int main()
                                     halo.X0[1], 
                                     halo.X0[2]};
 
-                printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
+                // printf("\nFinal Measurements - time, eAltitude, HAltitude, HVelo, Haccel:\n %f,%f,%f,%f,%f\n", time, eAltitude, unitedStates[0], unitedStates[1], unitedStates[2]);
 
                 #ifdef LOGON
                     fprintf(file, "%f,%f,%f,%f,%f,%f,%f\n", time, eAltitude, eVelocity, eAccelerationZ, unitedStates[0], unitedStates[1], unitedStates[2]);
