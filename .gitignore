@@ -4,3 +4,5 @@
 *.txt
 *.o
 *.xlsx
+EverestLibrary/Data.cpp
+EverestLibrary/input_data.cpp

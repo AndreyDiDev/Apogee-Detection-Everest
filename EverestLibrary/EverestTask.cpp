@@ -15,7 +15,7 @@
 #define LOGON
 #define TIMERON
 
-#define printf(...) ;
+// #define printf(...) ;
 
 // task specific defines
 // #include "main.h"
@@ -474,6 +474,7 @@ void EverestTask::Baro_Update(const BarosData& Baro1, const BarosData& Baro2)
     if(debug == RAW || debug == ALL){
         // SOAR_PRINT("Baro1: %.f Pa, Baro2: %.f Pa, Baro3: %.f Pa, RealBaro: %.f m\n",
         //     baro1.pressure, baro2.pressure, baro3.pressure, realBaro.altitude);
+        printf("Baro1: %f Pa, Baro2: %f Pa\n", baro1.pressure, baro2.pressure);
     }
 
 }
@@ -1253,7 +1254,7 @@ int main()
     FILE* predictedValues = fopen("predictedValues.txt", "a+");
 
     if(!predictedValues){
-        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        fprintf(stderr, "Error opening predictedValues.txt...exiting\n");
         exit(1);
     }
 
@@ -1316,7 +1317,7 @@ int main()
     FILE* sigmaPoints4 = fopen("sigmaPoints4.txt", "a+");
 
     if(!sigmaPoints4){
-        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        fprintf(stderr, "Error opening sigmaPoints4.txt...exiting\n");
         exit(1);
     }
 
@@ -1327,7 +1328,7 @@ int main()
     FILE* sigmaPoints5 = fopen("sigmaPoints5.txt", "a+");
 
     if(!sigmaPoints5){
-        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        fprintf(stderr, "Error opening sigmaPoints5.txt...exiting\n");
         exit(1);
     }
 
@@ -1338,7 +1339,7 @@ int main()
     FILE* sigmaPoints6 = fopen("sigmaPoints6.txt", "a+");
 
     if(!sigmaPoints6){
-        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        fprintf(stderr, "Error opening sigmaPoints6.txt...exiting\n");
         exit(1);
     }
 
@@ -1349,7 +1350,7 @@ int main()
     FILE* nearestScenarios = fopen("nearestScenarios.txt", "a+");
 
     if(!nearestScenarios){
-        fprintf(stderr, "Error opening HALO.txt...exiting\n");
+        fprintf(stderr, "Error opening nearestScenarios.txt...exiting\n");
         exit(1);
     }
 
@@ -1567,7 +1568,7 @@ int main()
         float magZ = taberLaunch[i][9];
 
         // Parse pressure readings
-        float pressure = taberLaunch[i][10];
+        float pressure = baroData[i][1];
 
         IMUData sensorData = {
             time,
