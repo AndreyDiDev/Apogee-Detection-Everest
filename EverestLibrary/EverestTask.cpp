@@ -1507,20 +1507,59 @@ int main()
     // scenarioListofVectorsAfter[4].erase(scenarioListofVectorsAfter[4].begin());
     // scenarioListofVectorsAfter[5].erase(scenarioListofVectorsAfter[5].begin());
 
+    std::vector<std::vector<float>> megaList;
+
+        // Helper lambda to add scenario index to each point
+        auto addScenarioIndex = [](const std::vector<std::vector<float>>& sim, int index) {
+            std::vector<std::vector<float>> result;
+            for (const auto& point : sim) {
+                std::vector<float> newPoint = {point.at(0), point.at(1), point.at(2)};
+                newPoint.push_back(static_cast<float>(index));
+                result.push_back(newPoint);
+                printf("newPoint: %f, %f, %f, %f\n", newPoint[0], newPoint[1], newPoint[2], newPoint[3]);
+            }
+
+            return result;
+        };
+
+        // Combine all simulation data into one list with scenario index
+        auto sim1WithIndex = addScenarioIndex(sim1, 1);
+        auto sim2WithIndex = addScenarioIndex(sim2, 2);
+        auto sim3WithIndex = addScenarioIndex(sim3, 3);
+        auto sim4WithIndex = addScenarioIndex(sim4, 4);
+        auto sim5WithIndex = addScenarioIndex(sim5, 5);
+        auto sim6WithIndex = addScenarioIndex(sim6, 6);
+
+        megaList.insert(megaList.end(), sim1WithIndex.begin(), sim1WithIndex.end());
+        megaList.insert(megaList.end(), sim2WithIndex.begin(), sim2WithIndex.end());
+        megaList.insert(megaList.end(), sim3WithIndex.begin(), sim3WithIndex.end());
+        megaList.insert(megaList.end(), sim4WithIndex.begin(), sim4WithIndex.end());
+        megaList.insert(megaList.end(), sim5WithIndex.begin(), sim5WithIndex.end());
+        megaList.insert(megaList.end(), sim6WithIndex.begin(), sim6WithIndex.end());
+
+        // Create the mega tree
+        KDTree megaTree(megaList);
+
 
     // create scenarios with before and after lists
     Scenario scenario1 = Scenario{sim1, sim1, 1};
-    scenario1.createTree();
+    // scenario1.createTree();
+    scenario1.passMegaTree(megaTree);
     Scenario scenario2 = Scenario{sim2, sim2, 2};
-    scenario2.createTree();
+    // scenario2.createTree();
+    scenario2.passMegaTree(megaTree);
     Scenario scenario3 = Scenario{sim3, sim3, 3};
-    scenario3.createTree();
+    // scenario3.createTree();
+    scenario3.passMegaTree(megaTree);
     Scenario scenario4 = Scenario{sim4, sim4, 4};
-    scenario4.createTree();
+    // scenario4.createTree();
+    scenario4.passMegaTree(megaTree);
     Scenario scenario5 = Scenario{sim5, sim5, 5};
-    scenario5.createTree();
+    // scenario5.createTree();
+    scenario5.passMegaTree(megaTree);
     Scenario scenario6 = Scenario{sim6, sim6, 6};
-    scenario6.createTree();
+    // scenario6.createTree();
+    scenario6.passMegaTree(megaTree);
 
     std::vector<Scenario> scenarios = {scenario1, scenario2, scenario3, scenario4, scenario5, scenario6};
 

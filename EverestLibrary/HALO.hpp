@@ -10,6 +10,7 @@
 
 
 #include "KDTree.hpp"
+// #include "Data2.cpp"
 
 // home
 #ifdef HOME
@@ -78,24 +79,24 @@ struct Scenario {
         // Print the first part
         // std::cout << "First Part:" << std::endl;
         // fprintf(file, "%s\n", "First Part:");
-        for (const auto& vec : BeforeList) {
-            for (float value : vec) {
-                //std::cout << value << " ";
-                // printf("%f", value);
-            }
-            // std::cout << std::endl;
-        }
+        // for (const auto& vec : BeforeList) {
+        //     for (float value : vec) {
+        //         //std::cout << value << " ";
+        //         // printf("%f", value);
+        //     }
+        //     // std::cout << std::endl;
+        // }
 
         // Print the second part
         // std::cout << "Second Part:" << std::endl;
         // fprintf(file, "%s\n", "Second Part:");
-        for (const auto& vec : AfterList) {
-            for (float value : vec) {
-                //std::cout << value << " ";
-                // fprintf(file, "%f,%f,%f,%f\n", value);
-            }
-            // std::cout << std::endl;
-        }
+        // for (const auto& vec : AfterList) {
+        //     for (float value : vec) {
+        //         //std::cout << value << " ";
+        //         // fprintf(file, "%f,%f,%f,%f\n", value);
+        //     }
+        //     // std::cout << std::endl;
+        // }
 
 
 
@@ -141,11 +142,18 @@ struct Scenario {
      */
     std::pair<std::vector<float>, size_t> nearestKDTree(std::vector<float> measurement){
         if(isBeforeApogeeBool){
+            // scan neighbourhood to find nearest different scenario
+            // increasing the radius until a different scenario is found
             return treeBefore.nearest_pointIndex(measurement);
         }
         else{
             return treeAfter.nearest_pointIndex(measurement);
         }
+    }
+
+    void passMegaTree(KDTree megaTree){
+        treeBefore = megaTree;
+        treeAfter = megaTree;
     }
 
     void createTree(){
@@ -174,6 +182,37 @@ struct Scenario {
             afterVectorofVectors.push_back(vect);
         }
 
+        // std::vector<std::vector<float>> megaList;
+
+        // // Helper lambda to add scenario index to each point
+        // auto addScenarioIndex = [](const std::vector<std::vector<float>>& sim, int index) {
+        //     std::vector<std::vector<float>> result;
+        //     for (const auto& point : sim) {
+        //         std::vector<float> newPoint = point;
+        //         newPoint.push_back(static_cast<float>(index));
+        //         result.push_back(newPoint);
+        //     }
+        //     return result;
+        // };
+
+        // // Combine all simulation data into one list with scenario index
+        // auto sim1WithIndex = addScenarioIndex(sim12, 1);
+        // auto sim2WithIndex = addScenarioIndex(sim22, 2);
+        // auto sim3WithIndex = addScenarioIndex(sim32, 3);
+        // auto sim4WithIndex = addScenarioIndex(sim42, 4);
+        // auto sim5WithIndex = addScenarioIndex(sim52, 5);
+        // auto sim6WithIndex = addScenarioIndex(sim62, 6);
+
+        // megaList.insert(megaList.end(), sim1WithIndex.begin(), sim1WithIndex.end());
+        // megaList.insert(megaList.end(), sim2WithIndex.begin(), sim2WithIndex.end());
+        // megaList.insert(megaList.end(), sim3WithIndex.begin(), sim3WithIndex.end());
+        // megaList.insert(megaList.end(), sim4WithIndex.begin(), sim4WithIndex.end());
+        // megaList.insert(megaList.end(), sim5WithIndex.begin(), sim5WithIndex.end());
+        // megaList.insert(megaList.end(), sim6WithIndex.begin(), sim6WithIndex.end());
+
+        // // Create the mega tree
+        // KDTree megaTree(megaList);
+
         // for(const auto& vec : AfterList){
         //     for(float value : vec){
         //         printf("%f ", value);
@@ -182,7 +221,9 @@ struct Scenario {
         // }
 
         treeBefore = KDTree(beforeVectorofVectors);
+        // treeBefore = megaTree;
         treeAfter  = KDTree(afterVectorofVectors);
+        // treeAfter = megaTree;
 
     }
 
